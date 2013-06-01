@@ -28,10 +28,11 @@
 ;; make return key autoindent
 
 ;; make C-RET enter vi insert state
-;; (add-hook 'org-insert-heading-hook
-;;           (lambda ()
-;;             (if (evil-normal-state-p)
-;;                 (evil-insert-state 1))))
+(add-hook 'org-insert-heading-hook
+          (lambda ()
+            (if (evil-normal-state-p)
+                (evil-insert-state))))
+
 ;; set my variables
 (setq 
  org-todo-keywords 
@@ -354,9 +355,8 @@
 ;;       (org-show-context))
 ;;     (org-next-visible-line-same-heading)))
 
-;; (defadvice org-insert-todo-heading (after go-insert-mode activate)
-;;   (and viper-mode
-;;        (evil-insert-state 1)))
+(defadvice org-insert-todo-heading (after go-insert-mode activate)
+  (evil-insert-state))
 
 ;; get the o after a headline automatically do TAB for indentation
 ;; (defadvice viper-open-line (after my-org-mode-vi-open-line activate)
@@ -459,8 +459,7 @@ skipping headings of the same level as the starting position"
       (end-of-line 0)
       (org-reveal nil)
       (org-insert-todo-heading-respect-content)
-      ;; (evil-insert-state 1)
-      )))
+      (evil-insert-state))))
 
 (defun my-org-insert-todo-heading-start (arg)
   "Insert TODO heading at the end of the current project"
@@ -471,8 +470,7 @@ skipping headings of the same level as the starting position"
   (beginning-of-line)
   (org-reveal)
   (org-insert-todo-heading-respect-content)
-  ;; (evil-insert-state 1)
-  )
+  (evil-insert-state))
 
 (defun my-org-sort (&optional arg)
   "Sort current item if it has any TODO children, otherwise sort
@@ -732,8 +730,7 @@ one"
 (evil-define-key 'insert org-mode-map  (kbd "<S-return>") 'mm/org-shift-return)
 
 (evil-define-key 'normal org-mode-map "\C-m" 'org-cycle)
-;; (vimpulse-define-key 'org-mode 'insert-state "\C-m" 
-;;                     'evil-execute-in-emacs-state)
+(evil-define-key 'insert org-mode-map "\C-m" 'evil-execute-in-emacs-state)
 
 
 (defun mm/org-insert-mode-tab (&optional arg)
@@ -866,8 +863,7 @@ one"
     (org-reveal t)))
 
 (defadvice org-capture-place-template (after go-viper-insert-mode activate)
-  ;; (evil-insert-state 1)
-  )
+  (evil-insert-state))
 
 (defun capture-divaradio (artist title album year)
   "Called by capture-divaradio shell script"
@@ -1358,7 +1354,7 @@ grandparent and so on"
 
 (setq org-clock-in-re-clock 1)
 
-(vimpulse-define-key 'org-mode 'vi-state ";ic" 'mm/insert-parent-headline-cookie)
+(evil-define-key 'normal org-mode-map ";ic" 'mm/insert-parent-headline-cookie)
 
 (defun mm/org-clock-goto (&optional select)
   "Same as `org-clock-goto' but first check if item is in Agenda,
