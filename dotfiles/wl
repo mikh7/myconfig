@@ -1,0 +1,311 @@
+;; -*- mode: emacs-lisp -*-
+
+(setq wl-thread-indent-level 2)
+(setq wl-thread-have-younger-brother-str "+"
+      wl-thread-youngest-child-str	 "+"
+      wl-thread-vertical-str		 "|"
+      wl-thread-horizontal-str		 "-"
+      wl-thread-space-str		 " "
+      wl-icon-directory                  "~/myconfig/elisp/site-lisp/wl/icons"
+      wl-summary-default-number-column   7)
+
+(add-to-list 'wl-summary-score-marks "!")
+(add-to-list 'wl-summary-score-marks nil)
+(add-to-list 'wl-summary-score-marks "U")
+(add-to-list 'wl-summary-score-marks "u")
+
+;; FCC the outgoing messages to the parent folder
+
+(add-hook 'wl-mail-setup-hook 'wl-draft-config-exec)
+(add-hook 'wl-draft-reedit-hook 'wl-draft-config-exec)
+
+(setq wl-subscribed-mailing-list
+      '(
+        ;; OrgMode mailing list convention is to CC people
+        "emacs-orgmode@gnu.org"
+        "wl-en@ml.gentei.org"))
+
+(setq wl-insert-mail-followup-to t)
+
+
+(defvar mm/wl-folder-to-mailing-list nil
+  "List of (REGEXP . ADDR) of mailing lists, where REGEXP is folder name")
+
+(defvar mm/wl-last-mailing-list nil
+  "Last mailing list address matched by `mm/wl-match-mailing-list")
+
+(setq mm/wl-folder-to-mailing-list
+      '(("Org-Mode" . "emacs-orgmode@gnu.org")
+        ("Slime" . "slime-devel@common-lisp.net")
+        ("Stump" . "stumpwm-devel@nongnu.org")))
+
+(defun mm/wl-match-mailing-list (&optional folder)
+  "Match wl-draft-parent-folder against `mm/wl-folder-to-mailing-list', return
+address if successful, and store it in mm/wl-last-mailing-list"
+  (let ((done nil)
+        (list mm/wl-folder-to-mailing-list)
+        (case-fold-search t))
+    (while (and (not done)
+                (not (null list)))
+      (let* ((elem (pop list))
+             (regexp (car elem))
+             (addr (cdr elem)))
+        (when (string-match regexp (or folder wl-draft-parent-folder))
+          (setq done addr))))
+    (setq mm/wl-last-mailing-list done)))
+
+(setq wl-draft-config-alist
+      '(((and (not (buffer-live-p wl-draft-reply-buffer))
+              (mm/wl-match-mailing-list))
+         ("To" . mm/wl-last-mailing-list))
+        ;; newsgroups
+        ((string-match "^-\\(.+\\)" wl-draft-parent-folder)
+         ("Newsgroups" . (match-string 1 wl-draft-parent-folder)))
+        ((not mm/wl-last-mailing-list)
+         (header-bottom . (format "Fcc: %s"
+                                  (if (plusp (length wl-draft-parent-folder))
+                                      wl-draft-parent-folder "%INBOX"))))
+        (t (header-bottom . "Fcc: %INBOX.Sent Items"))))
+
+;; (setq wl-draft-reply-without-argument-list
+;;       '((("X-ML-Name" "Reply-To") . (("Reply-To") nil nil))
+;; 	("X-ML-Name" . (("To" "Cc") nil nil))
+;; 	("Followup-To" . (nil nil ("Followup-To")))
+;; 	("Newsgroups" . (nil nil ("Newsgroups")))
+;; 	("Reply-To" . (("Reply-To") nil nil))
+;; 	("Mail-Reply-To" . (("Mail-Reply-To") nil nil))
+;; 	(wl-draft-self-reply-p . (("To") ("Cc") nil))
+;; 	("From" . (("From") nil nil))))
+
+(setq wl-draft-reply-without-argument-list
+      '(("Followup-To" . (("Mail-Followup-To" "Mail-Reply-To" "Reply-To") nil ("Followup-To")))
+        ("Mail-Followup-To" . (("Mail-Followup-To") nil nil))
+        ("Newsgroups" . (("Mail-Reply-To" "Reply-To" "To") ("Cc") ("Newsgroups")))
+        ("Mail-Reply-To" . (("Mail-Reply-To" "Reply-To") ("To" "Cc") nil))
+        ("Reply-To" . (("Reply-To") ("To" "Cc") nil))
+        (wl-draft-self-reply-p . (("To") ("Cc") nil))
+        ("From" . (("From") ("To" "Cc") nil))))
+
+(defun wl-looking-at-citation-face? ()
+  "Return t if current line is highlighted with any of citation faces"
+  (do* ((end (1+ (line-end-position))) ;; to include trailing \n
+        (pos (line-beginning-position)
+             (when pos
+               (next-single-property-change pos 'face nil end)))
+        (face (get-text-property (line-beginning-position) 'face)
+              (when (and pos (<= pos end))
+                (get-text-property pos 'face)))
+        (ret nil))
+      ((or (null pos) (>= pos end)
+           (setq ret (member face wl-highlight-citation-face-list))
+           (setq ret (eq face 'wl-highlight-message-citation-header)))
+       ret)))
+
+(defun wl-find-next-citation ()
+  "Move the point one line down until current line is highlighted
+  with citation face"
+  (while (and (not (eobp))
+              (or (not (wl-looking-at-citation-face?))
+                  (looking-at "^[[:space:]]*$")))
+    (forward-line 1))
+  ;;(message "Here looking-at space=%s line='%s' beg=%s point=%s" 
+  ;;         (looking-at "^[[:space:]]*$")
+  ;;         (buffer-substring (line-beginning-position) (line-end-position))
+  ;;         (line-beginning-position)
+  ;;         (point))
+  (unless (eobp)
+    (point)))
+
+(defun wl-find-next-body ()
+  "Move the point one line down until current line is not highlighted
+  with citation face"
+  (while (and (not (eobp)) 
+              (or (wl-looking-at-citation-face?)
+                  (looking-at "^[[:space:]]*$")))
+    (forward-line 1))
+  (point))
+
+(defun wl-scroll-msg-to-next-text (&optional arg)
+  "Scroll the message window to the next text like Slrn does with
+the Tab key"
+  (interactive)
+  (let (win)
+    (if (or (not (buffer-live-p wl-message-buffer))
+            (not (setq win (get-buffer-window wl-message-buffer))))
+        (wl-summary-toggle-disp-msg 'on)
+      (with-current-buffer wl-message-buffer
+        (save-excursion
+          (goto-char (window-start win))
+          ;;(message "Starting from %s line=%s" (point)
+          ;;        (buffer-substring-no-properties (point) 
+          ;;                                         (line-end-position)))
+          (when (and (wl-find-next-citation)
+                     (wl-find-next-body))
+            ;;(message "Ending on %s line=%s" (point)
+            ;;         (buffer-substring-no-properties (point) 
+            ;;                                         (line-end-position)))
+            (set-window-start win (point))))))))
+
+
+;;;
+;;; key bindings
+;;;
+
+;; fix the j/k keys where I need them
+(define-key wl-folder-mode-map "j" 'next-line)
+(define-key wl-folder-mode-map "k" 'previous-line)
+(define-key wl-folder-mode-map "q" 'bury-wl)
+(define-key wl-folder-mode-map "Q" 'wl-exit)
+(define-key wl-folder-mode-map "\C-b" 'scroll-down)
+(define-key wl-folder-mode-map "\C-f" 'scroll-up)
+(define-key wl-folder-mode-map "\C-w" nil)
+
+(define-key wl-summary-mode-map "j" 'next-line)
+(define-key wl-summary-mode-map "k" 'previous-line)
+(define-key wl-summary-mode-map "\C-i" 'wl-scroll-msg-to-next-text)
+(define-key wl-summary-mode-map "\C-b" 'scroll-down)
+(define-key wl-summary-mode-map "\C-f" 'scroll-up)
+
+
+
+;; TODO j in summary used to be "Jump to current message" rebind this
+;; to something else
+;;;
+
+(defvar mm/wl-message-field-list-alist nil)
+(defvar mm/wl-default-message-sort-field-list nil) 
+(defvar mm/wl-default-message-ignored-field-list nil)
+(defvar mm/wl-default-message-visible-field-list nil)
+
+(setq
+ mm/wl-default-message-sort-field-list
+ '("^Subject" "^From" "^To" "^Cc")
+ mm/wl-default-message-ignored-field-list
+ '("^.*:")
+ mm/wl-default-message-visible-field-list
+ '("^Dnas.*:" "^Message-Id:" "^Date:"
+   "^From:" "^To:" "^Cc:" "^Subject:")
+ mm/wl-message-field-list-alist
+ '(
+   ;; plain inbox
+   ("^%INBOX$"
+    :visible
+    ;; ("^Subject" "^From")
+    ("^Date:" "^To:" "^Cc:") 
+    :sort ("^To" "^Cc" "^Date"))
+   ;; Mailing lists
+   ("^%INBOX\\.\\b"
+    :visible
+    ;; ("^Subject" "^From")
+    ("^Date:" "^To:" "^Cc:") 
+    :sort ("^From" "^Subject"))))
+
+(defun mm/wl-get-message-ignored-field-list ()
+  (with-current-buffer wl-current-summary-buffer
+    (getf (wl-get-assoc-list-value mm/wl-message-field-list-alist
+                                   (wl-summary-buffer-folder-name))
+          :ignored
+          mm/wl-default-message-ignored-field-list)))
+
+(defun mm/wl-get-message-visible-field-list ()
+  (with-current-buffer wl-current-summary-buffer
+    (getf (wl-get-assoc-list-value mm/wl-message-field-list-alist
+                                   (wl-summary-buffer-folder-name))
+          :visible
+          mm/wl-default-message-visible-field-list)))
+
+(defun mm/wl-get-message-sort-field-list ()
+  (with-current-buffer wl-current-summary-buffer
+    (getf (wl-get-assoc-list-value mm/wl-message-field-list-alist
+                                   (wl-summary-buffer-folder-name))
+          :sort
+          mm/wl-default-message-sort-field-list)))
+
+
+;; (let ((wl-message-buffer-cur-folder "%INBOX.Test"))
+;;   (mm/wl-get-message-visible-field-list))
+
+;;; per folder headers
+(defun mm/wl-message-header-setup ()
+  (setq wl-message-visible-field-list
+        (mm/wl-get-message-visible-field-list))
+  (setq wl-message-ignored-field-list
+        (mm/wl-get-message-ignored-field-list))
+  (setq wl-message-sort-field-list
+        (mm/wl-get-message-sort-field-list)))
+
+(add-hook 'wl-message-buffer-created-hook 'mm/wl-message-header-setup)
+(add-hook 'wl-summary-redisplay-hook 'mm/wl-message-header-setup)
+
+(defface wl-summary-header-line
+  '((t (:foreground "black" :background "LavenderBlush2")))
+  "WL summary header line"
+  :group 'wl-faces)
+
+(defface wl-summary-header-line-subject
+  '((t (:inherit wl-highlight-message-important-header-contents)))
+  "WL summary header subject"
+  :group 'wl-faces)
+
+(defface wl-summary-header-line-from
+  '((t (:inherit wl-highlight-message-important-header-contents2)))
+  "WL summary header from"
+  :group 'wl-faces)
+
+(defface wl-summary-header-line-folder
+  '((t (:foreground "black")))
+  "WL summary folder face"
+  :group 'wl-faces)
+
+(defun mm/wl-summary-current-subject ()
+  (let ((num (wl-summary-message-number)))
+    (when num
+      (let ((entity
+             (elmo-message-entity wl-summary-buffer-elmo-folder num)))
+        (elmo-message-entity-field entity 'subject 'string)))))
+
+(defun mm/wl-summary-current-from ()
+  (let ((num (wl-summary-message-number)))
+    (when num
+      (let ((entity
+             (elmo-message-entity wl-summary-buffer-elmo-folder num)))
+        (funcall wl-summary-from-function (elmo-message-entity-field
+                                           entity 'from 'string))))))
+
+(defun mm/quote-percent (string)
+  (replace-regexp-in-string "%" "%%" string))
+
+(defun mm/wl-format-header-line (format)
+  (let* ((spec (format-spec-make
+                ?f (propertize (mm/quote-percent
+                                (if (memq 'modeline wl-use-folder-petname)
+                                    (wl-folder-get-petname
+                                     (elmo-folder-name-internal wl-summary-buffer-elmo-folder))
+                                  (elmo-folder-name-internal wl-summary-buffer-elmo-folder)))
+                               'face 'wl-summary-header-line-folder)
+                ?F (propertize (mm/wl-summary-current-from)
+                               'face 'wl-summary-header-line-from)
+                ?s (propertize (mm/wl-summary-current-subject)
+                               'face 'wl-summary-header-line-subject)
+                ?u wl-summary-buffer-unread-count
+                ?n wl-summary-buffer-new-count)))
+    (format-spec format spec)))
+
+
+(defun mm/wl-setup-summary-mode-line ()
+  (setq mode-line-format
+        '(:eval (mm/wl-format-header-line "%f | %s"))
+        header-line-format nil))
+
+;; (with-current-buffer wl-current-summary-buffer
+;;   (mm/wl-format-header-line "%f | %s"))
+
+(setq wl-folder-summary-line-format-alist
+      '(("^%INBOX\\.\\b" . "%n%T%P %t%[%17(%c %f%) %] %s")))
+
+(add-hook 'wl-summary-mode-hook 'mm/wl-setup-summary-mode-line)
+(add-hook 'wl-summary-prepared-hook 'mm/wl-setup-summary-mode-line)
+
+
+(require 'wl-expire)
+

@@ -1,0 +1,22 @@
+#!/bin/ksh
+
+cleanup() {
+    rm -f pipe$$
+}
+trap cleanup EXIT
+
+if [ -z "$3" ] ; then
+  echo "Usage: $0 <fromuser> <touser> <file>"
+  exit 1
+fi
+mknod pipe$$ p
+case $3 in
+  *.gz)
+     gzip -dc $3 > pipe$$&
+     ;;
+  *)
+    cat $3 > pipe$$&
+     ;;
+esac
+imp '"/ as sysdba"' FILE=pipe$$ fromuser=$1 touser=$2
+rm pipe$$

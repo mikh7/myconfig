@@ -1,0 +1,3 @@
+#!/bin/zsh
+export WINEPREFIX=~/.wine_nb
+exec wine ~/.wine_nb/drive_c/Program\ Files/NewsBin/nbpro.exe

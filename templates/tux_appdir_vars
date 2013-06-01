@@ -1,0 +1,16 @@
+export tux_TUXDIR=/opt/bea/tux81
+export tux_UID=`id -u`
+export tux_GID=`id -g`
+export tux_HOST=`hostname`
+export tux_LMID=rave_far
+export tux_APPDIR=/opt/maxtux/appdir/rave_far
+export tux_RLSDIR=$tux_APPDIR"/rls"
+export tux_XASERVER=$TUXDIR/bin/XA_ORA10_SERVER
+export tux_RMNAME=Oracle_XA10G
+export tux_ORAUSER=ravefardb
+export tux_ORAPASS=ravefardb
+export tux_ORADB=ORADB
+export tux_ORASECUSER=appdbsec
+export tux_ORASECPASS=appdbsec
+export tux_ORASECDB=ORADB
+export tux_IPADDR=`host $tux_HOST | awk '{print $4}'`

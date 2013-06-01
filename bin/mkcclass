@@ -1,0 +1,17 @@
+#!/bin/sh
+
+if [ "x$1" == "x" ] ; then
+  echo "Usage: $0 <classname>"
+  exit 1
+fi
+
+cat > $1.cpp << EOF
+
+class $1
+{
+  public:
+}
+
+// vim: sw=2 cindent expandtab
+
+EOF

@@ -1,0 +1,35 @@
+#!/bin/zsh
+
+zmodload zsh/stat
+
+local file=$1 mtime last_mtime first=1 
+if [ ! -f $file ] ; then
+    print "Usage: $0 <file.md>"
+    return 1
+fi
+
+
+let last_mtime=$(stat +mtime $file)
+local temp=$file:r.html
+local url=file://$PWD/$temp
+
+zvvv temp url
+
+while true ; do
+    sleep 0.2 
+    ((mtime=$(stat +mtime $file)))
+    if ((mtime > last_mtime)) ; then
+        ((last_mtime = mtime))
+        if github-flavored-markdown.rb < $file > $temp ; then
+            print Generated file://$temp
+            if ((first == 1)) ; then
+                let first=0
+                url $url
+            fi
+        else
+            print Had some errors
+        fi
+    fi
+done
+
+

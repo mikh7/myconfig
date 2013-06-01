@@ -1,0 +1,218 @@
+# provide functions for manipulating unique lists as sets.
+
+function newset {
+	setopt local_options no_ksh_arrays
+	local name="$1"; shift
+	typeset -gUa $name
+	set -A $name "$@"
+}
+
+function copyset_tofrom {
+	setopt local_options no_ksh_arrays
+	local new="$1" old="$2"
+	typeset -gUa $new
+	set -A $new "${(P@)old}"
+}
+function copyset_fromto { copyset_tofrom "$2" "$1" }
+
+function set_add_new {
+	setopt local_options no_ksh_arrays
+	local new="$1" a="$2" b="$3"
+	typeset -gUa $new
+	set -A $new "${(P@)a}" "${(P@)b}"
+}
+
+function set_add_in {
+	setopt local_options no_ksh_arrays
+	local name="$1" b="$2"
+	set -A $name "${(P@)name}" "${(P@)b}"
+}
+
+function set_add_print {
+	setopt local_options no_ksh_arrays
+	local a="$1" b="$2"
+	typeset -Ua tmp
+	tmp=("${(P@)a}" "${(P@)b}")
+	print -r -- ${(q)tmp}
+}
+
+function set_subtract_new {
+	setopt local_options no_ksh_arrays
+	local new="$1" a="$2" b="$3"
+	typeset -gUa $new
+	set -A $new "${(P@)a:#${(P~j,|,)b}}"
+}
+
+function set_subtract_in {
+	setopt local_options no_ksh_arrays
+	local name="$1" b="$2"
+	set -A $name "${(P@)name:#${(P~j,|,)b}}"
+}
+
+function set_subtract_print {
+	setopt local_options no_ksh_arrays
+	local a="$1" b="$2"
+	typeset -Ua tmp
+	tmp=("${(P@)a:#${(P~j,|,)b}}")
+	print -r -- ${(q)tmp}
+}
+
+function set_intersection_new {
+	setopt local_options no_ksh_arrays
+	local new="$1" a="$2" b="$3"
+	typeset -gUa $new
+	set -A $new "${(@PM)a:#${(P~j,|,)b}}"
+}
+
+function set_intersection_in {
+	setopt local_options no_ksh_arrays
+	local name="$1" b="$2"
+	set -A $name "${(@PM)name:#${(P~j,|,)b}}"
+}
+
+function set_intersection_print {
+	setopt local_options no_ksh_arrays
+	local a="$1" b="$2"
+	typeset -Ua tmp
+	tmp=("${(@PM)a:#${(P~j,|,)b}}")
+	print -r -- ${(q)tmp}
+}
+
+function set_union_new { set_add_new "$@" }
+function set_union_in { set_add_in "$@" }
+function set_union_print { set_add_print "$@" }
+
+function set_difference_new { set_subtract_new "$@" }
+function set_difference_in { set_subtract_in "$@" }
+function set_difference_print { set_subtract_print "$@" }
+
+function set_symmetric_difference_new {
+	setopt local_options no_ksh_arrays
+	local new="$1" a="$2" b="$3"
+	typeset -gUa $new
+	set -A $new "${(P@)a:#${(P~j,|,)b}}" "${(P@)b:#${(P~j,|,)a}}"
+}
+
+function set_symmetric_difference_in {
+	setopt local_options no_ksh_arrays
+	local name="$1" b="$2"
+	set -A $name "${(P@)name:#${(P~j,|,)b}}" "${(P@)b:#${(P~j,|,)name}}"
+}
+
+function set_symmetric_difference_print {
+	setopt local_options no_ksh_arrays
+	local a="$1" b="$2"
+	typeset -Ua tmp
+	tmp=("${(P@)a:#${(P~j,|,)b}}" "${(P@)b:#${(P~j,|,)a}}")
+	print -r -- ${(q)tmp}
+}
+
+function set_insert_list {
+	setopt local_options no_ksh_arrays
+	local name="$1"; shift
+	set -A $name "${(P@)name}" "$@"
+}
+
+function set_remove_list {
+	setopt local_options no_ksh_arrays
+	local name="$1"; shift
+	set -A $name "${(P@)name:#${(~j,|,)@}}"
+}
+
+function set_equal {
+	setopt local_options no_ksh_arrays
+	local a="$1" b="$2"
+	[[ "${${(P@oq)a}}" == "${${(P@oq)b}}" ]]
+}
+
+# Is there a way to print the variable, in the style of "typeset -p",
+# but showing the -U unique-flag?
+
+#%prep
+# fpath=(../Functions/Misc)
+# autoload load_dataset
+# load_dataset
+#
+#%test
+# newset x a b c d
+# newset y c d e f
+# copyset_tofrom z x
+# print -l "$x" "$y" "$z"
+#0:Testing basic set creation
+#>a b c d
+#>c d e f
+#>a b c d
+#
+# set_add_print x y
+# set_add_in z y
+# print $z
+# set_add_new z x y
+# print $z
+#0:Testing set addition (union)
+#>a b c d e f
+#>a b c d e f
+#>a b c d e f
+#
+# set_subtract_new z x y
+# print $z
+# copyset_fromto x z
+# set_subtract_in z y
+# print $z
+# set_subtract_print x y
+# set_subtract_print y x
+#0:Testing set subtraction (asymmetric difference)
+#>a b
+#>a b
+#>a b
+#>e f
+#
+# set_intersection_new z x y
+# print $z
+# copyset_tofrom z x
+# set_intersection_in z y
+# print $z
+# set_intersection_print x y
+#0:Testing set intersection
+#>c d
+#>c d
+#>c d
+#
+# set_symmetric_difference_new z x y
+# print $z
+# copyset_tofrom z x
+# set_symmetric_difference_in z y
+# print $z
+# set_symmetric_difference_print x y
+# set_symmetric_difference_print y x
+#0:Testing set symmetric difference
+#>a b e f
+#>a b e f
+#>a b e f
+#>e f a b
+#
+# set_insert_list y 'a|b' '*'
+# set_remove_list x d
+# print -l "$x" "$y"
+#0:Testing basic set item addition and removal
+#>a b c
+#>c d e f a|b *
+#
+# set_intersection_print x y
+# set_symmetric_difference_print x y
+# set_union_print x y
+# set_difference_print x y
+# set_difference_print y x
+#0:Testing set resilience to meta characters
+#>c
+#>a b d e f a\|b \*
+#>a b c d e f a\|b \*
+#>a b
+#>d e f a\|b \*
+#
+# newset z b c a
+# set_equal x z
+#0:Testing set equality
+#
+# newset z a 'b c'
+# set_equal x z
+#1:Testing set inequality

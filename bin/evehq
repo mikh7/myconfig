@@ -1,0 +1,4 @@
+#!/bin/sh
+export WINEPREFIX=~/.wine_evehq
+cd ~/EveHQ
+wine EveHQ.exe < /dev/null >/dev/null 2>&1

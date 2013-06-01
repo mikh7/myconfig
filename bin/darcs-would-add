@@ -1,0 +1,2 @@
+#!/bin/sh
+darcs add -r --dry-run . 2>/dev/null | grep -v Would\ skip

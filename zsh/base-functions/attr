@@ -1,0 +1,36 @@
+# working with extended attributes
+
+function attr ()
+{
+    local name value hadValue
+    if [ $# -lt 2 ] ; then 
+        echo "Usage: $0 attr[=value] <file>"
+        return
+    fi
+    if [[ $1 == *=* ]] ; then
+        name=${1%%=*}
+        value=${1#*=}
+        hadValue=1
+    else
+        name=${1}
+        value=
+        hadValue=
+    fi
+    name="user.$name"
+    shift
+    if [[ -z $hadValue ]] ; then
+        if [[ $# == 1 ]] ; then
+            getfattr -n $name --only-values $* 2>/dev/null
+        else
+            getfattr -n $name $* 2>/dev/null
+        fi
+    else
+        if [[ -z $value ]] ; then
+            setfattr -n $name -x $*
+        else
+            setfattr -n $name -v $value $*
+        fi
+    fi
+}
+
+

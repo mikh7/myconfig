@@ -1,0 +1,7 @@
+[extensions]
+hgext.convert=
+# [diff]
+# showfunc=False
+# ignorews=True
+[ui]
+username=max@openchat.com

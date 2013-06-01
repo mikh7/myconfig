@@ -1,0 +1,39 @@
+function fontconfig-usage() {
+}
+
+function fontconfig-debug {
+    local -A channels
+    local word ok flag
+    integer fc_debug=0
+
+    channels[MATCH]=1        # Brief information about font matching
+    channels[MATCHV]=2       # Extensive font matching information
+    channels[EDIT]=4         # Monitor match/test/edit execution
+    channels[FONTSET]=8      # Track loading of font information at startup
+    channels[CACHE]=16       # Watch cache files being written
+    channels[CACHEV]=32      # Extensive cache file writing information
+    channels[PARSE]=64       # (no longer in use)
+    channels[SCAN]=128       # Watch font files being scanned to build caches
+    channels[SCANV]=256      # Verbose font file scanning information
+    channels[MEMORY]=512     # Monitor fontconfig memory usage
+    channels[CONFIG]=1024    # Monitor which config files are loaded
+    channels[LANGSET]=2048   # Dump char sets used to construct lang values
+    channels[OBJTYPES]=4096  # Display message when value typechecks fail
+    
+    local usage="
+Usage: $0: <channel> [<channel> ...]
+Valid channels are:
+
+  ${(k)channels}
+  "
+    for word in $* ; do 
+        if [ -z $channels[$word] ] ; then
+            print "Invalid channel $word\n$usage"
+            return
+        fi
+        let fc_debug+=$channels[$word]
+    done
+    print export FC_DEBUG=$fc_debug
+    export FC_DEBUG=$fc_debug
+}
+

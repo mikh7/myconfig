@@ -1,0 +1,4 @@
+set nocompatible
+source ~/myconfig/vim-config/vimrc-core.vim
+"set makeprg=ant\ -emacs
+"set makeprg=./make

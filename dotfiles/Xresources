@@ -1,0 +1,54 @@
+!
+! We now use .Xdefaults-host to specify font
+!
+!XTerm*font: 9x15
+!XTerm*boldFont: 9x15bold
+!XTerm*font: -mine-fixed-medium-r-normal--17-170-75-75-c-90-iso8859-1
+!XTerm*faceName: Bitstream Vera Sans Mono-12
+#ifdef NX
+XTerm*font: 9x15
+XTerm*renderFont: false
+#endif
+! Put the below entris into your .Xresources file
+! and run xrdb ~/.Xresources
+XTerm*color232: #80a0ff
+XTerm*color233: #ffa0a0
+XTerm*color234: Orange
+XTerm*color235: #40ffff
+XTerm*color236: #ffff60
+XTerm*color237: #ff80ff
+XTerm*color238: #60ff60
+XTerm*color239: SlateBlue
+XTerm*color240: DarkCyan
+XTerm*color241: Brown
+XTerm*color242: Purple
+XTerm*color243: SeaGreen
+XTerm*color244: grey80
+XTerm*color245: grey95
+
+rxvt*meta8: true
+Rxvt*meta8: true
+
+Emacs*background: gray90
+
+#ifdef NX
+Emacs.*Font: 9x15
+#else
+Emacs.*font: Consolas-13
+#endif
+
+
+ddd*rshCommand: ssh
+
+#if defined(CLNT_tigerclaw)
+XTerm*faceName: Bitstream Vera Sans Mono-14
+XTerm*renderFont: true
+XTerm*background: white
+Emacs*font: Bitstream Vera Sans Mono-14
+Emacs*background: white
+#elif defined (CLNT_momoland)
+XTerm*faceName: Consolas-13
+#endif
+
+irc*font: Lucida Sans Typewriter-11
+emacs-small-agenda*font: Lucida Sans Typewriter-10

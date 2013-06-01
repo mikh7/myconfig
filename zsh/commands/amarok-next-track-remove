@@ -1,0 +1,33 @@
+#!/bin/zsh
+
+# Deletes current track in amarok, and advances to the next one
+
+local caps capCanPause=4 capCanPlay=8 isPlaying trackNum dummy location
+
+caps=$(qdbus org.kde.amarok \
+    /Player \
+    org.freedesktop.MediaPlayer.GetCaps)
+
+(( (caps & capCanPlay) == 0 )) && isPlaying=y
+
+print isPlaying=$isPlaying
+
+if [[ $isPlaying == y ]] ; then
+    trackNum=$(qdbus org.kde.amarok /TrackList org.freedesktop.MediaPlayer.GetCurrentTrack)
+    if [[ -n $trackNum ]] ; then
+        qdbus org.kde.amarok /TrackList org.freedesktop.MediaPlayer.GetMetadata $trackNum \
+            | grep location: | read dummy location
+        print location=$location
+        if [[ -n $location  ]] ; then
+            print $location>~/.amarok-next-track-and-remove.last
+            qdbus org.kde.amarok /Player org.freedesktop.MediaPlayer.Next
+            qdbus org.kde.amarok /TrackList org.freedesktop.MediaPlayer.DelTrack $trackNum
+        else
+            print "Unable to determine location for track $trackNum"
+        fi
+    else
+        print "Unable to determine current track number"
+    fi
+else
+    print "Amarok is not currently playing"
+fi

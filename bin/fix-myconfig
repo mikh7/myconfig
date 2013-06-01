@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# do various fixups of myconfig dir
+
+zero="`perl -e 'print \"\x00\"'`"
+
+# find the scripts that do not have execute permission set
+# and set it
+find ~/myconfig/bin \
+-type f \
+! -wholename '*/.backup/*' \
+-print0 \
+| while read -d "$zero" ff; do
+  f="${ff##*/}" # just name
+  ext="${f##*.}" # ext
+  if [ "$ext" = "$f" ] ; then
+    ext=""
+  fi
+  if [ -z "$ext" ] ; then
+    #echo Empty extention for $f
+    if [ "`head -c2 "$ff"`" != "#!" ] ; then
+      echo Making $ff a shell script
+      (echo "#!/bin/sh" && cat "$ff") > /tmp/temp$$.tmp
+      mv /tmp/temp$$.tmp "$ff" || exit
+    fi
+    if [ ! -x "$ff" ] ; then
+      echo Making $ff executable
+      chmod +x "$ff"
+    fi
+  fi
+done
+
+
+

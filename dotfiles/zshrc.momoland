@@ -1,0 +1,8 @@
+for p (~/myconfig ~/tt-hg/src /usr/src/local/xft-emacs) { cdpath[$cdpath[(i)$p]]=() }
+
+#export emacsdir=/usr/src/local/xft-emacs/emacs-head
+export EDITOR='connect-emacs emacs'
+export VISUAL=$EDITOR
+
+fpath=(~/projects/sunflare/scripts $fpath)
+path=(~/projects/sunflare/scripts $path)

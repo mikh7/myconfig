@@ -1,0 +1,43 @@
+#!/bin/zsh
+
+if [ "$1" = "" ] ; then
+  echo "Usage: $0 <crewid>"
+  exit 1
+fi
+
+saveAsmt=save_ex_asmt_$1
+saveAsmtHist=save_ex_asmthist_$1
+saveOrigAsmt=save_ex_origasmt_$1
+saveTass=save_ex_tass_$1
+saveTradeAsmt=save_ex_tasmt_$1
+saveTrade=save_ex_trade_$1
+cmseq="(select cmseqnumber from crewmember where cmidnumber = $1)"
+asmtseqnos="(select asmtseqnumber from $saveAsmt)"
+trdseqnos="(select trdseqnumber from $saveTrade)"
+cmasmts="(select asmtseqnumber from assignment where cmseqnumber=$cmseq)"
+cmtrds="(select trdseqnumber from trade where cmseqnumbera=$cmseq or cmseqnumberb=$cmseq)"
+ahseqnos="(select asmthistseqnumber from $saveAsmtHist)"
+
+cat > tmp$$.sql << EOF
+  delete from tass_offset where asmtseqnumber in $cmasmts;
+  delete from assignment_history where asmtseqnumber in $cmasmts
+    or asmthistseqnumber in $ahseqnos;
+  delete from cm_orig_asmt where cmseqnumber=$cmseq
+  or asmtseqnumber in $cmasmts;
+  delete from assignment where asmtseqnumber in $cmasmts
+  or asmtseqnumber in $asmtseqnos;
+  delete from trade_assignment where trdseqnumber in $cmtrds;
+  delete from trade where trdseqnumber in $cmtrds;
+  insert into assignment select * from $saveAsmt;
+  insert into assignment_history select * from $saveAsmtHist;
+  insert into cm_orig_asmt select * from $saveOrigAsmt;
+  insert into tass_offset select * from $saveTass;
+  insert into trade select * from $saveTrade;
+  insert into trade_assignment select * from $saveTradeAsmt;
+  commit;
+  quit;
+EOF
+#cat tmp$$.sql
+sqlplus badev1/badev1@ORADB @ tmp$$.sql
+rm tmp$$.sql
+

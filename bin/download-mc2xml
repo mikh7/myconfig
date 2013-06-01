@@ -1,0 +1,14 @@
+#!/bin/sh
+
+PATH=~/myconfig/bin:/usr/local/bin:$PATH
+
+# make and/or cd to .zap2xml the directory
+[ -d ~/.mc2xml ] || mkdir ~/.mc2xml
+cd ~/.mc2xml || ( echo Unable to cd to ~/.mc2xml && exit )
+# sleep randomly from 0 to 59 mins
+random -e 60
+#sleep $(($? * 60))
+# dowload xmltv.xml
+if mc2xml ; then
+   mythfilldatabase --refresh-all --update --file 3 ./xmltv.xml || ( echo Unable to run mythfilldatabase && exit )
+fi

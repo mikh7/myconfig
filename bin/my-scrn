@@ -1,0 +1,73 @@
+#!/bin/zsh
+
+setopt nonomatch
+setopt nullglob
+unset DISPLAY
+unset SESSION_MANAGER
+unset KDE_FULL_SESSION
+unset DBUS_SESSION_BUS_ADDRESS
+
+if [[ $TERM == xterm ]] ; then
+  export TERM=xterm-256color
+fi
+
+case $OSTYPE ; in
+  aix*)    
+                screens=/tmp/screens 
+                ;;
+  linux*)  
+                if [[ -f /etc/redhat-release ]] ; then
+                  screens=/tmp/uscreens
+                else
+                  screens=/var/run/uscreens 
+                fi
+                ;;
+  *) 
+                echo "Dont know your OS"
+                exit 2
+                ;;
+esac
+
+if [[ ! -d $screens ]] ; then
+  echo "Screens directory '$screens' does not exist"
+  exit 2
+fi
+
+name=$1
+screendir=$screens/S-$USER
+
+if [[ -z "$name" ]]; then 
+    echo "Usage: my-screen <name>" >&2
+    exit 1
+fi
+
+function num_args {
+  print $#*
+}
+
+function have_files {
+  local num=$(num_args $*)
+  [[ $num -gt 0 ]] 
+}
+
+if ! have_files $screendir/*.$name ; then
+  # start it
+  screen -dmS $name
+  # wait for it to appear
+  for ((cnt=0; cnt < 5; cnt++)) ; do
+    if have_files $screendir/*.$name; then break ;fi
+  done
+  if [[ cnt == 5 ]] ; then
+    After waiting 5 seconds unable to find the screen socket in $screendir
+    exit 3
+  fi
+  # attach it
+  screen -rS $name
+else
+  # its there, check if attached
+  if screen -list $name | grep -q Attached ; then
+    screen -d $name
+    sleep 1
+  fi
+  screen -rS $name
+fi

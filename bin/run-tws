@@ -1,0 +1,5 @@
+#!/bin/zsh
+
+cd ~/IBJts
+java -cp jts-exploded:hsqldb.jar:jcommon-1.0.12.jar:jfreechart-1.0.9.jar:jhall.jar:other.jar:rss.jar -Xmx2048M -XX:MaxPermSize=512M jclient.LoginFrame .
+

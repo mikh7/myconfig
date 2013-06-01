@@ -1,0 +1,865 @@
+#!/usr/bin/perl -w -s
+
+use FindBin;
+use lib "$FindBin::Bin";
+
+
+use  TokenParser;
+# refactor the cpp file out of the .h file
+
+package RFTokenParser;
+use base qw(TokenParser);
+
+sub skipUntilMatchingBrace
+{
+  my $self = shift;
+  my $tok = $self->{token};
+  my $startLine = $self->{lineNum};
+  my @ret = ($self->last_token());
+  my $nok = $tok;
+  $nok =~ tr/\{\[\(\</\}\]\)\>/;
+  while ($self->{token} ne $nok)
+  {
+    $self->nextToken();
+    die "Unexpected EOF while scanning for closing $nok opened at line $startLine"
+      if $self->{type} eq 'EOF';
+    last if $self->{token} eq $nok;
+    if ($self->{token} eq $tok)
+    {
+      push @ret, $self->skipUntilMatchingBrace();
+    }
+    else {
+      push @ret, $self->last_token();
+    }
+  }
+  push @ret, $self->last_token();
+  $self->nextTokenSkipComments();
+  return @ret;
+}
+
+# parse the type of variable or return type of function
+# or the type of parameter inside of the prototype
+# when called first token should be already parsed
+# last token parsed will be
+# either of:
+#   (
+#   ,
+#   ;
+#   )
+# 
+sub get_type
+{
+  my $self = shift;
+  my @ret;
+  while ($self->{token} ne '('  && $self->{token} ne ','
+    && $self->{token} ne ';'
+    && $self->{token} ne '='
+    && $self->{token} ne ')')
+  {
+    push @ret, $self->last_token();
+    my $operator = ($self->{token} eq "operator"
+      or $self->{token} =~ /::operator$/);
+
+    my $type = $self->nextTokenSkipComments();
+    if ($self->{token} eq '[')
+    {
+      if ($operator) {
+        $self->merge_token($ret[$#ret], $self->last_token());
+        $self->expectToken("]");
+        $self->merge_token($ret[$#ret], $self->last_token());
+        $type = $self->nextTokenSkipComments();
+      } else {
+        push @ret, $self->skipUntilMatchingBrace();
+      }
+      next;
+    }
+    if ($self->{token} eq '<')
+    {
+      push @ret, $self->skipUntilMatchingBrace();
+      next;
+    }
+    if ($self->{type} eq 'punct')
+    {
+      if ($operator) {
+        $self->merge_token($ret[$#ret], $self->last_token());
+        if ($self->{token} eq '(') {
+          $self->expectToken(")");
+          $self->merge_token($ret[$#ret], $self->last_token());
+        }
+        $type = $self->nextTokenSkipComments();
+        next;
+      }
+      if ($self->{token} !~ /^[(),=;&*~]$/)
+      {
+        die "Unexpected $$self{token} at line $self->{lineNum}\n";
+      }
+    }
+    elsif ($self->{type} ne 'ident')
+    {
+      die "Unexpected $self->{type} $$self{token} at line $self->{lineNum}\n";
+    }
+  }
+  return @ret;
+}
+
+sub find_remove_tok
+{
+  my $ref = shift;
+  my $what = shift;
+  my $i;
+  for ($i=0; $i <= $#{$ref}; $i++)
+  {
+    if ($ref->[$i]->{token} eq $what)
+    {
+      return splice @{$ref}, $i, 1;
+    }
+  }
+  return undef;
+}
+
+sub skipUntil
+{
+  my $self = shift;
+  my $what = shift;
+  while ($self->{token} ne $what)
+  {
+    die "Unexpected EOF while skipping until $what at line $self->{lineNum}\n"
+      if $self->{type} eq 'EOF';
+    if ($self->{token} eq '('
+        or $self->{token} eq '['
+        or $self->{token} eq '{')
+    {
+      $self->skipUntilMatchingBrace();
+    }
+    else
+    {
+      $self->nextTokenSkipComments();
+    }
+  }
+  $self->nextTokenSkipComments();
+}
+
+sub expectToken
+{
+  my $self = shift;
+  my $type_expected = shift;
+  my $what_expected = shift;
+  my $type = $self->nextTokenSkipComments();
+  $type eq $type_expected or die "Expecting $type_expected at line $self->{lineNum}\n";
+  if (defined $what_expected)
+  {
+    $self->{token} eq $what_expected or die "Expecting $what_expected at line $self->{lineNum}\n";
+  }
+  return $self->{token};
+}
+
+sub parseFile
+{
+  my $self = shift;
+  my $type;
+  my $classes = [];
+  my $functions = [];
+  $self->{classes} = $classes;
+  $self->{functions} = $functions;
+  $self->{returnEof} = 1;
+  $type = $self->nextTokenSkipComments();
+  while (1)
+  {
+    if ($self->{token} eq 'class')
+    {
+      my $class = $self->parseClass();
+      push @{$classes}, $class;
+    }
+    elsif ($self->{token} eq 'struct') {
+      if ($self->nextTokenSkipComments() eq 'ident') {
+        $self->expectToken('punct');
+      } else {
+        $self->expectToken('punct');
+      }
+      if ($self->{token} eq '{') {
+        $self->skipUntilMatchingBrace();
+      }
+      next;
+    }
+    elsif ($self->{token} eq 'typedef')
+    {
+      $self->skipUntil(';');
+      next;
+    }
+    elsif ($self->{type} eq 'ident')
+    {
+      my @type = $self->get_type();
+      if ($self->{token} eq ';')
+      {
+        # must be the variable declaration
+        $type = $self->nextTokenSkipComments();
+        next;
+      }
+      elsif ($self->{token} eq ',')
+      {
+        # must be the multiple variable declaration
+        $self->skipUntil(';');
+        next; 
+      }
+      elsif ($self->{token} eq '(')
+      {
+        my $method = $self->getMethod(undef, @type);
+        push @{$functions}, $method;
+      }
+      elsif ($self->{token} eq '=') {
+        $self->skipUntil(';');
+        next; 
+      }
+      else
+      {
+        die "get_type return with last token $$self{token} at line $self->{lineNum}\n";
+      }
+    }
+    elsif ($type eq 'EOF')
+    {
+      last;
+    }
+    else
+    {
+      $type = $self->nextTokenSkipComments();
+    }
+  }
+}
+
+sub parseClass
+{
+  my $self = shift;
+  my $name = $self->expectToken('ident');
+  my $tmp = $self->expectToken('punct');
+  return if $tmp eq ';';
+  my $methods = [];
+  my $extends = [];
+  my $ret = {
+    name => $name,
+    methods => $methods,
+    extends => $extends
+  };
+  if ($tmp eq ':')
+  {
+    while (1)
+    {
+      my $e = {
+      };
+      $tmp = $self->expectToken('ident');
+      if ($tmp eq 'public' || $tmp eq 'protected')
+      {
+        $e->{$tmp} = 1;
+        $tmp = $self->expectToken('ident')
+      }
+      $e->{name} = $tmp;
+      push @{$extends}, $e;
+      $tmp = $self->expectToken('punct');
+      next if $tmp eq ',';
+      last;
+    }
+  }
+  $tmp eq '{' or die "Expecting { at line $self->{lineNum}\n";
+  # parse the class members
+  $type = $self->nextTokenSkipComments();
+  while (1)
+  {
+    my $con_or_des = '';
+    
+    if ($self->{token} eq '}')
+    {
+      $self->nextTokenSkipComments();
+      last;
+    }
+    elsif ($type eq 'cpp')
+    {
+      $type = $self->nextTokenSkipComments();
+      next;
+    }
+    elsif ($type ne 'ident')
+    {
+      die "Unexpected $type $$self{token} at line $self->{lineNum}\n";
+    }
+
+    # handle scope
+    if ($self->{token} eq 'public'
+        or $self->{token} eq 'private' 
+        or $self->{token} eq 'signals' 
+        or $self->{token} eq 'protected')
+    {
+      $type = $self->nextTokenSkipComments();
+      if ($self->{token} eq 'slots' or $self->{token} eq 'signals')
+      {
+        $type = $self->nextTokenSkipComments();
+      }
+      die "Expecting : at line $self->{lineNum}"
+      if ($self->{token} ne ':');
+      $type = $self->nextTokenSkipComments();
+      next;
+    }
+    if ($self->{token} =~ /^Q_OB/)
+    {
+      $type = $self->nextTokenSkipComments();
+      next;
+    }
+    # collect the attributes of instance variable or method
+    my @type = $self->get_type();
+    if ($self->{token} eq ';')
+    {
+      # must be the variable declaration
+      $type = $self->nextTokenSkipComments();
+      next;
+    }
+    elsif ($self->{token} eq ',')
+    {
+      # must be the multiple variable declaration
+      $self->skipUntil(';');
+      next; 
+    }
+    elsif ($self->{token} eq '(')
+    {
+      my $method = $self->getMethod($name, @type);
+      push @{$ret->{methods}}, $method;
+    }
+    else
+    {
+      die "get_type return with last token $$self{token} at line $self->{lineNum}\n";
+    }
+  }
+  return $ret;
+}
+
+sub getMethod
+{
+  my $self = shift;
+  my $className = shift;
+  my @type = @_;
+  # its a method, get he parameters
+  my $headerFirstToken = $type[0];
+  my $methodName = pop @type;
+  my $params = [];
+  my $parsingClass = (defined $className);
+  my $name = $methodName->{token};
+  if ($name =~ /^(.+)::(.+)$/)
+  {
+    if ($parsingClass and $1 ne $className) {
+      die "Class name $1 is different from class $className at line $self->{lineNum}";
+    }
+    $className = $1;
+    $name = $2;
+  }
+  my $method = {
+    nameToken => $methodName,
+    name => $name,
+    className => $className,
+    params => $params,
+    virtual => find_remove_tok(\@type, 'virtual'),
+    static => find_remove_tok(\@type, 'static'),
+    inline => find_remove_tok(\@type, 'inline'),
+    ret => [@type],
+    type => '',
+    open => $self->last_token(),
+    headerFirstToken => $headerFirstToken
+  };
+  
+  if ($#type == -1)
+  {
+    die "Missing funtion return type at line $self->{lineNum}\n"
+      if not defined $className;
+    my $theName = $name;
+    my $type = "Constructor";
+    $method->{type} = 'constructor';
+    if ($theName =~ s/^~//)
+    {
+      $type = 'destructor';
+      $method->{type} = 'destructor';
+    }
+    die "$type $name doesn'n match class name $className at line $self->{lineNum}\n" if $className ne $theName;
+  }
+  my $type = $self->nextTokenSkipComments();
+  if ($type eq 'ident')
+  {
+    # get the parameters
+    while (1)
+    {
+      my $param = {};
+      my @type = $self->get_type();
+      die "Expecting ) or , at line $self->{lineNum}\n"
+      if ($self->{token} ne ',' 
+          and $self->{token} ne ')'
+          and $self->{token} ne '=');
+      if ($self->{token} eq '=')
+      {
+        $self->nextTokenSkipComments();
+        $param->{default} = $self->last_token();
+        $self->nextTokenSkipComments();
+        die "Expecting ) or , at line $self->{lineNum}\n"
+        if ($self->{token} ne ',' 
+            and $self->{token} ne ')');
+      }
+      die "Expecting parameter type at line $self->{lineNum}\n"
+        if ($#type ==  -1);
+      my $last = $type[$#type]->{token};
+      my $paramName;
+      if (
+        $#type == 0
+        || $last eq 'int'
+        || $last eq 'unsigned'
+        || $last eq 'signed'
+        || $last eq 'long'
+        || $last eq 'short'
+        || $last eq 'char'
+        || $last eq 'float'
+        || $last eq 'double'
+        || $last eq 'bool'
+        || $last eq '*'
+        || $last eq '&')
+      {
+        $paramName = undef;
+      }
+      else
+      {
+        $paramName = pop @type;
+      }
+      $param->{name} = $paramName;
+      $param->{type} = [@type];
+      push @{$params}, $param;
+
+      if ($self->{token} eq ',')
+      {
+        $type = $self->nextTokenSkipComments();
+        next;
+      }
+      last;
+    }
+  }
+  elsif ($self->{token} ne ')')
+  {
+    die "Expecting ) at line $self->{lineNum}\n"
+  }
+  $method->{close} = $method->{headerLastToken} = $self->last_token();
+  $type = $self->nextTokenSkipComments();
+
+  # after the method parameter list
+  # will be either \{ for the inline method or
+  # ; for the prototype method
+
+  while ($self->{type} eq 'ident')
+  {
+    if ($self->{token} eq 'const')
+    {
+      die "Need to use const before throw at line $self->{lineNum}\n"
+      if defined $method->{throw};
+      die "Double const at line $self->{lineNum}\n"
+      if defined $method->{const};
+      $method->{const} = $method->{headerLastToken} = $self->last_token();
+      $type = $self->nextTokenSkipComments();
+    }
+    elsif ($self->{token} eq 'throw')
+    {
+      die "Double throw at line $self->{lineNum}\n"
+      if defined $method->{throw};
+      my $throwClause = {
+        open => $self->last_token(),
+        list => []
+      };
+      $self->expectToken('punct', '(');
+      $self->nextTokenSkipComments();
+      while ($self->{token} ne ')')
+      {
+        $self->{type} eq 'ident' 
+          or die "Expecting exception name at line $self->{lineNum}\n"; 
+        push @{$throwClause->{list}}, $self->last_token();
+        $self->expectToken('punct');
+        $self->{token} eq ',' or $self->{token} eq ')' or die
+           "Expecting ) or , at line $self->{lineNum}\n";
+        $self->nextTokenSkipComments() if $self->{token} eq ',';
+      }
+      $throwClause->{close} = $method->{headerLastToken} = $self->last_token();
+      $method->{throw} = $throwClause;
+      $self->nextTokenSkipComments();
+    }
+  }
+
+  if ($self->{token} eq ':' && $method->{type} eq 'constructor')
+  {
+    while (1)
+    {
+      $self->expectToken('ident');
+      $self->expectToken('punct', '(');
+      $self->skipUntilMatchingBrace();
+      last if ($self->{token} ne ',');
+    }
+  }
+
+  if ($self->{token} eq '=')
+  {
+    $self->expectToken('number', '0');
+    $method->{abstract} = 1;
+    $self->nextTokenSkipComments();
+  }
+
+  if ($self->{token} eq '{')
+  {
+    $method->{bodyFirstToken} = $self->last_token();
+    $self->skipUntilMatchingBrace();
+    $method->{bodyLastToken} = $self->last_token();
+  }
+  elsif ($self->{token} eq ';')
+  {
+    $type = $self->nextTokenSkipComments();
+  }
+  else
+  {
+    die "Expecting { or ; at line $self->{lineNum}\n"
+  }
+  #print "Method " . methodToString($method) . "\n";
+  return $method;
+}
+
+sub tok_array_to_string
+{
+  my $tok_array = shift;
+  my $sep = shift;
+  $sep = ' ' if not defined $sep;
+  my @tmp = map { $_->{token} } @{$tok_array};
+  return join $sep, @tmp;
+}
+
+sub methodToString
+{
+  my $method = shift;
+  my @tmp;
+  push @tmp, $method->{virtual} if defined $method->{virtual};
+  push @tmp, $method->{static} if defined $method->{static};
+  push @tmp, $method->{inline} if defined $method->{inline};
+  push @tmp, @{$method->{ret}};
+  push @tmp, $method->{nameToken};
+  my $ret_and_name = tok_array_to_string(\@tmp);
+  @tmp = ();
+  foreach my $param (@{$method->{params}})
+  {
+    my $type = tok_array_to_string($param->{type});
+    my $name = "";
+    $name = ' ' . $param->{name}->{token}
+      if (defined $param->{name});
+    push @tmp, $type . $name;
+    $tmp[$#tmp] .= " = $param->{default}->{token}"
+      if defined $param->{default};
+  }
+  my $params = join ', ', @tmp;
+  my $const = "";
+  $const = ' ' . $method->{const}->{token}
+    if (defined $method->{const});
+  my $throw = '';
+  if (defined $method->{throw})
+  {
+    $throw = ' throw (' . tok_array_to_string($method->{throw}->{list}, ',')
+      . ')';
+  }
+  my $abstract = '';
+  $abstract = ' = 0' if (defined $method->{abstract});
+  return "$ret_and_name($params)$const$throw$abstract";
+}
+
+sub usage
+{
+  print STDERR "Usage: $0 <header file> [<cpp file>]\n";
+  exit 1;
+}
+
+sub read_file
+{
+  my $file = shift;
+  my $t = RFTokenParser->newFile($file);
+  $t->parseFile();
+  return $t;
+}
+
+sub main {
+  if (! defined $ARGV[0] || ! -f $ARGV[0]) {
+    usage();
+  }
+  foreach my $fname (@ARGV) {
+    if ($fname =~ /^(.+)\.h$/) {
+      my $cpp_fname = "$1.cpp";
+      process_pair($fname, $cpp_fname, 1);
+    } elsif ($fname =~ /^(.+)\.cpp/) {
+      my $h_fname = "$1.h";
+      process_pair($h_fname. $fname, 0);
+    }
+  }
+}
+
+sub compare_tokarray {
+  my ($arr1, $arr2) = @_;
+  if ($#{$arr1} != $#{$arr2}) {
+    return $#{$arr1} - $#{$arr2};
+  }
+  my $i;
+  for ($i = 0; $i < $#{$arr1}; $i++) {
+    if ($arr1->[$i]->{token} ne $arr2->[$i]->{token}) {
+      return -1;
+    }
+  }
+  return 0;
+}
+
+sub get_method_closeness_score {
+  my ($m1, $m2) = @_;
+  my $ret = 0;
+  my $total_match = 1;
+  if (!compare_tokarray($m1->{ret}, $m2->{ret})) {
+    $ret++;
+  } else {
+    $total_match = 0;
+  }
+  my $i;
+  my $len1 = $#{$m1->{params}};
+  my $len2 = $#{$m2->{params}};
+  my $len = $len1 > $len2 ? $len1 : $len2;
+  for ($i = 0; $i <= $len; $i++) {
+    if ($i <= $len1 and $i <= $len2) {
+      if (!compare_tokarray($m1->{params}->[$i]->{type}, 
+          $m2->{params}->[$i]->{type})) {
+        $ret++;
+      } else {
+        $total_match = 0;
+      }
+    }
+  }
+  if ((defined $m1->{const} and defined $m2->{const})
+      or (not defined $m1->{const} and not defined $m2->{const})) {
+    $ret++;
+  } else {
+    $total_match = 0;
+  }
+  if (not defined $m1->{throw} and not defined $m2->{throw}) {
+    $ret++
+  } elsif (defined $m1->{throw} and defined $m2->{throw}) {
+    if (!compare_tokarray($m1->{throw}->{list}, $m2->{throw}->{list})) {
+      $ret++;
+    } else {
+      $total_match = 0;
+    }
+  } else {
+    $total_match = 0;
+  }
+  $ret = 1000 if $total_match;
+  return $ret;
+}
+
+
+sub find_closest_method {
+  my ($m, $list) = @_;
+  my $closest;
+  my $closest_score;
+  foreach my $im (@{$list}) {
+    if (defined $m->{className} and defined $im->{className} 
+        and $m->{className} eq $im->{className}
+        and $m->{name} eq $im->{name}) {
+      my $score = get_method_closeness_score($m, $im);
+      if ($score == 1000) {
+        return 'ok';
+      }
+      if (!defined $closest or $score > $closest_score) {
+        $closest = $im;
+        $closest_score = $score;
+      }
+    }
+  }
+  return $closest;
+}
+
+sub ask {
+  my $prompt = shift;
+  return 1 if defined $main::y and $main::y == 1;
+  local $| = 1;
+  print "$prompt ";
+  my $resp = <STDIN>;
+  if ($resp =~ /^y/i) {
+    return 1;
+  }
+  return 0;
+}
+
+sub extract_text_between_tokens {
+  my $self = shift;
+  my ($first, $last) = @_;
+  my $ret = '';
+  my $i;
+  for ($i=$first->{startLine}; 
+    $i <= $last->{endLine}; 
+    $i++) {
+    my $line = $self->{text}->[$i-1];
+    my ($col1, $col2) = (0, length($line));
+    if ($i == $first->{startLine}) {
+      $col1 = $first->{startCol};
+    }
+    if ($i == $last->{endLine}) {
+      $col2 = $last->{endCol};
+    }
+    $line = substr($line, $col1, $col2 - $col1);
+    if ($ret ne '') {
+      #  $ret .= "\n";
+    }
+    $ret .= "$line";
+  }
+  return $ret;
+}
+
+sub get_method_ret_type_string {
+  my $self = shift;
+  my $h_file = shift;
+  my $method = shift;
+  my @ret;
+  push @ret, @{$method->{ret}};
+  if ($#ret == -1) {
+    return "";
+  }
+  return $h_file->extract_text_between_tokens($ret[0], $ret[$#ret]);
+}
+
+sub get_method_params_string {
+  my $self = shift;
+  my $h_file = shift;
+  my $method = shift;
+  my @params = @{$method->{params}};
+  my $first_token;
+  my $last_token;
+  my $ret = '(';
+  while ($#params != -1) {
+    my $p = shift @params;
+    $first_token = $p->{type}->[0] if not defined $first_token;
+    $last_token = $p->{type}->[$#{$p->{type}}];
+    $last_token = $p->{name} if defined $p->{name};
+    if (defined $p->{default}) {
+      $ret .= $h_file->extract_text_between_tokens($first_token, $last_token);
+      $ret .= ", " if $#params != -1;
+      $first_token = undef;
+      $last_token = undef;
+    }
+  }
+  if (defined $first_token) {
+    $ret .= $h_file->extract_text_between_tokens($first_token, $last_token);
+  }
+  $ret .= ')';
+  $ret .= ' const' if defined $method->{const};
+  if (defined $method->{throw}) {
+    my $throw = 'throw (' . tok_array_to_string($method->{throw}->{list}, ',')
+      . ')';
+    $ret .= "\n    $throw";
+  }
+  return $ret;
+}
+
+sub make_method_header {
+  my $self = shift;
+  my $h_file = shift;
+  my $m = shift;
+  my $ret_type_str = $self->get_method_ret_type_string($h_file, $m);
+  my $params_str = $self->get_method_params_string($h_file, $m);
+  my $ret = '';
+
+  if ($ret_type_str ne '') {
+    $ret .= "$ret_type_str ";
+  }
+  $ret .= "$m->{className}::$m->{name} ";
+  $ret .= "$params_str";
+  my @tmp = split /\n/, $ret;
+  my $i;
+  for ($i = 1; $i < $#tmp; $i++) {
+    $tmp[$i] =~ s/^\s*/    /;
+  }
+  return join "\n", @tmp;
+}
+
+sub replace_method_header {
+  my $self = shift;
+  my $method = shift;
+  my $text = shift;
+  my @tmp = split /\n/, $text;
+  my ($first, $last) = ($method->{headerFirstToken}, $method->{headerLastToken});
+  my $orig_header_height = $last->{endLine} - $first->{startLine} + 1;
+  my $height_diff = $#tmp+1 - $orig_header_height;
+  my $tmp = substr($self->{text}->[$first->{startLine}-1], 0, $first->{startCol});
+  $tmp[0] = "$tmp$tmp[0]";
+  $tmp = substr($self->{text}->[$last->{endLine}-1], $last->{endCol}, 1000);
+  $tmp[$#tmp] .= $tmp;
+  foreach (@tmp) {$_ .= "\n";}
+  splice @{$self->{text}}, $first->{startLine}-1, $orig_header_height, @tmp;
+  my $doit = 0;
+  foreach my $m (@{$self->{functions}}) {
+    if ($m eq $method) {
+      $doit = 1;
+      next;
+    }
+    if ($doit) {
+      $m->{headerFirstToken}->{startLine} += $height_diff;
+      $m->{headerFirstToken}->{endLine} += $height_diff;
+      $m->{headerLastToken}->{startLine} += $height_diff;
+      $m->{headerLastToken}->{endLine} += $height_diff;
+    }
+  }
+  $self->{updated} = 1;
+}
+
+sub process_pair {
+  my ($h_fname, $cpp_fname, $fix_cpp) = @_;
+  my ($h_file, $cpp_file);
+  if ($fix_cpp) {
+    $h_file = read_file($h_fname);
+    if (-f $cpp_fname) {
+      $cpp_file = read_file($cpp_fname);
+    } else {
+      if (ask("$cpp_fname does not exists, create?")) {
+        open OUT, ">$cpp_fname" or die "Unable to create $cpp_fname: $!";
+        print OUT qq~\n#include "$h_fname"\n\n~;
+        close OUT;
+        $cpp_file = read_file($cpp_fname);
+      } else {
+        return;
+      }
+    }
+    foreach my $c (@{$h_file->{classes}}) {
+      foreach my $m (@{$c->{methods}}) {
+        next if defined $m->{abstract};
+        next if defined $m->{bodyFirstToken};
+        my $method_str = RFTokenParser::methodToString($m);
+        my $cpp_method = find_closest_method($m, $cpp_file->{functions});
+        if (!defined $cpp_method) {
+          if (ask("Method $method_str is not defined, create?")) {
+            my $text = $cpp_file->make_method_header($h_file, $m);
+            $text = "$text\n{\n}\n\n";
+            my @text = split /\n/, $text;
+            foreach (@text) {$_ .= "\n";}
+            push @{$cpp_file->{text}}, $text;
+            $cpp_file->{updated} = 1;
+          }
+        } elsif ($cpp_method eq 'ok') {
+          next;
+        } else {
+          my $method_body_str = RFTokenParser::methodToString($cpp_method);
+          if (ask("Method $method_str does not match implementation $method_body_str, fix?")) {
+            my $text = $cpp_file->make_method_header($h_file, $m);
+            $cpp_file->replace_method_header($cpp_method, $text);
+          }
+        }
+      }
+    }
+    if ($cpp_file->{updated}) {
+      open OUT, ">$cpp_file->{fname}" or die "$cpp_file->{fname}: $!";
+      print OUT @{$cpp_file->{text}};
+      close OUT;
+    }
+  } else {
+    $cpp_file = read_file($cpp_fname);
+    if (-f $h_fname) {
+      $h_file = read_file($h_fname);
+    } else {
+      # create the h file here
+    }
+  }
+}
+
+main();
+

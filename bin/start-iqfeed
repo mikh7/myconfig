@@ -1,0 +1,30 @@
+#!/bin/sh
+
+PATH=~/myconfig/bin:/usr/local/bin:$PATH
+
+. shell-lib-process.sh
+
+# stop the iqfeed process in case its running
+# TODO: replace with pgrep
+process_pids_matching \*taDriver\*
+for pid in ${pids[*]} ; do
+  echo IQFeed taDriver was running with pid $pid - sending kill -9...
+  kill -9 $pid
+done
+
+# restart the Win32 one
+echo Restarting Win32 IQFeed process
+touch ~/.restart_iqfeed
+sleep 5
+# start taDriver
+echo Starting iqfeed
+cd ~/TA
+setsid ./taDriver.pl >1 2>&1 &
+sleep 10
+# add symbols
+echo Adding symbols
+echo addIQFeed | nc -vv localhost 8887
+echo addFile /home/max/nasdaq100.txt | nc -vv localhost 8887
+echo addFile /home/max/indexes.txt | nc -vv localhost 8887
+echo test recon timer | nc -vv localhost 8887
+echo Finished starting iqfeed

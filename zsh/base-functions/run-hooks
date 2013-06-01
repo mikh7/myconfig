@@ -1,0 +1,9 @@
+# (run-hooks hook-var &rest args)
+function run-hooks {
+    local hook_var=$1
+    local hook
+    shift
+    for hook in ${(P)hook_var} ; do
+        eval $hook ${(q)*}
+    done
+}

@@ -1,0 +1,6 @@
+#!/bin/sh
+
+PATH=~/myconfig/bin:/usr/local/bin:$PATH
+
+# link MythTV shows to the directory
+mythrename.pl --link ~/tv

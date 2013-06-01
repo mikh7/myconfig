@@ -1,0 +1,42 @@
+typeset -g _do_reload_config=0
+
+add-hook precmd_hook
+add-hook preexec_hook
+add-hook chpwd_hook
+add-hook periodic_hook
+
+function _do_reload_config {
+    _do_reload_config=0
+    echo Reloading zsh files
+    . ~/.zshenv
+    [[ -o interactive ]] && . ~/.zshrc
+    setopt no_local_options
+}
+
+function precmd {
+    emulate -L zsh
+    run-hooks precmd_hook $@
+    if [[ $_do_reload_config == 1 ]] ; then
+        setopt no_local_options
+        _do_reload_config
+    fi
+}
+
+function preexec {
+    emulate -L zsh
+    run-hooks preexec_hook $@
+    if [[ $_do_reload_config == 1 ]] ; then
+        setopt no_local_options
+        _do_reload_config
+    fi
+}
+
+function chpwd {
+    emulate -L zsh
+    run-hooks chpwd_hook $@
+}
+
+function periodic {
+    emulate -L zsh
+    run-hooks periodic_hook $@
+}

@@ -1,0 +1,54 @@
+if [[ $TERM == xterm* ]] ; then
+  export TERMINFO=~/.terminfo
+fi
+function alias() {
+  emulate -L zsh
+  if [[ $1 == -x ]] ; then
+    shift
+  fi
+  builtin alias $@
+}
+builtin typeset -ga orig_fpath orig_path
+if [[ $#orig_fpath == 0 ]] ; then
+  orig_fpath=($fpath)
+  orig_path=($path)
+fi
+function put_back_orig_path {
+  emulate -L zsh
+  fpath=($orig_fpath $fpath)
+  path=($orig_path $path)
+}
+emulate ksh
+# When loading /etc/profile for the 2nd time LOGNAME disappears, I have no idea 
+# how and why
+if [ -z "$KSH_PROFILE_READ" ] ; then
+  . /etc/profile
+  KSH_PROFILE_READ=true
+fi
+autoload -k alnews chgsbenv sbsdata sbsdefaults aw pvcscfg cvscfg 
+autoload -k pvcslsbranch pvcsvers
+. ~/.profile
+. ~/.kshrc
+emulate zsh
+setopt nonomatch
+### autoload all the sbs ksh functions
+for p in $fpath ; do
+  if [[ $p == ${GVSBS}* ]] ; then
+    for file in $p/* ; do
+      autoload -k $file:t
+    done
+  fi
+done
+put_back_orig_path
+emulate ksh
+for f in ~/myconfig/bin/sbs-* ; do
+  . $f
+done
+# autoload these
+#set -x
+#for f in _get _put _vcs _vlog _vdiff ; do
+#  $f 1>&1 2>/dev/null
+#done
+#set +x
+
+export SHELL=/bin/zsh

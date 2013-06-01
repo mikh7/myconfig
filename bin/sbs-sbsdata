@@ -1,0 +1,88 @@
+#!/bin/ksh
+function sbsdata #the sbs group command on prime
+{
+  typeset  -l oldgr oldsgr
+  typeset -l newgr newsgr
+  typeset varx= groupdo=yes
+  integer irtn=0 shiftcount
+  set -a
+  if [ "$#" -eq 0 ]
+  then
+    set -- -h
+  fi
+  while getopts :hlix varx
+  do
+    case "$varx"
+      in
+      l) print Available data group names are:
+      ls -C ${GVSBS}work/wheredata/where.* |
+      sed "s?${GVSBS}work/wheredata/where\.?   ?g" |
+      tr '[a-z]' '[A-Z]'
+      return 0
+      ;;
+      i) groupdo=no  #initial login process, do not setgroups
+      ;;
+      x) set -x
+      ;;
+      ? | h) print Usage: sbsdata group '[subgroup]' 
+      print subgroup is optional and defaults to $GVSGR
+      print Example: sbsdata sb skeds OR sbsdata sbskeds
+      print "       sbsdata -l   to obtain list of groups"
+      print "       sbsdata -h   to list this help"
+      print This command changes key evnvironmental pointers to data.
+      print For example it may be used to change from production data to test data
+      print Check with SBS for specific usage.
+      return 0 ;;
+    esac
+  done
+  shiftcount=$OPTIND-1
+  shift $shiftcount
+  #trap "print $0 encountered an error" ERR
+  newgr=$1
+  readonly | grep -s GVGROUP
+  # Some people cannot change major groups
+  if [ $? -eq 0 ]
+  then
+    newgr=$GVGROUP
+  fi
+  newsgr=$2
+  if [ -z  "$newsgr" -a "${#newgr}" -le 2 ]
+  then 
+    newsgr=$GVSGR
+  fi
+  oldgr=$GVGROUP
+  oldsgr=$GVSGR
+  if [ -r ${GVSBS}work/wheredata/where.${newgr}${newsgr} ]
+  then
+    trap '' QUIT
+    #trap "return" ERR
+    . ${GVSBS}work/wheredata/where.${newgr}${newsgr}
+    if [ "$?" -ne 0 ]
+    then
+      irtn=1
+      sbsdata $oldgr $oldsgr
+      if [ "$?" -ne 0 ]
+      then
+        print Unable to restore old data settings
+        irtn=4
+      fi
+    fi
+  else
+    irtn=2
+  fi
+  if [ "$irtn" -ne 0 ]
+  then
+    print Data for $newgr $newsgr not found
+  fi
+  if [ $irtn = 0 -a $groupdo = yes ]
+  then
+    if [ -z "$GVUNIXGRP" ]
+    then
+      :
+    else
+      setgroups $GVUNIVGRP
+    fi
+  fi
+  put_back_orig_path
+  return $irtn
+}

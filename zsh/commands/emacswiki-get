@@ -1,0 +1,24 @@
+#!/bin/zsh
+
+if [[ -z $1 ]] ; then
+    print "Usage: $0 <file.el>"
+    exit 1
+fi
+file=$1
+
+rm -f $file
+wget -O $file http://www.emacswiki.org/emacs-en/download/$file:t
+
+
+
+    
+    
+
+    
+    
+
+
+    
+
+    
+

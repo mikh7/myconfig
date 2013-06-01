@@ -1,0 +1,185 @@
+;; -*-mode: Emacs-Lisp; auto-recompile:t; outline-minor-mode:t-*- 
+;; Time-stamp: <2005-04-02 20:26:14 (djcb)>
+;;
+;; .emacs for Dirk-Jan C. Binnema <djcb@djcbsoftware.nl>
+;; works for GNU/Emacs 21.x
+
+
+;; * my include paths
+(add-to-list 'load-path "~/.emacs-lisp/misc/")
+(add-to-list 'load-path "~/.emacs-lisp/tiny/")
+(add-to-list 'load-path "~/.emacs-lisp/")
+
+;; some other paths
+(add-to-list 'backup-directory-alist '("~/.emacs-backup")) ; backups here
+(defconst abbrevs-file "~/.abbrevs_defs")
+
+
+;; general settings
+(line-number-mode t)		; show line numbers in the mode-line
+(column-number-mode t)		; show column numbers in the mode-line
+(menu-bar-mode nil)             ; don't show the menu 
+(tool-bar-mode nil)		; don't show the toolbar
+(scroll-bar-mode t)             ; show the scroll bar ... 
+(set-scroll-bar-mode 'right)    ; ... on the right side
+(transient-mark-mode t)		; make the current 'selection' visible
+(delete-selection-mode t)       ; delete the selection area with a keypress
+(setq scroll-step 1)            ; scroll one line at a time
+(iswitchb-mode 1)		; smart buffer switching
+(fset 'yes-or-no-p 'y-or-n-p)   ; enable one letter y/n answers to yes/no 
+(global-font-lock-mode t)       ; always do syntax highlighting 
+(set-language-environment "UTF-8") ; prefer utf-8 for language settings
+(setq x-select-enable-clipboard t) ; copy-paste should work
+
+;;  abbrieviations
+(abbrev-mode t)                 ; enable abbrevs (abbreviations) ...
+(quietly-read-abbrev-file)      ; ... silently read them ...
+(add-hook 'kill-emacs-hook      ; ... end save them upon emacs exit
+  (lambda() (write-abbrev-file abbrevs-file)))
+
+
+;; backups 
+;;   emacs will write backups and number them
+;;   see top of this file for backup dir
+(setq make-backup-files t
+  version-control t
+  delete-old-versions t)
+
+
+
+;; time-stamps 
+;;   when there is a "Time-stamp: <>" in the first 10 lines of the file,
+;;   emacs will write time-stamp information there when saving the file.
+(setq 
+  time-stamp-active t
+  time-stamp-line-limit 10
+  time-stamp-format "%04y-%02m-%02d %02H:%02M:%02S (%u)") 
+(add-hook 'write-file-hooks 'time-stamp)
+
+
+;; global keybindings
+;; the arg to 'kbd' is what you get when pushing C-h k and the key(s)
+(define-key global-map (kbd "<backspace>")  'delete-backward-char) ; bs means bs 
+(define-key global-map (kbd "<delete>")     'delete-char)  ; delete means delete         
+(define-key global-map (kbd "M-g")           'goto-line)    ; M-g means 'goto-line
+
+
+;; external packages
+;; some extra niceties, but only if the are available
+
+;; let's define 'require-if-available, so we won't fail if the
+;; package is not there...
+;; (from some japanese website with too long url...)
+(defun require-if-available (&rest args)
+  "require symbols, load-library strings, fail silently if some aren't available"
+  (let (lib)
+    (condition-case err
+      (mapc (lambda (e)
+	      (setq lib e)
+	      (cond
+		((stringp e) (load-library e))
+		((symbolp e) (require e)))) args)
+      (file-error  (progn (message "Couldn't load extension: %s" lib) nil)))))
+
+
+;; the actual packages - might require some googling to find them...
+
+; byte-recompile .el files when 'auto-recompile' is set (see top of this file)
+(require-if-available 'auto-recomp) 
+
+; choose a funky color theme
+(when (require-if-available 'color-theme)   ; show a different color theme ... 
+    (if (not window-system)                  
+	(color-theme-dark-laptop)         ; ... for console mode ...        
+      (color-theme-jonadabian)))          ; ... and gui mode 
+
+
+;; mode-specific settings for non-default modes
+
+;;text-mode
+(add-hook 'text-mode-hook
+  (lambda()
+    (set-input-method "latin-1-prefix")))   ; make " + e => ë  etc.
+
+
+;; post mode (used when editing mail / news)
+(autoload 'post-mode "post" "mode for e-mail" t)
+(setq auto-mode-alist 
+  (append  '((".*mutt-.*\\|\\.article\\|.followup" . post-mode)) 
+     auto-mode-alist))
+
+(add-hook 'post-mode-hook
+  (lambda()
+    (setq fill-column 72)            ; rfc 1855 for usenet
+    
+    (if (require-if-available 'footnode-mode)   ; give us footnotes
+	(footnote-mode 1))
+    (require-if-available 'thinks)   ; put text in 'thinks' boxes
+    (require-if-available 'boxquote) ; put text in boxes
+    
+    (local-set-key (kbd "C-c C-j l")  'set-justification-left)
+    (local-set-key (kbd "C-c C-j f")  'set-justification-full)))
+ 
+
+;; lisp-mode
+(add-hook 'lisp-mode-hook
+  (lambda()
+    (set-input-method nil)    
+    (setq lisp-indent-offset 2)))
+
+
+;; html/html-helper mode
+(add-hook 'html-helper-mode-hook
+  (lambda()
+    
+  ; cursor up go to up one line *as show on screen*
+  ; instead of one line in editor
+  (when (require-if-available 'screen-lines) 
+    (screen-lines-mode 1))
+  
+  (defun tag-region (b e el)
+    "put '<el>...</el>' around text" 
+    (let ((tb (concat "<" el ">")) (te (concat "</" el ">")))
+      (insert-string 
+	(concat tb (delete-and-extract-region b e) te))
+      (goto-char (- (point) (+ (length te) (- e b))))))
+  
+  (defun tag-region-or-point (el)
+    "tag the region or the point if there is no region"
+    (when (not mark-active)
+      (set-mark (point)))
+    (tag-region (region-beginning) (region-end) el))
+
+  ;; i am lazy
+  (defmacro set-key-func (key expr)
+    (list 'local-set-key (list 'kbd key) 
+      (list 'lambda nil 
+         (list 'interactive nil) expr)))
+  
+  (set-key-func "C-c i"  (tag-region-or-point "em"))
+  (set-key-func "C-c b"  (tag-region-or-point "strong"))
+  (set-key-func "C-c s"  (tag-region-or-point "small"))
+  (set-key-func "C-c u"  (tag-region-or-point "u"))
+  (set-key-func "C-c -"  (tag-region-or-point "strike"))
+  (set-key-func "C-c tt" (tag-region-or-point "tt"))
+
+  (defmacro set-key (key str)
+    (list 'local-set-key (list 'kbd key) str))
+
+  (set-key "C-: a" "&auml;")
+  (set-key "C-` a" "&agrave;")
+  (set-key "C-' a" "&aacute;")    
+  (set-key "C-: e" "&euml;")
+  (set-key "C-` e" "&egrave;")
+  (set-key "C-' e" "&eacute;")
+  (set-key "C-: i" "&iuml;")
+  (set-key "C-` i" "&igrave;")
+  (set-key "C-' i" "&iacute;")
+  (set-key "C-: o" "&ouml;")
+  (set-key "C-` o" "&ograve;")
+  (set-key "C-' o" "&oacute;")
+  (set-key "C-: u" "&uuml;")
+  (set-key "C-` u" "&ugrave;")
+  (set-key "C-' u" "&uacute;")))
+	   
+  

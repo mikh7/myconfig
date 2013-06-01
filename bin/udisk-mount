@@ -1,0 +1,47 @@
+#!/bin/zsh
+
+bakpat="bakdisk-[0-9]+"
+dev=
+
+# set -x
+typeset -A labels
+typeset -A mounts
+
+typeset string d
+udisks --dump | while read one two rest ; do
+    case $one$two ; in
+        (device-file:*)
+            dev=$two
+            mountpoint=
+            ;;
+        (mount*paths:)
+            mountpoint=$rest
+            ;;
+        (label:*)
+            if [[ -n $dev && $two$rest =~ $bakpat ]] ; then
+                labels[$dev]=$two$rest
+                if [[ -n $mountpoint ]] ; then
+                   mounts[$dev]=$mountpoint 
+                fi
+            fi
+    esac
+done
+
+print Found $#labels drives with labels
+
+for dev in ${(k)labels} ; do
+    label=$labels[$dev]
+    mount=$mounts[$dev]
+    print "Device $dev => $label"
+    if [[ $label == bakdisk* ]] ; then
+        if [[ -z $mount ]] ; then
+            print Backup disk $label not mounted, will try to mount
+            udisks --mount $dev 
+        else
+            print Backup disk $label already mounted on $mount
+        fi
+        break
+    fi
+done
+
+

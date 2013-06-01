@@ -1,0 +1,28 @@
+#!/bin/zsh
+
+if [[ ! -d $1 ]] ; then
+    print "Usage: $0 <backup dir>"
+    exit -1
+fi
+
+dir=/tmp/123
+dir2=$dir
+if [[ $dir2 == / ]] ; then
+   dir2=/root 
+fi
+if [[ $dir2[1] == /  ]] ; then
+   dir2[1]=
+fi
+
+rdiff-backup \
+    --create-full-path \
+    --exclude-other-filesystems \
+    --exclude "**/*cache*/**" \
+    --exclude "**/*Trash*/**" \
+    --include "/tmp/123/Maildir/.Included" \
+    --exclude "/tmp/123/Maildir/.*" \
+    --include "/tmp/123/Maildir/*" \
+    --exclude "/tmp/123/Maildir" \
+    $dir \
+    $1/$HOST/$dir2
+

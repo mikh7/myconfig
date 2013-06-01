@@ -1,0 +1,60 @@
+#!/bin/zsh
+
+killall -9 amarok
+killall ssh-agent
+killall amarok-pauser
+killall gnome-screensaver
+killall xscreensaver
+killall dropbboxd
+killall knetworkmanager
+xfce4-panel &
+(sleep 7 
+  kmix &
+  if [[ $HOST == tigerclaw ]] ; then
+    killall knetworkmanager
+    killall gnome-power-manager
+    killall xfce4-power-manager
+    knetworkmanager &
+    xfce4-power-manager&
+  fi
+)&
+xset r rate 200 22
+xset mouse 20/15
+xset b 100
+xset +dpms
+xset dpms 900 1200 1600
+if [[ $HOST != momoland ]] ; then
+  setxkbmap -option ctrl:nocaps
+fi
+if [[ $HOST == momoland ]] ; then
+    # Turn left food pedal into hyper
+    xmodmap -e 'keysym KP_4 = Hyper_L'
+fi
+xsetroot -solid black
+xscreensaver&
+amarok-pauser&
+~/.dropbox-dist/dropboxd &
+ssh-agent > /tmp/env$$
+. /tmp/env$$
+rm /tmp/env$$
+sudo renice -10 $(pgrep X)
+if [[ $HOST == momoland ]] ; then
+sbcl \
+    --eval "(require 'swank)" \
+    --eval "(swank:create-server 
+                :port 4105 
+                :dont-close t)" \
+    --eval "(require :stumpwm)" \
+    --eval "(stumpwm:stumpwm)"
+else
+  stumpwm
+fi
+killall -9 amarok
+killall -9 kded4
+killall -9 knotify4
+killall gnome-panel
+killall gnome-screensaver
+killall xscreensaver
+killall kmix
+killall amarok-pauser
+killall knetworkmanager

@@ -1,0 +1,54 @@
+#!/bin/sh
+# debug zsh optios
+
+compare_options() {
+  # 1 => first file with options
+  # 2 => second file with options
+  # 3 => optional if yes then do a diff
+  emulate -L zsh
+  local -A opts1 opts2
+  local name value ret=0
+  for name value in `cat $1` ; do
+    if [[ $name = no* && $name != nomatch && $name != notify ]] ; then
+      name=$name[3,-1]
+      if [[ $value = off ]] ; then
+        value=on
+      else
+        value=off
+      fi
+    fi
+    opts1[$name]=$value
+  done
+  for name value in `cat $2` ; do
+    if [[ $name = no* && $name != nomatch && $name != notify ]] ; then
+      name=$name[3,-1]
+      if [[ $value = off ]] ; then
+        value=on
+      else
+        value=off
+      fi
+    fi
+    opts2[$name]=$value
+  done
+  for name in ${(k)opts1} ; do
+    if [[ $opts1[$name] != $opts2[$name] ]] ; then
+      ret=1
+      if [[ $3 == yes ]] ; then
+        print "Option $name was $opts1[$name] now $opts2[$name]"
+      fi
+    fi
+  done
+  return $ret
+}
+
+debug_options_diff() {
+  set -o | egrep -v ^shinstdin\|^monitor\|^zle > ~/tmp$$
+  if ! compare_options ~/zsh.options tmp$$ ; then
+    if [[ ! -z $1 ]] ; then
+      echo $1 caused options to change
+      compare_options ~/zsh.options tmp$$ yes
+    fi
+  fi
+  rm -f ~/tmp$$
+}
+

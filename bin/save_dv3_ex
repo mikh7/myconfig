@@ -1,0 +1,44 @@
+#!/bin/zsh
+
+if [ "$1" = "" ] ; then
+  echo "Usage: $0 <crewid>"
+  exit 1
+fi
+
+saveAsmt=save_ex_asmt_$1
+saveAsmtHist=save_ex_asmthist_$1
+saveOrigAsmt=save_ex_origasmt_$1
+saveTass=save_ex_tass_$1
+saveTradeAsmt=save_ex_tasmt_$1
+saveTrade=save_ex_trade_$1
+cmseq="(select cmseqnumber from crewmember where cmidnumber = $1)"
+asmtseqnos="(select asmtseqnumber from $saveAsmt)"
+trdseqnos="(select trdseqnumber from $saveTrade)"
+cmasmts="(select asmtseqnumber from assignment where cmseqnumber=$cmseq)"
+
+cat > tmp$$.sql << EOF
+  drop table $saveAsmt;
+  drop table $saveAsmtHist;
+  drop table $saveOrigAsmt;
+  drop table $saveTass;
+  drop table $saveTradeAsmt;
+  drop table $saveTrade;
+  create table $saveAsmt as select * from assignment 
+     where asmtseqnumber in $cmasmts;
+  create table $saveAsmtHist as select * from assignment_history
+     where asmtseqnumber in $cmasmts; 
+  create table $saveOrigAsmt as select * from cm_orig_asmt
+     where cmseqnumber = $cmseq or asmtseqnumber in $cmasmts; 
+  create table $saveTass as select * from tass_offset where 
+    asmtseqnumber in $asmtseqnos or tasmtseqnumber in $asmtseqnos;
+  create table $saveTrade as select * from trade where CMSEQNUMBERA = $cmseq
+    or CMSEQNUMBERB = $cmseq;
+  create table $saveTradeAsmt as select * from trade_assignment where
+  trdseqnumber in $trdseqnos;
+  commit;
+  select count(*) from $saveAsmt;
+  quit;
+EOF
+#cat tmp$$.sql
+sqlplus badev1/badev1@ORADB @ tmp$$.sql
+rm tmp$$.sql

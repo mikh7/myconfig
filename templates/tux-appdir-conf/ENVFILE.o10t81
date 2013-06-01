@@ -1,0 +1,21 @@
+PATH=tux_RLSDIR
+FLDTBLDIR=tux_RLSDIR/view:tux_TUXDIR/udataobj
+VIEWDIR=tux_RLSDIR/view
+rt_varfile=tux_RLSDIR/pair.fmt
+rt_rulefile=tux_RLSDIR/ohrules.txt
+rt_errorfile=tux_RLSDIR/oherrors.txt
+rave_rulefile=tux_APPDIR/rave/crc/rule_set/MAESTRO/i386_linux/MaestroRules
+rave_etable_dir=tux_APPDIR/etables
+ORACONNECT=tux_ORAUSER/tux_ORAPASS@tux_ORADB
+#MQ_ERROR_QUEUE=MAXERR
+#FLIFO_IATA_QUEUE=MAX_FLIFO
+GVDBG=ALL 4
+#TRACKBACK=badbtb01
+TZ=UTC
+#VALIDATE_FICO_RESP=Errors
+#VALIDATE_VOICE_RESP=Errors
+#VALIDATE_CREWLINK_RESP=Errors
+#MVT_MAX_FLT_BLK_CHANGE=900
+LTD_OPTION=1
+force_allowances=n
+

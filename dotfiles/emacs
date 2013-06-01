@@ -1,0 +1,140 @@
+;; -*- mode: emacs-lisp -*-
+
+;;
+;; Otherwise any error in the .emacs file would erase my
+;; customize variables
+;;
+(condition-case err
+    (load-file "~/myconfig/elisp/my-emacs-setup.el")
+  (error
+   (ding)
+   (message "There had been an error %s while loading my-emacs-setup.el" err)))
+
+
+;;===========  do not modify below this line ====================;
+
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(Info-isearch-search nil)
+ '(backup-by-copying-when-linked t)
+ '(backward-delete-char-untabify-method (quote hungry))
+ '(bmkp-last-as-first-bookmark-file "~/.emacs.bmk")
+ '(c-offsets-alist (quote ((inline-open . 0) (substatement-open . 0))))
+ '(case-fold-search t)
+ '(comint-use-prompt-regexp nil)
+ '(comment-style (quote indent))
+ '(compilation-ask-about-save nil)
+ '(completion-ignored-extensions (quote (".o" "~" ".bin" ".lbin" ".so" ".a" ".ln" ".blg" ".bbl" ".elc" ".lof" ".glo" ".idx" ".lot" ".svn/" ".hg/" ".git/" ".bzr/" "CVS/" "_darcs/" "_MTN/" ".fmt" ".tfm" ".class" ".fas" ".lib" ".mem" ".x86f" ".sparcf" ".fasl" ".ufsl" ".fsl" ".dxl" ".pfsl" ".dfsl" ".p64fsl" ".d64fsl" ".dx64fsl" ".lo" ".la" ".gmo" ".mo" ".toc" ".aux" ".cp" ".fn" ".ky" ".pg" ".tp" ".vr" ".cps" ".fns" ".kys" ".pgs" ".tps" ".vrs" ".pyc" ".pyo" ".bak")))
+ '(cycle-buffer-esc-key (quote cancel))
+ '(cycle-buffer-follow t)
+ '(cycle-buffer-start-with-current nil)
+ '(cycle-buffer-timeout 2.5)
+ '(cycle-buffer-timeout-action (quote switch))
+ '(default-input-method "rfc1345")
+ '(delete-selection-mode nil)
+ '(dired-no-confirm (quote (byte-compile chgrp chmod chown compress copy delete hardlink load move shell symlink touch uncompress)))
+ '(ediff-diff-options "-twb")
+ '(egg-buffer-hide-help-on-start (quote (egg-status-buffer-mode egg-log-buffer-mode egg-file-log-buffer-mode egg-reflog-buffer-mode egg-diff-buffer-mode egg-commit-buffer-mode)))
+ '(egg-buffer-hide-section-type-on-start (quote ((egg-status-buffer-mode . :hunk) (egg-commit-buffer-mode . :hunk) (egg-diff-buffer-mode . :hunk))))
+ '(egg-buffer-hide-sub-blocks-on-start nil)
+ '(egg-confirm-next-action nil)
+ '(egg-dummy-option nil)
+ '(egg-quit-window-actions (quote ((egg-status-buffer-mode) (egg-log-buffer-mode) (egg-commit-buffer-mode) (egg-reflog-buffer-mode) (egg-diff-buffer-mode) (egg-file-log-buffer-mode))))
+ '(egg-show-key-help-in-buffers (quote (:status :log :file-log :reflog :diff :stash)))
+ '(elmo-folder-update-confirm t)
+ '(elmo-folder-update-threshold 200)
+ '(elmo-message-fetch-confirm t)
+ '(elmo-message-fetch-threshold 3000000000)
+ '(elmo-nntp-default-server "text.giganews.com")
+ '(elmo-nntp-default-user "gn195431")
+ '(erc-auto-query (quote window-noselect))
+ '(erc-away-timestamp-format "[%H:%M:%S]")
+ '(erc-dcc-auto-masks (quote (".*!.*@.*")))
+ '(erc-dcc-get-default-directory "/home/max/download")
+ '(erc-dcc-send-request (quote auto))
+ '(erc-echo-timestamps nil)
+ '(erc-enable-logging t)
+ '(erc-fill-mode t)
+ '(erc-generate-log-file-name-function (quote erc-generate-log-file-name-with-date))
+ '(erc-hide-list (quote ("JOIN" "PART" "QUIT" "MODE")))
+ '(erc-insert-away-timestamp-function (quote erc-insert-timestamp-left))
+ '(erc-insert-timestamp-function (quote erc-insert-timestamp-left))
+ '(erc-interpret-mirc-color t)
+ '(erc-log-channels-directory "~/irclogs")
+ '(erc-log-mode t)
+ '(erc-log-write-after-insert t)
+ '(erc-log-write-after-send t)
+ '(erc-max-buffer-size 900000)
+ '(erc-minibuffer-notice nil)
+ '(erc-nick "maxm")
+ '(erc-nick-uniquifier "-")
+ '(erc-port 6667)
+ '(erc-server-reconnect-attempts t)
+ '(erc-timestamp-format "[%H:%M:%S] ")
+ '(erc-timestamp-only-if-changed-flag nil)
+ '(erc-timestamp-use-align-to nil)
+ '(erc-track-exclude-types (quote ("JOIN" "KICK" "NICK" "PART" "QUIT" "MODE")))
+ '(erc-truncate-mode t)
+ '(erc-verbose-dcc nil)
+ '(erc-whowas-on-nosuchnick t)
+ '(even-window-heights nil)
+ '(garbage-collection-messages nil)
+ '(icicle-region-background "gray82")
+ '(icicle-reminder-prompt-flag 0)
+ '(icicle-top-level-key-bindings (quote (([pause] icicle-switch-to/from-minibuffer t) ("`" icicle-search-generic t) ("$" icicle-search-word t) ("^" icicle-search-keywords t) ("'" icicle-occur t) ("=" icicle-imenu t) ("\"" icicle-search-text-property t) ("/" icicle-complete-thesaurus-entry nil) ([24 134217829] icicle-execute-named-keyboard-macro t) (" " icicle-command-abbrev t) ("5o" icicle-select-frame t) ([f1 15] icicle-describe-option-of-type t) ([S-f4] icicle-kmacro t) (abort-recursive-edit icicle-abort-recursive-edit t) (minibuffer-keyboard-quit icicle-abort-recursive-edit (fboundp (quote minibuffer-keyboard-quit))) (execute-extended-command icicle-execute-extended-command t) (switch-to-buffer icicle-buffer t) (switch-to-buffer-other-window icicle-buffer-other-window t) (find-file icicle-file t) (find-file-other-window icicle-file-other-window t) (bookmark-set icicle-bookmark-cmd t) (find-tag icicle-find-tag (fboundp (quote command-remapping))) (eval-expression icicle-pp-eval-expression (fboundp (quote command-remapping))) (pp-eval-expression icicle-pp-eval-expression (fboundp (quote command-remapping))) (find-tag-other-window icicle-find-first-tag-other-window t) (kill-buffer icicle-kill-buffer t) (kill-buffer-and-its-windows icicle-kill-buffer t) (delete-window icicle-delete-window t) (delete-windows-for icicle-delete-window t) (other-window-or-frame icicle-other-window-or-frame t) (exchange-point-and-mark icicle-exchange-point-and-mark t) (where-is icicle-where-is t) (yank icicle-yank-maybe-completing t) (set-mark-command icicle-goto-marker-or-set-mark-command t) (pop-global-mark icicle-goto-global-marker-or-pop-global-mark t) ([27 134217848] lacarte-execute-menu-command (fboundp (quote lacarte-execute-menu-command))) ([134217824] lacarte-execute-menu-command (fboundp (quote lacarte-execute-menu-command))) ([f10] lacarte-execute-menu-command (fboundp (quote lacarte-execute-menu-command))))))
+ '(mark-even-if-inactive t)
+ '(max-specpdl-size 8000)
+ '(message-log-max 1000)
+ '(mime-edit-message-default-max-lines 1000000000000)
+ '(org-agenda-sticky t)
+ '(org-habit-show-all-today t)
+ '(paragraph-separate "[ 	]*$\\|--")
+ '(python-honour-comment-indentation t)
+ '(python-indent 2)
+ '(python-indent-guess-indent-offset nil)
+ '(python-indent-offset 2)
+ '(safe-local-variable-values (quote ((Package . CL-PPCRE) (Package . metabang\.math) (Package ITERATE :use "COMMON-LISP" :colon-mode :external) (syntax . COMMON-LISP) (Syntax . Common-Lisp) (Syntax . ANSI-Common-Lisp) (Syntax . COMMON-LISP) (Package . CL-USER) (Base . 10) (unibyte . t))))
+ '(save-place t nil (saveplace))
+ '(scroll-bar-mode (quote right))
+ '(search-invisible nil)
+ '(show-paren-style (quote parenthesis))
+ '(slime-repl-history-size 10000)
+ '(standard-indent 2)
+ '(transient-mark-mode t)
+ '(undo-limit 50000000)
+ '(undo-outer-limit 10000000)
+ '(undo-strong-limit 90000000)
+ '(vc-cvs-diff-switches "-u")
+ '(vc-cvs-global-switches "-z3")
+ '(vc-follow-symlinks t)
+ '(warning-suppress-types (quote ((undo discard-info))))
+ '(wl-auto-save-drafts-interval nil)
+ '(wl-default-folder "%INBOX")
+ '(wl-draft-always-delete-myself t)
+ '(wl-draft-delete-myself-from-bcc-fcc t)
+ '(wl-draft-folder "%INBOX.Drafts")
+ '(wl-from "Max Mikhanosha <max@openchat.com>")
+ '(wl-highlight-max-message-size 1000000000)
+ '(wl-summary-always-sticky-folder-list t)
+ '(wl-summary-flag-alist nil)
+ '(wl-summary-indent-length-limit nil)
+ '(wl-summary-width nil)
+ '(wl-thread-insert-opened t)
+ '(wl-trash-folder "%INBOX.Trash")
+ '(wl-user-mail-address-regexp ".*@openchat.com"))
+
+
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+
+(put 'narrow-to-region 'disabled nil)
+
+(put 'set-goal-column 'disabled nil)
+(put 'scroll-left 'disabled nil)

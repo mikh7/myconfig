@@ -1,0 +1,115 @@
+#!/bin/sh
+function pvcsbranch
+{
+if [ -z "$VCSCFG" ];then
+pvcscfg
+return
+fi
+if [ -z "$VCSCFG" ];then
+print No VCSCFG set. Branch not set. >&2
+return
+fi
+if [ ! -r $VCSCFG/branchfiles/pvcsbranch ];then
+	print $VCSCFG has no branches >&2
+       	export PVCSBRNCH=$mypvcsbranch
+	print PVCSBRNCH pointer set to tip of trunk >&2
+	return
+fi
+typeset mypvcsbranch=  picklist= oifs= cfpatha= cfdescb=
+integer line=0
+if [ -z "$1" ]
+then
+	print >&2
+	print Your VCSCFG pointer is set to: $VCSCFG >&2
+	print Your PVCSBRNCH pointer is set to: $PVCSBRNCH >&2
+	print >&2
+	print The list of archive branches are: >&2
+	cat $VCSCFG/branchfiles/pvcsbranch |
+	while (( line < 99 )) && read cfpatha cfdescb
+	do
+	        if [ $line -eq 0 ]
+		then
+			picklist=${cfdescb}
+		else
+		 	picklist="${picklist}@${cfdescb//	/ /}"
+		fi
+		(( line = line + 1 ))
+	done
+	PS3='Enter branch pointer by number or path enter -h or return:
+'
+	oifs=$IFS
+	IFS=@
+	set $picklist
+	(select i
+	do
+		case $i in
+		
+			*)
+			:
+			break
+			;;
+		esac
+	done) </dev/null 2>&1
+	IFS=$oifs
+	read  mypvcsbranch 
+else
+	mypvcsbranch=$1
+fi
+#
+if [ -z "$mypvcsbranch" ]
+then
+        :
+else
+	if [ "$mypvcsbranch"  = '-h' ]
+	then
+		echo pvcsbranch sets your PVCSBRNCH environment variable
+		echo Usage: pvcsbranch [argument]
+		echo argument can be a path or a line number in the pvcs branch list file.
+		echo It can also be -h for help of -l to list the branch list file.
+		echo If no argument is given you are given a list to choose from.
+		mypvcsbranch=
+		return
+	fi
+	if [ "$mypvcsbranch"  = '-l' ]
+	then
+		cat -n $VCSCFG/branchfiles/pvcsbranch | more
+		echo End list of $VCSCFG/branchfiles/pvcsbranch
+		mypvcsbranch=
+		return
+	fi
+	case $mypvcsbranch in
+		[0-9] | [0-9][0-9] )
+                        mypvcsbranch=$(sed -n "$mypvcsbranch","$mypvcsbranch"p  $VCSCFG/branchfiles/pvcsbranch)
+			if [ -z "$mypvcsbranch" ]
+			then
+				print Item not found. >&2
+				return 1
+			fi
+			mypvcsbranch=${(e)mypvcsbranch%%[ 	]*}
+		;;
+		*) :
+		;;
+esac
+	if [ "$mypvcsbranch" != TIPPVCS ]
+	then
+		if [ ! -r "$mypvcsbranch" ]
+		then
+			print - $mypvcsbranch not found. >&2
+			return 1
+		fi
+		mypvcsbranch=-c${mypvcsbranch}
+	else
+		mypvcsbranch=
+	fi
+        export PVCSBRNCH=$mypvcsbranch
+fi
+print >&2
+if [ -z "$PVCSBRNCH" ];then
+print PVCSBRNCH pointer set to tip of trunk >&2
+else
+print PVCSBRNCH pointer set to $PVCSBRNCH >&2
+pvcslsbranch
+fi
+return
+}
+

@@ -1,0 +1,2 @@
+#!/bin/bash
+exec ck-launch-session dbus-launch --exit-with-session ~/myconfig/bin/start-stumpwm

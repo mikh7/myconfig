@@ -1,0 +1,23 @@
+#!/bin/zsh
+
+if [[ -z $MYCONFIG ]] ; then
+  MYCONFIG=~/myconfig
+fi
+
+if [[ ! -d $MYCONFIG ]] ; then
+  echo $MYCONFIG directory does not exist
+  exit 1
+fi
+
+for file in $MYCONFIG/dotfiles/* ; do
+    if [[ $file = .* || $file = *~ || $file = */\#*\# 
+      || $file = *.orig || $file = *.orig.* || $file = *.chg.* ]] ; then
+        continue
+    fi
+    dotfile=~/.$file:t
+    [[ -f $dotfile ]] && unlink $dotfile
+    ln -s $file $dotfile || exit 2
+    print -D $file "==>" $dotfile
+done
+
+

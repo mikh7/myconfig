@@ -1,0 +1,14 @@
+#!/bin/sh
+id=`id -un`
+ids="`ipcs -m | egrep -v -- '----|^key' | awk '{print $3 " " $2}' | grep "^$id" | awk '{print $2}'`"
+if [ -n "$ids" ] ; then
+  ipcrm shm $ids
+fi
+ids="`ipcs -q | egrep -v -- '----|^key' | awk '{print $3 " " $2}' | grep "^$id" | awk '{print $2}'`"
+if [ -n "$ids" ] ; then
+  ipcrm msg $ids
+fi
+ids="`ipcs -s | egrep -v -- '----|^key' | awk '{print $3 " " $2}' | grep "^$id" | awk '{print $2}'`"
+if [ -n "$ids" ] ; then
+  ipcrm sem $ids
+fi

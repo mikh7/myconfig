@@ -1,0 +1,36 @@
+#!/bin/zsh
+
+local output
+local -a match mbegin mend
+local laststate=none lastaction=none
+local state 
+local caps capCanPause=4 capCanPlay=8
+
+zmodload zsh/datetime
+    
+xscreensaver-command -watch |\
+while read state ; do
+    case $state ; in
+        (BLANK*)
+            caps=$(qdbus org.kde.amarok \
+                /Player \
+                org.freedesktop.MediaPlayer.GetCaps)
+            if (( (caps & capCanPlay) == 0 )) then
+                #print Pausing
+                qdbus org.kde.amarok /Player Pause
+                lastaction=stop
+            else
+                #print Not pausing
+                lastaction=none
+            fi
+            ;;
+        (UNBLANK*) 
+            notify-send "Screen unblanked"
+            if [[ $lastaction == stop ]] ; then
+                #print Starting play
+                qdbus org.kde.amarok /Player Play
+                lastaction=play
+            fi
+            ;;
+    esac
+done

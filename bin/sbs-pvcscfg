@@ -1,0 +1,114 @@
+#!/bin/sh
+function pvcscfg
+{
+typeset mypvcscfg=  picklist= oifs= cfpatha= cfdescb= arg2=
+integer line=0
+typeset tpvcsvers=8
+if [ "$GVCPU" = IBM.4:3 ];then
+tpvcsvers=7
+fi
+#set -x
+if [ ! -z "$2" ]
+then
+	arg2=$2
+fi
+if [ -z "$1" ]
+then
+	print >&2
+	print Your VCSCFG pointer is set to: $VCSCFG >&2
+	print >&2
+	print The list of archive config files are: >&2
+	cat ${GVSBS}work/files/pvcslist|
+	while (( line < 99 )) && read cfpatha cfdescb
+	do
+	        if [ $line -eq 0 ]
+		then
+			picklist=${cfdescb}
+		else
+		 	picklist="${picklist}@${cfdescb}"
+		fi
+		(( line = line + 1 ))
+	done
+	PS3='Enter config pointer by number or path enter -h or return:
+'
+	oifs=$IFS
+	IFS=@
+	set $picklist
+	(select i
+	do
+		case $i in
+		
+			*)
+			:
+			break
+			;;
+		esac
+	done) </dev/null  2>&1 
+	IFS=$oifs
+	read  mypvcscfg 
+else
+	mypvcscfg=$1
+fi
+#
+if [ -z "$mypvcscfg" ]
+then
+        :
+else
+	if [ "$mypvcscfg"  = '-h' ]
+	then
+		echo pvcscfg sets your VCSCFG environment variable
+		echo Usage: pvcscfg [argument]
+		echo argument can be a path or a line number in the pvcs archive list file.
+		echo It can also be -h for help of -l to list the archive list file.
+		echo If no argument is given you are given a list to choose from.
+		mypvcscfg=
+		return
+	fi
+	if [ "$mypvcscfg"  = '-l' ]
+	then
+		cat -n ${GVSBS}work/files/pvcslist | more
+		echo End list of ${GVSBS}work/files/pvcslist
+		mypvcscfg=
+		return
+	fi
+	case $mypvcscfg in
+		[0-9] | [0-9][0-9] )
+					mypvcscfg=$(sed -n "$mypvcscfg","$mypvcscfg"p  ${GVSBS}work/files/pvcslist)
+			if [ -z "$mypvcscfg" ]
+			then
+				print Item not found. >&2
+				return 1
+			fi
+			mypvcscfg=${mypvcscfg%%[ 	]*}
+			#eval mypvcscfg=$mypvcscfg
+		;;
+		*) :
+		;;
+esac
+	if [ "$mypvcscfg" != NULLPVCS ]
+	then
+		if [ ! -r "$mypvcscfg" ]
+		then
+			print - $mypvcscfg not found. >&2
+			return 1
+		fi
+	else
+		mypvcscfg=
+	fi
+        export VCSCFG=$mypvcscfg
+fi
+print >&2
+print VCSCFG pointer set to $VCSCFG >&2
+if [ -f "$VCSCFG"/.PVCS_NEW ];then
+pvcsvers $tpvcsvers
+else
+pvcsvers 5
+fi
+if [ ! -z "$VCSCFG" ];then
+	pvcsbranch $arg2
+	if [ $? -eq 1 ];then
+	pvcsbranch
+	fi
+fi
+return
+}

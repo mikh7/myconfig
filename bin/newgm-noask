@@ -1,0 +1,382 @@
+#!/bin/ksh
+#set -x
+function query
+{
+  GVTRUE=TRUE
+}
+function gethelp
+{
+	print Retrieves writable current time stamped $baseis source.
+	print Usage: $running '[-v version]' '[-f]' 'filelist ...filelistn' 
+	print Example: $running filelist1 filelist2
+	print '  		to get tip of branch you are working on.'
+	print Example:  $running -v p.MM110901 filelist1 filelist2
+	print '			to get a specific version.'
+	print Version may be omitted or set to \'tip\' or pvcs version name.
+	print filelist is a list of files to be retrieved from for $baseis 
+#        print archive and asubfilelist is list of files from asub archive
+	print filelists are stored in pvcs - one for each archive accessed.
+	print Use -f flag to suppress automatic get of the filelists
+	print Use -r flag to suppress automatic recording of revisions used
+	print Use of -v voids -f flag and -r flag
+	exit
+}
+id=`whoami`
+if [ $id = "root" ] ; then
+   echo "Cannot run this as root!"
+   exit 1
+fi
+running=$(basename $0)
+minlist=1
+case "$running" in
+	*maestro*)baseis=maestro
+	minlist=2
+	gettyp=maestro
+	;;
+	*newgm*)baseis=maestro
+	minlist=2
+	gettyp=maestro
+	;;
+	*) echo Unknown archive type $running
+	   gethelp
+	;;
+esac
+getc=_get
+echo $running|grep pcget >/dev/null
+if [ $? -eq 0 ]
+then
+	getc=pcget
+fi
+getf=ye
+recv=ye
+timestamp=ye
+integer shiftcount
+if [ "$#" -eq 0 ]
+then
+set -- -h
+fi
+optsare=:fhv:rtx
+while getopts $optsare vopt
+do
+	case "$vopt"
+	in
+		h) gethelp
+		    ;;
+		v) ver=$OPTARG
+		   if [ -z "$ver" ];then
+		     print you must enter a version with v argument
+	             gethelp
+		   fi
+		   verarg=$ver
+		   ver=-v${ver}
+		   ;;
+		f) getf=no
+		    ;;
+		r) recv=no
+		    ;;
+		t) timestamp=no
+		    ;;
+		x) set -x
+		    ;;
+	esac
+done
+if [ "$ver" = tip ]
+then
+ver=''
+fi
+if [ "$OPTIND" -gt "$#" ]
+	then
+	echo Missing filelist
+	gethelp
+fi
+shiftcount=$OPTIND-1
+shift $shiftcount
+if [ $# -lt $minlist ];then
+	gethelp
+fi
+mylist=$@
+case $gettyp
+in
+	maestro ) dirlist="dbsource include/rave object reports source/rave sqls view customdir xsd/aoc xsd/common xsd/crew_tracking dtd rave"
+		;;
+	       * )   print Do not know set up for $gettyp
+		  exit 1
+		;;
+esac
+for i in $dirlist
+do
+if [ !  -d $i ]
+then
+ 	print Cannot find $i directory
+	print You are in $PWD
+	query Create $i
+	if [ $GVTRUE = TRUE ]
+	then
+		mkdir -p $i
+		if [ $? -ne 0 ];then
+		  gethelp
+		fi
+	else
+	gethelp
+	fi
+fi
+done
+
+Getlog=$PWD/getlog.$$
+if [[ "$GVPVCS" = 7 || "$GVPVCS" = 8 ]];then
+:
+#	echo testing testing testing testing using cfg 32
+#	pauseterm
+#	pvcscfg 32
+else
+	pvcscfg 3
+fi
+print `date` >$Getlog
+print Getting $baseis using $VCSCFG >>$Getlog
+print Using $filelist $rptfilelist $ver>>$Getlog
+filelist=$1
+rptfilelist=$2
+echo
+# Ans yes, get writable copy and make time current time.
+if [ $timestamp = ye ];then
+	pvf='-y -w -t'
+else
+	pvf='-y -w'
+	print Getting files with pvcs time stamps!
+	print Getting files with pvcs time stamps! >>$Getlog
+fi
+print
+print Your are in directory $PWD.
+if [ -z "$ver" ]
+then
+	if [ -z "$PVCSBRNCH" ];then 
+	print You are getting tip version of ${baseis}. | tee -a $Getlog
+	else
+	print You are getting tip of branch $PVCSBRNCH |tee -a $Getlog
+	fi
+else
+	print You are getting version $ver |tee -a $Getlog
+fi
+print
+echo
+filelist=$1
+rptfilelist=$2
+vlog ${ver} makefile >/dev/null 2>&1
+if [ $? -ne 0 ]
+then
+	echo Version does not exist
+	exit
+fi
+# Ans yes, get writable copy and make time current time.
+pvf='-y -w -t'
+print
+rmit=ye
+if tty>/dev/null ;then
+query -qr Remove source files from:'
+'source, dbsource, include, reports, and view \(or q to quit\) 
+if [ $GVTRUE = QUIT ]
+then
+	exit
+fi
+if [ $GVTRUE = TRUE ]
+then
+	rmit=ye
+else
+	rmit=no
+fi
+fi #goes with tty line
+# Here we go.
+if  tty >/dev/null
+then
+query Ok to retrieve
+if [ $GVTRUE = TRUE ];then
+	:
+else
+	exit
+fi
+fi
+#Test dirlist
+for i in $dirlist
+do
+	cd ./$i 
+	if [ $? -ne 0 ]
+	then
+		print Cannot cd $i
+		exit
+	rm -f *.o *.V
+	fi
+	cd - >/dev/null
+done
+if [ $rmit = ye ]
+then
+	rm -f makefile prepchkauth pair.fmt kwsetup
+	print cleaning ./object
+	cd ./object
+	if [ $? -ne 0 ];then
+		print cd failed!
+		exit
+	fi
+	rm -f  *.o
+	cd - >/dev/null
+	cd ./source
+	if [ $? -ne 0 ];then
+		print cd failed!
+		exit
+	fi
+	rm -f *.o
+	print cleaning ./source
+	rm -f *.c *.ec
+	cd - >/dev/null
+	cd ./dbsource
+	if [ $? -ne 0 ];then
+		print cd failed!
+		exit
+	fi
+	rm -f *.o
+	print cleaning ./dbsource
+	rm -f *.c *.ec
+	cd - >/dev/null
+	cd ./include
+	if [ $? -ne 0 ];then
+		print cd failed!
+		exit
+	fi
+	print cleaning ./include
+	rm -f *.c *.ec *.h
+	cd - >/dev/null
+	cd ./view
+	if [ $? -ne 0 ];then
+		print cd failed!
+		exit
+	fi
+	rm -f  *V
+	print cleaning ./view
+	rm -f *.v
+	cd - >/dev/null
+	cd ./reports
+	if [ $? -ne 0 ];then
+		print cd failed!
+		exit
+	fi
+	rm  -f *.o
+	print cleaning ./reports
+	rm -f *.c *.ec *.h report.make NTreport.make
+fi
+cd - >/dev/null
+print Getting Maestro using $VCSCFG
+print Using $filelist $rptfilelist $ver
+set -o noglob
+if [[ ! -z  "$ver" || $getf = ye ]] ;then
+	echo Getting the $filelist and $rptfilelist files
+	print $getc ${pvf} ${ver} ${filelist} >>$Getlog
+	$getc ${pvf} ${ver} ${filelist} 2>&1 |grep -v exceeded >>$Getlog
+	if [ $? -ne 0 ];then
+	exit 1
+	fi
+	print $getc ${pvf} ${ver} ${rptfilelist} >>$Getlog
+	$getc ${pvf} ${ver} ${rptfilelist} 2>&1 |grep -v exceeded >>$Getlog
+	if [ $? -ne 0 ];then
+	exit 1
+	fi
+fi
+if [[ ! -r $filelist || ! -s $filelist ]] ;then
+	print $filelist Not found or empty ${baseis}files
+        exit
+fi
+if [[ ! -r $rptfilelist || ! -s $rptfilelist ]] ;then
+	print $rptfilelist Not found or empty ${baseis}files
+        exit
+fi
+print Getting the $filelist files ...
+print $getc ${pvf} ${ver} @${filelist} >>$Getlog
+#type $getc
+echo $getc
+$getc ${pvf} ${ver} @${filelist} 2>&1 |grep -v exceeded |tee -a $Getlog
+if [ $? -ne 0 ]
+then
+	print Cannot find/get  version $ver
+	exit
+fi
+print Getting reports using $VCSCFG
+#set -x
+set +o noglob
+#pvcscfg 32
+if [ $? -ne 0 ]
+then
+	print Cannot set pvcscfg
+	exit
+fi
+print Getting the $rptfilelist files ....
+print $getc ${pvf} ${ver} @${rptfilelist} >>$Getlog
+set -o noglob
+$getc ${pvf} ${ver} @${rptfilelist} 2>&1 |grep -v exceeded |tee -a $Getlog
+if [ $? -ne 0 ]
+then
+	print Cannot find/get  version $ver
+	exit
+fi
+# Touch some files
+print  Touch some files
+
+set +o noglob
+touch ./reports/foo.o
+chmod a+rx qmsgs qdelete
+cd ./include
+if [ $? -ne 0 ]
+then
+	echo Cannot cd to include for touch
+	exit 1
+fi
+touch *
+cd -
+cd ./view
+if [ $? -ne 0 ]
+then
+	echo Cannot cd to view for touch
+	exit 1
+fi
+touch *
+cd -
+print `date` >>$Getlog
+if [[ ! -z  "$ver" || $recv = ye ]] ;then
+	if [ -z "$PVCSBRNCH" ];then
+	Verlog1=$PWD/Rev$$trunk.rpt
+	if [ -z "$verarg" ];then
+	   verarg=trunktip
+	fi
+	else
+	bname=`echo $PVCSBRNCH|sed 's/-c//'`
+	bname=`basename $bname`
+	Verlog1=$PWD/Rev$$${bname}.rpt
+	if [ -z "$verarg" ];then
+	   verarg=${bname}tip
+	fi
+	fi
+	if [ ! -z "$ver" ];then
+	Verlog1=$PWD/Rev$$${verarg}.rpt
+	fi
+	print Recording revision information...
+	#Set up join script for sed
+	echo ''/\<-/\{N'' >$GVWHEREUF/joinsc
+	echo 's/\\n/ /' >>$GVWHEREUF/joinsc
+	echo 's/.*<-//' >>$GVWHEREUF/joinsc
+	echo "s/rev/ - $verarg :/" >>$GVWHEREUF/joinsc
+	echo '}' >>$GVWHEREUF/joinsc
+	#egrep '<-|^rev '  |sed -f joinsc
+	cat $Getlog |
+	egrep '<-|^rev '|
+	sed -f $GVWHEREUF/joinsc >>$Verlog1 2>&1
+#	sed '/<-/{N
+#	egrep '<-|^rev '|
+#	sed '/<-/{N
+#	s/\n/ /
+#	s/.*<-//
+#	s/rev/ - $verarg :/
+#	}' >>$Verlog1 2>&1
+fi
+grep 'get:' $Getlog
+if [ $? -eq 0 ] ;then
+	print "[1;33m Errors occured!   [0m"
+fi
+print Done... 
+print Results are in `basename $Getlog` `basename $Verlog1` 

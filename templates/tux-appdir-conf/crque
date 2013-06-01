@@ -1,0 +1,118 @@
+define(tux_3UID,substr(tux_UID,eval(len(tux_UID) - 3)))
+qmadmin  $QMCONFIG <<!
+echo
+crdl $QMCONFIG  0 9000
+qspacecreate
+QSPACE
+50tux_3UID
+8000
+20
+50
+20
+18000
+errque
+y
+16
+qopen QSPACE
+qcreate
+SENDMSG
+time fifo
+none
+50
+10
+80%
+0%
+
+qcreate
+RPLYQ
+time fifo
+none
+10
+0
+80%
+0%
+
+qcreate
+errque
+time fifo
+none
+10
+0
+80%
+0%
+
+qcreate
+UPMALERT
+time fifo
+none
+10
+0
+80%
+0%
+
+qcreate
+SENDMALERT
+time fifo
+none
+10
+0
+80%
+0%
+
+qcreate
+ADDMSG
+time fifo
+none
+10
+0
+80%
+0%
+
+qcreate
+FLIFO
+time fifo
+none
+10
+0
+80%
+0%
+
+qcreate
+B_FLIFO
+time fifo
+none
+10
+0
+80%
+0%
+
+qcreate
+B_INTRACK
+time fifo
+none
+10
+0
+80%
+0%
+
+qcreate
+INTRACK_ERRQ
+time fifo
+none
+10
+0
+80%
+0%
+
+qcreate
+UPDT_RSV_WRN
+time fifo
+none
+10
+0
+80%
+0%
+
+q
+!
+

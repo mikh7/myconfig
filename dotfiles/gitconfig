@@ -1,0 +1,13 @@
+
+[core]
+	attributesfile = ~/.gitattributes
+
+[mergetool.ediff]
+	cmd = ediff-merge $LOCAL $REMOTE $BASE $MERGED
+[merge]
+	tool = ediff
+[user]
+	email = max@openchat.com
+	name = Max Mikhanosha
+[diff "lisp"]
+        xfuncname="^(\\(def.*)$"

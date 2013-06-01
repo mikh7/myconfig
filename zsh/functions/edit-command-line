@@ -1,0 +1,11 @@
+edit-command-line () {
+	local tmpfile=${TMPPREFIX:-/tmp/zsh}ecl$$
+	print -R - "$PREBUFFER$BUFFER" > $tmpfile
+	set -x
+	exec < $TTY
+        eval ${VISUAL:-${EDITOR:-vi}} $tmpfile
+	set +x
+	print -Rz - "$(<$tmpfile)"
+	command rm -f $tmpfile
+	zle reset-prompt
+}

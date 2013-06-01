@@ -1,0 +1,2 @@
+#!/bin/zsh
+exec iconv --from-code UTF-16 --to-code utf-8 $*

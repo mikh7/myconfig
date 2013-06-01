@@ -1,0 +1,5 @@
+LANG=C
+path=(/usr/local/python-2.6.2/bin $path)
+. /opt/work/maxdev/rave_far/conf/settuxenv.sh
+
+

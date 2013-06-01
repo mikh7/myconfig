@@ -1,0 +1,51 @@
+#!perl 
+
+use Tk;
+use strict;
+use Data::Dumper;
+
+if ($ARGV[0] eq '-d') {
+  $ENV{"DISPLAY"} = $ARGV[1];
+}
+
+if (not defined $ENV{"DISPLAY"}) {
+  $ENV{"DISPLAY"} = "127.0.0.1:0.0";
+}
+
+my $top = MainWindow->new(title=> "cygwinxHelper");
+$top->appname("cygwinxHelper");
+$top->withdraw;
+my $name = $top->name;
+my $title = $top->title;
+my $id = $top->id;
+$id = hex $id;
+printf "My name is $name title=$title id=$id\n";
+open XRDB, "|xrdb -merge -" or die "Unable to run xrdb: $!";
+print XRDB "cygwinx*helperWindowId: $id\n";
+close XRDB;
+$top->BindClientMessage('browseUrlStart', \&handler);
+$top->BindClientMessage('browseUrlMore', \&handler);
+$top->BindClientMessage('browseUrlEnd', \&handler);
+
+my $url;
+
+sub handler {
+  my ($top) = (@_);
+  my $e = $top->XEvent;
+  my $type = $e->d;
+  my $str = unpack('W/a', $e->A); 
+  #print "type=$type str=$str\n";
+  if ($type eq 'browseUrlStart') {
+    $url = $str;
+  } else {
+    $url .= $str;
+  }
+  if ($type eq 'browseUrlEnd') {
+    print "Final url=$url\n";
+    system("cygstart", $url);
+    $url = '';
+  }
+}
+MainLoop;
+
+exit 0;

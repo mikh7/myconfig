@@ -1,0 +1,8 @@
+#!/bin/zsh
+
+sbcl \
+    --eval "(require 'swank)" \
+    --eval "(swank:create-server 
+                :port 4005 
+                :coding-system \"utf-8\"
+                :dont-close t)"

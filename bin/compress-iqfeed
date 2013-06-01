@@ -1,0 +1,13 @@
+#!/bin/sh
+
+PATH=~/myconfig/bin:/usr/local/bin:$PATH
+
+. shell-lib-process.sh
+
+cd ~/CTA
+ls -alt /l2logs/ |  head
+echo Compressing files
+./compress_files
+ls -alt /l2logs/ |  head
+df -h
+ 

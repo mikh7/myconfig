@@ -1,0 +1,17 @@
+
+# Put the below entris into your .Xresources file
+# and run xrdb ~/.Xresources
+]4;232;rgb:80/a0/ff\xterm*color232: #80a0ff
+]4;233;rgb:ff/a0/a0\xterm*color233: #ffa0a0
+]4;234;rgb:ff/a5/00\xterm*color234: #ffa500
+]4;235;rgb:40/ff/ff\xterm*color235: #40ffff
+]4;236;rgb:ff/ff/60\xterm*color236: #ffff60
+]4;237;rgb:ff/80/ff\xterm*color237: #ff80ff
+]4;238;rgb:60/ff/60\xterm*color238: #60ff60
+]4;239;rgb:6a/5a/cd\xterm*color239: #6a5acd
+]4;240;rgb:00/8b/8b\xterm*color240: #008b8b
+]4;241;rgb:a5/2a/2a\xterm*color241: #a52a2a
+]4;242;rgb:a0/20/f0\xterm*color242: #a020f0
+]4;243;rgb:2e/8b/57\xterm*color243: #2e8b57
+]4;244;rgb:cc/cc/cc\xterm*color244: #cccccc
+]4;245;rgb:f2/f2/f2\xterm*color245: #f2f2f2

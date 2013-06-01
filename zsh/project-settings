@@ -1,0 +1,55 @@
+zmodload zsh/stat
+
+declare -g pds_path
+declare -g pds_fpath
+declare -g pds_cdpath
+declare -g pds_last_file
+declare -g pds_last_time
+declare -g pds_settings_file=.project.zsh
+declare -g pds_recursive
+
+pds_save_paths () {
+    if [[ $#pds_path -gt 0 ]] ; then
+        # restore
+        path=($pds_path)
+        fpath=($pds_fpath)
+        cdpath=($pds_cdpath)
+    else
+        # save
+        pds_path=($path)
+        pds_fpath=($fpath)
+        pds_cdpath=($cdpath)
+    fi
+}
+
+# Usage: pds_check [<dir>]
+pds_check () {
+    if [[ -z $pds_recursive ]] ; then
+        local dir=${${1:=$PWD}:a}
+        local file=$dir/$pds_settings_file
+        file=$file:a
+        if [[ -z $pds_recursive && -r $file && ($pds_last_file != $file \
+            || $pds_last_time != $(stat +mtime $file)) ]] ; then
+            pds_recursive=t
+            pds_save_paths
+            print Loading $file
+            pds_last_file=$file
+            pds_last_time=$(stat +mtime $file)
+            {pushd $dir && . $file} always {popd && pds_recursive=;}
+        fi
+    fi
+}
+            
+pds_check2 () {
+    if [[ -n $pds_last_file ]] ; then
+        pds_check $pds_last_file:h
+    fi
+}
+
+add-hook chpwd_hook pds_check
+add-hook precmd_hook pds_check2
+
+
+
+
+

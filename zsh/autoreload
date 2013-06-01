@@ -1,0 +1,30 @@
+typeset -g zshrc_load_time
+# Provide automatic reload of zshrc
+zmodload zsh/stat
+
+function zsh-autoreload-check {
+    emulate -L zsh
+    local time
+    local first_time=0
+    _do_reload_config=0
+    [[ ! -z $zshrc_load_time ]] || first_time=1
+    for time in \
+        $(stat +mtime ~/.zshrc) \
+        $(stat +mtime ~/.zalias) \
+        $(stat +mtime ~/.zshenv)
+    do
+      if [[ $first_time == 1 ]] ; then
+        if [[ -z $zshrc_load_time || $time > $zshrc_load_time ]] ; then
+          zshrc_load_time=$time
+        fi
+      else
+        if [[ $time > $zshrc_load_time ]] ; then
+          zshrc_load_time=$time
+          _do_reload_config=1
+        fi
+      fi
+    done
+}
+
+# add-hook preexec_hook zsh-autoreload-check
+add-hook precmd_hook zsh-autoreload-check

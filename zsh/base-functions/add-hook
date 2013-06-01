@@ -1,0 +1,15 @@
+# (add-hook hook-var hook-name &optional append)
+function add-hook {
+    local hook_var=$1
+    local hook=$2
+    typeset -aU -g $hook_var
+    if [[ ! -z $hook  ]] ; then
+        shift 2
+        if [[ $1 == append ]] ; then
+            set -A $hook_var ${(P)hook_var} $hook
+        else
+            set -A $hook_var $hook ${(P)hook_var}
+        fi
+    fi
+}
+

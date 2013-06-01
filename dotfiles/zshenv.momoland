@@ -1,0 +1,59 @@
+#
+# Copied from /etc/profile, in case SUSE needs this 
+# somewhere. 
+#
+test -z "$UID"  && readonly  UID=`id -ur 2> /dev/null`
+test -z "$EUID" && readonly EUID=`id -u  2> /dev/null`
+test -z "$USER" && USER=`id -un 2> /dev/null`
+test -z "$MAIL" && MAIL=/var/spool/mail/$USER
+test -z "$HOST" && HOST=`/bin/hostname -s 2> /dev/null`
+test -z "$CPU"  &&  CPU=`/bin/uname -m 2> /dev/null`
+test -z "$HOSTNAME" && HOSTNAME=`/bin/hostname 2> /dev/null`
+test -z "$LOGNAME"  && LOGNAME=$USER
+case "$CPU" in
+    i?86) HOSTTYPE=i386   ;;
+    *)    HOSTTYPE=${CPU} ;;
+esac
+OSTYPE=linux
+MACHTYPE=${CPU}-suse-${OSTYPE}
+# Do NOT export UID, EUID, USER, and LOGNAME
+export MAIL HOST CPU HOSTNAME HOSTTYPE OSTYPE MACHTYPE
+#
+# Set some environment variables for TeX/LaTeX
+#
+textinputs=("" $texinputs $HOME/.TeX /usr/share/doc/.TeX /usr/doc/.TeX)
+#
+# These settings are recommended for old motif applications
+#
+if test -z "$PROFILEREAD" ; then
+    if [ -r /usr/share/X11/XKeysymDB ]; then
+	export XKEYSYMDB=/usr/share/X11/XKeysymDB
+    else
+	export XKEYSYMDB=/usr/X11R6/lib/X11/XKeysymDB
+    fi
+    if [ -d /usr/share/X11/nls ]; then
+	xnlspath+=/usr/share/X11/nls
+    else
+	xnlspath+=/usr/X11R6/lib/X11/nls
+    fi
+    #
+    # Midnight Commander needs this to run in color mode
+    #
+    COLORTERM=1
+    export COLORTERM
+fi
+
+# add oracle
+#export ORAENV_ASK=NO
+#export ORACLE_SID=ORADEV
+#. oraenv 
+# add tuxedo
+export TUXDIR=/opt/bea/tuxedo8.1
+#ld_library_path+=$TUXDIR/lib
+#ld_library_path+=$ORACLE_HOME/lib32
+path+=~/pvt-myconfig/bin
+#path+=$TUXDIR/bin
+#export CARMSYS=/opt/carmen/Rave-15.11.2_CARMSYS
+
+export emacsdir=/usr/src/local/emacs/emacs-24
+#unset emacsdir

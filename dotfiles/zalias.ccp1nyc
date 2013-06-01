@@ -1,0 +1,26 @@
+#!/bin/zsh
+alias vi=vim
+
+
+create-dot-makefile() {
+  cat makefile | sed -e 's/makefile/.makefile/g' \
+  | sed -e 's/make rave/make -f .makefile rave/g' \
+  | sed -e 's/hgenawk/.hgenawk/g' \
+  > .makefile
+  cp view/hgenawk view/.hgenawk
+}
+
+make() {
+  local tmp
+  if [[ -d .hg && -f kwsetup ]] ; then
+    if [[ ! -f .makefile || makefile -nt .makefile ]] ; then
+      create-dot-makefile
+      print "Please regenarate makefile"
+      return 1
+    else      
+      /usr/bin/make -f .makefile $*
+    fi
+  else
+    /usr/bin/make $*
+  fi
+}

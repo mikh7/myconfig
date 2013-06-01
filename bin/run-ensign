@@ -1,0 +1,6 @@
+#!/bin/sh
+
+cd ~/.wine_ensign/drive_c/ENSIGN
+pwd
+export WINEPREFIX="/home/max/.wine_ensign"
+setsid wine Ensign.exe

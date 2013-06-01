@@ -1,0 +1,386 @@
+!
+!      XTERM RESOURCES
+!
+! with some emphasis on 'Translation Tables'
+!
+! Docs & Commands:
+!
+!    Thomas E. Dickey's free xterm
+!    <URL:http://dickey.his.com/xterm/>
+!       ( Jul 30 2000 : xterm-139)
+!       Both xterm and manpage are better than the MIT version.
+!       It also comes with an FAQ.
+!
+!    x-faq
+!	<URL:http://www.faqs.org/faqs/x-faq/>
+!       (also <URL:http://www.uni-ulm.de/~s_smasch/X11/x-faq.gz> (old))
+!    speedup-x-faq
+!	<URL:http://www.faqs.org/faqs/x-faq/speedups/>
+!       (also <URL:http://www.uni-ulm.de/~s_smasch/X11/speedup-x-faq.gz> (old))
+!    xt-faq
+!	<URL:http://www.faqs.org/faqs/xt-faq/>
+!
+!    Application defaults:
+!	/usr/X11R6/lib/X11/app-defaults/XTerm
+!	/usr/openwin/lib/app-defaults/XTerm (Solaris)
+!    KeySym Names:
+!	/usr/X11R6/include/X11/keysymdef.h
+!	/usr/openwin/share/include/X11/keysymdef.h (Solaris)
+!
+!    xrdb(1), xmodmap(1)
+!
+!    Debugging resources: appres(1)
+!    If you want to know about the effectively used resources for a
+!    certain program.  In particular it also pays attention to the
+!    resources loaded at start-up.
+!
+!    xkeycaps(1):
+!       <URL:http://www.jwz.org/xkeycaps/>
+!       with excellent dokumentation about the keyboard model in X11
+!
+!    »Using and Specifying X Resources«
+!      <URL:ftp://ftp.x.org/pub/unsupported/doc/papers/tutorials/resources.txt>
+!
+!    editres(1). Modify resources on the fly.
+!
+!    About generating your 8bit chars with an american/english keyboard
+!      <URL:http://www.uni-ulm.de/~s_smasch/X11/Xmodmap>)
+!
+
+
+! processing of this resource file additionally leasts at least
+! about 50 ms on 'SunOS 5.5 sun4m sparc' 169MHz
+! (measured via 'time xterm -e /bin/true')
+
+! Where to get resources from (highest priority first)
+!
+! XENVIRONMENT (filename)    or $HOME/.Xdefaults-<hostname>
+!     Only these have precedence over the resources being preloaded
+!     (usually with 'xrdb'), "overrides the global resources stored
+!     in the RESOURCE_MANAGER property".
+! XUSERFILESEARCHPATH        or XAPPLRESDIR (directory) , $HOME/Xterm resp.
+! XFILESEARCHPATH            or /usr/lib/X11/app-defaults/XTerm
+!   (system/library resources)
+!
+! The format of X[USER]FILESEARCHPATH:
+!    The easiest way: something like "$HOME/lib/app-defaults/%N",
+!    then the filename is the class name ("XTerm").
+!    See x-faq in particular, it's not really well documented
+!    anywhere else?  XAPPLRESDIR is easier unless you use the
+!    more sophisticated ways (locales etc).
+
+
+! preprocessor macros ("#ifdef COLOR") are _not_ evaluated in
+! application specific resource files (those files that are
+! read at start-up in contrast to those read with xrdb).
+!
+!    #include <...>, #ifdef, ... see cpp(1)
+!
+! See "xrdb -symbols" about the known macros when processing your
+! Resource File.  Don't rely on the cpp-builtin-macros
+! as xrdb might explicitly undefine(!) them when calling cpp (Irix-5 e.g.).
+
+
+! Usually one gets hardly any error messages. Try...
+XTerm*StringConversionWarnings: on
+
+
+!
+! Translation Tables:
+!
+!    In general:   »Events« are mapped to »Actions« .
+!    These are often keyboard-events and string()-actions
+!
+! * lines must end with '\' - except the last one
+!   (easier: empty line at end )
+! * single ressources need to be separated with '\n'
+!   reason: the translation table gets loaded as one string,
+!   and these '\n' are the delimiters for the single elements.
+! * ...and thus comments are impossible in a translation.
+! * string(0x0d) is 'return',  string(0x1b) is 'escape'
+
+! The feature 'translation table' is provided by libXt, thus it's not
+! really available in 'rxvt', because this terminal emulator intentionally
+! doesn't link libXt for reasons of performance and size.
+
+! The rxvt maintainer Geoff Wing on 'Fri, 7 May 1999 12:04:20 +1000'
+!   "It could be added as a compile-time define feature.  I suspect it hasn't
+!    been because nobody who has wanted it has written it.  It wouldn't have
+!    been originally added because back then rxvt didn't allow for so many
+!    compile-time defined features and ones that were perceived to consume
+!    lots of memory were very low on the list of features to add."
+! that makes sense.
+
+
+! See some hints about the following below.
+
+XTerm.VT100.translations: #override \
+	None<Key>BackSpace:	string(0x08) \n\
+	Ctrl<Key>BackSpace:	string(0x7F) \n\
+	<Key>F12:		keymap(other) \n\
+	<Key>F1:		string("sven.mascheck@student.uni-ulm.de") \n\
+	<Key>F2:		string("mascheck@faw.uni-ulm.de") \n\
+	None<Key>F8:		string("LD_LIBRARY_PATH") \n\
+	Meta<Key>F8:		string("LC_CTYPE") \n\
+	Ctrl<Key>F8:		string("XUSERFILESEARCHPATH") \n\
+	Shift<Key>F8:		string("DISPLAY") \n\
+ \
+	Ctrl<Key>Left:		string(0x1b) string("b") \n\
+	Ctrl<Key>Right:		string(0x1b) string("f") \n\
+\
+	:Meta<Key>a:		string("ä") \n\
+	:Meta<Key>o:		string("ö") \n\
+	:Meta<Key>u:		string("ü") \n\
+	:Meta<Key>A:		string("Ä") \n\
+	:Meta<Key>O:		string("Ö") \n\
+	:Meta<Key>U:		string("Ü") \n\
+	:Meta<Key>s:		string("ß") \n\
+	:Meta<Key>comma:	string("«") \n\
+	:Meta<Key>period:	string("»") \n\
+	:Meta<Key>slash:	string("ø") \n\
+	:Meta<Key>m:		string("µ") \n\
+ \
+	None<Key>F10:		set-vt-font(1) \n\
+	None<Key>F11:		set-vt-font(d) \n\
+ \
+	<FocusIn>:		\n\
+	<FocusOut>:		\n\
+ \
+	None<Key>Prior:		scroll-back(1,page) \n\
+	None<Key>Next:		scroll-forw(1,page) \n\
+	Meta<Key>Prior:		scroll-back(1) \n\
+	Meta<Key>Next:		scroll-forw(1) \n\
+	Shift<Key>Prior:	scroll-back(3) \n\
+	Shift<Key>Next:		scroll-forw(3) \n\
+ \
+ \
+	<Key>F2:	string("mascheck@faw.uni-ulm.de") \n\
+	<Key>F3:	string("slogin -l faw ") \n\
+	<Key>F4:	string("test -x /amd/bin/bash && exec /amd/bin/bash \
+|| test -x /bin/bash && exec /bin/bash \
+|| test -x /usr/local/bin/bash && exec /usr/local/bin/bash -login \
+|| test -x /com/bin/bash && exec /com/bin/bash \
+|| echo 'no bash';") string(0x0d)\n\
+	None<Key>F9:	string("TOP_INCLUDES = -I/usr/openwin/include") \n\
+
+
+! keymap(other): more translation tables with more "keymaps" (see below)
+!
+! Strings:	stuff often used, can span accounts - in contrast to
+!               the "rc" files.  ..., email addresses, long strings,...
+!
+! Ctrl<Key>Left/Right:
+!		For the emacs mode of the readline library (eg bash)
+!
+! Umlaute:	for the english Sun keyboard (type 5).
+!
+!		It's a workaround to get »Meta« and Umlauts via
+!		the same(!) modifier. If you don't need that, better
+!		define Umlauts (etc) via xmodmap/xkeycaps.
+!
+! Keynames:	Actually, you should use the KeySym names instead of
+!		the characters themeselves (',' vs 'comma' e.g.).
+!		See /usr/X11R6/include/X11/keysymdef.h
+!		    /usr/openwin/share/include/X11/keysymdef.h (solaris).
+!		Be aware of the KeySyms being prefixed with 'XK_'
+!		in those files.
+!		Take care of Caps inside: 'BackSpace' vs. 'Linefeed'
+!
+! Modifiers:
+!		'@Meta_L<Key>x' : KeySym itself
+!		   'Meta<Key>x' : shortcut for a modifier. possible:
+!					Ctrl, Shift, Lock, Meta, Hyper, Super,
+!					Alt, Mod1-5, Button1-5, None, Any.
+!		   'None<Key>x' : key must be pressed w/o any modifier
+!    ":" in front of a modifier : shift/lock get attention,
+!    "~" in front of a modifier : negation ("without this modifier")
+!
+! Which KeySyms are mapped on a certain key? ("F12, Meta_L, Control_L", ...)
+! consult 'xev' or 'xkeycaps' , customize with 'xmodmap' or 'xkeycaps'
+!
+! If you want xev to also inform you about the currently pressed
+! _modifier_, use the following source patch for xev:
+!     <URL:http://www.uni-ulm.de/~s_smasch/X11/xev.diff>
+!
+! BackSpace vs Delete:  See also
+!		'stty erase [...]'
+!		~/.inputrc and /etc/inputrc [bash]
+!		"Consistent BackSpace and Delete Configuration":
+!		    <URL:http://www.ibbnet.nl/~anne/keyboard.html>
+!
+! possible events in xterm:  See T.Dickey's xterm manual
+
+
+
+! Another translation table:
+XTerm.VT100.otherKeymap.translations:  #override \
+	<Key>F12:		keymap(None)\n\
+	<Key>F1:		string("different keymap! ") \n\
+	<FocusIn>:		set-vt-font(d) \n\
+	<FocusOut>:		set-vt-font(1) \n
+
+
+! Do conversion of <Meta>-<Key> (on Sun: "rhomb") to <Esc><Key>.
+! Very useful for the emacs editing mode (f.i. bash/readline)
+! e.g: Meta-b/-f.    Use "false" then.
+XTerm*eightBitInput:    false
+
+! xfree-xterm #122 - #127:
+! XTerm*metaSendsEscape: true
+
+
+
+! Which characters are considered to build a _single_ word for Cut&Paste?
+! Every ascii-value gets mapped to another (arbitrary), already 'valid'
+! character  with a colon.
+! Here ascii 48 ("0") is the reference. See the manpage.
+!
+! I don't want these to separate 'words':   ! # $ % + - . / @ ~
+XTerm.VT100.charClass: 33:48,35-37:48,43:48,45-47:48,64:48,126:48
+
+! Reminder:
+!   !    "    #    $    %    &    '    (    )    *    +    ,    -    .    / 
+!   33,  34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44,  45,  46,  47,
+!   @         [    \    ]    ^    _    `    {    |    }    ~  
+!   64,       91,  92,  93,  94,  48,  96,  123, 124, 125, 126,
+
+! Wether this works also with _wrapped_ selections, depends on
+!  - the terminal emulator:  Neither MIT X11R5/6 nor Suns openwin xterm
+!    know about that.  Use the 'xfree xterm' or 'rxvt'.  Both compile on
+!    all major platforms.
+!  - It only works if xterm is wrapping the line itself (if so is not
+!    always really obvious for the user).
+!  - Among the different vi's, vim actually supports this with a
+!    clever and hackish trick (see screen.c):
+!
+!    But first: vim inspects the _name_ of the value of TERM.
+!    This must be similar to 'xterm' (like xterm-color).
+!    The terminfo entry _itself_ doesn't matter here
+!    (e.g.: 'xterm' and 'vs100' are the same entry, but with
+!     the latter it doesn't work).
+!
+!    If vim has to wrap a word, it appends a space at the first part,
+!    this space will be wrapped by xterm.  vim in turn then positions
+!    the cursor again at the _beginning_ of this next line. Thus, the
+!    space is not visible. xterm now believes that the two lines are
+!    actually a single one--as xterm _did_ some wrapping...
+
+! Here comes a simple test for a                                   'wrapped_selection' (using an 80 chars wide terminal).
+! Double click shall select the _whole_ word.
+
+
+! For the FocusIn/Out-demo above and for ascii-art:
+XTerm.VT100*font1:		nil2
+
+
+!  There shall be colours
+
+! First:
+! If the following is not explicitly set, "*Foreground" (with uppercase F,
+! by accident e.g.) will override all other colors!  To take care of such
+! an accident, use/modify the following table.
+! In other words: If you definitely want to avoid any colors, even those
+! switched by plain escape sequences(!) then comment out the following
+! and use '*Foreground' etc.
+!
+! It's the original colors:
+XTerm.VT100*color0: black
+XTerm.VT100*color1: red3
+XTerm.VT100*color2: green3
+XTerm.VT100*color3: yellow3
+XTerm.VT100*color4: blue3
+XTerm.VT100*color5: magenta3
+XTerm.VT100*color6: cyan3
+XTerm.VT100*color7: gray90
+XTerm.VT100*color8: gray30
+XTerm.VT100*color9: red
+XTerm.VT100*color10: green
+XTerm.VT100*color11: yellow
+XTerm.VT100*color12: blue
+XTerm.VT100*color13: magenta
+XTerm.VT100*color14: cyan
+XTerm.VT100*color15: white
+
+
+! What i use...
+XTerm*background:       rgb:19/10/50
+XTerm*foreground:	rgb:ff/dd/70
+XTerm*cursorColor:	#ffdd70
+
+! different purposes, different colors, switched by the instance name
+! "..." of the Class XTerm:  'xterm -name wega'
+wega*background:	rgb:05/00/60
+lyra*background:	rgb:05/00/60
+cellar*background:	rgb:05/00/60
+ultra15*background:	black
+auspex1*background:	black
+w3m*background:		black
+
+
+XTerm.VT100.geometry:	80x40
+! Xterm*geometry would also influence the window menu itself
+! (<ctrl>-<Button>), "newbie fault".
+
+! Unfortunately 'a big memory' needs lots of memory.
+!
+! Memory prints on Solaris:
+!    104kB heap without savelines  in contrast to  448kB with 1024 savlines
+!    (means about a third kB per 'saved' line)
+XTerm*scrollBar:	true
+XTerm*saveLines:	1024
+
+! Hm...
+! XTerm.VT100.ttyModes: susp ^Z intr ^C start ^Q stop ^S dsusp ^U
+
+! XTerm*font :            fixed
+
+
+! The ages of X11: multi-login
+XTerm*loginShell:	  True
+
+
+! ...end
+!----------------------------------------------------------
+! default bindings in xterm-131
+! to get an idea:
+!
+!	   Shift <KeyPress> Prior:scroll-back(1,halfpage) \n\
+!	    Shift <KeyPress> Next:scroll-forw(1,halfpage) \n\
+!	  Shift <KeyPress> Select:select-cursor-start() \
+!				  select-cursor-end(PRIMARY, CUT_BUFFER0) \n\
+!	  Shift <KeyPress> Insert:insert-selection(PRIMARY, CUT_BUFFER0) \n\
+!
+!		    ~Meta <KeyPress>:insert-seven-bit() \n\
+!		     Meta <KeyPress>:insert-eight-bit() \n\
+!		    !Ctrl <Btn1Down>:popup-menu(mainMenu) \n\
+!	       !Lock Ctrl <Btn1Down>:popup-menu(mainMenu) \n\
+!    !Lock Ctrl @Num_Lock <Btn1Down>:popup-menu(mainMenu) \n\
+! 	 ! @Num_Lock Ctrl <Btn1Down>:popup-menu(mainMenu) \n\
+!		    ~Meta <Btn1Down>:select-start() \n\
+!		  ~Meta <Btn1Motion>:select-extend() \n\
+!		    !Ctrl <Btn2Down>:popup-menu(vtMenu) \n\
+!	       !Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \n\
+!    !Lock Ctrl @Num_Lock <Btn2Down>:popup-menu(vtMenu) \n\
+!	 ! @Num_Lock Ctrl <Btn2Down>:popup-menu(vtMenu) \n\
+!	      ~Ctrl ~Meta <Btn2Down>:ignore() \n\
+!		     Meta <Btn2Down>:clear-saved-lines() \n\
+!		~Ctrl ~Meta <Btn2Up>:insert-selection(PRIMARY, CUT_BUFFER0) \n\
+!		    !Ctrl <Btn3Down>:popup-menu(fontMenu) \n\
+!	       !Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \n\
+!    !Lock Ctrl @Num_Lock <Btn3Down>:popup-menu(fontMenu) \n\
+!	 ! @Num_Lock Ctrl <Btn3Down>:popup-menu(fontMenu) \n\
+!	      ~Ctrl ~Meta <Btn3Down>:start-extend() \n\
+!		  ~Meta <Btn3Motion>:select-extend() \n\
+!		     Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \n\
+!		Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \n\
+!     Lock @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \n\
+!	   @Num_Lock Ctrl <Btn4Down>:scroll-back(1,halfpage,m) \n\
+!			  <Btn4Down>:scroll-back(5,line,m)     \n\
+!		     Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \n\
+!		Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \n\
+!     Lock @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \n\
+!	   @Num_Lock Ctrl <Btn5Down>:scroll-forw(1,halfpage,m) \n\
+!			  <Btn5Down>:scroll-forw(5,line,m)     \n\
+!			     <BtnUp>:select-end(PRIMARY, CUT_BUFFER0) \n\
+!			   <BtnDown>:bell(0)
+!------------------------------------------------------------

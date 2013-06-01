@@ -1,0 +1,7 @@
+tmadmin <<!
+echo
+crdl -b 6000 -z $APPDIR/conf/TLOG
+crlog -m tux_LMID
+q
+!
+

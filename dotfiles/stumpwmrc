@@ -1,0 +1,1049 @@
+;; -*- mode: Lisp; -*-
+(in-package :stumpwm)
+
+(set-select-bg-color "SlateGray4")
+
+(defun cat (&rest strings) 
+  "A shortcut for (concatenate 'string foo bar)."
+  (apply 'concatenate 'string strings))
+
+;;(setf *debug-level* 20)
+(redirect-all-output (data-dir-file "debug-output" "txt"))
+
+(set-prefix-key (kbd "C-t"))
+;; (and (getenv "SHELL") (setf *shell-program* (getenv "SHELL")))
+(setf 
+ *normal-border-width*             1 
+ *window-border-style*             :thick
+ *frame-number-map*                "0123456789abcdefghijklmnop"
+ *window-number-map*               "0123456789"
+ *group-number-map*                "0123456789"
+ *window-format*                   "%n%8@c  %50^t"
+ *mouse-focus-policy*              :click
+ *message-window-gravity*          :center
+ *input-window-gravity*            :center
+ *run-or-raise-all-groups*         NIL
+ *input-history-ignore-duplicates* T
+ *mode-line-position*              :bottom
+ *honor-window-moves*              nil
+ *resize-hides-windows*            nil)
+
+(defvar *regular-map* "0123456789")
+(defvar *shifted-map* ")!@#$%^&*(")
+(defvar *window-map*)
+(defvar *exec-map*)
+(defvar *xterm-map*)
+(defvar *alphabet*    "abcdefghijklmnopqrstuvwxyz")
+(defvar *clipboard*   (make-hash-table :test 'equalp))
+
+;; Keyboard on topmap to show the key pressed
+(defun key-press-hook (key key-seq cmd)
+  (declare (ignore key))
+  (unless (or (stringp cmd)
+              *record-last-msg-override*)
+    (message "~A" (print-key-seq (reverse key-seq)))))
+
+(defmacro replace-hook (hook fn)
+  `(remove-hook ,hook ,fn)
+  `(add-hook ,hook ,fn))
+(replace-hook *key-press-hook* 'key-press-hook)
+
+(defmacro hook-once (hook args &body body) 
+  (alexandria:with-gensyms (ref func) 
+    `(let* ((,ref nil)
+            (,func (lambda ,args 
+                     (remove-hook ,hook ,ref)
+                     ,@body)))
+       (setq ,ref ,func)
+       (add-hook ,hook ,func))))
+
+;; renumber windows on focus
+
+(defvar *autorenumber* t)
+  
+(defun renumber-windows-on-focus (new old)
+  (declare (ignore old new))
+  (when *autorenumber*
+    (let ((n 0))
+      (dolist (w (group-windows (current-group)))
+        (setf (window-number w) n)
+        (incf n)))))
+
+(replace-hook *focus-window-hook* 'renumber-windows-on-focus)
+
+(defcommand autorenumber (&optional onoff) (:rest) 
+  (cond ((null onoff)
+         (setq *autorenumber* (not *autorenumber*)))
+        ((member onoff '("on" "true" "t"))
+         (setq *autorenumber* T))
+        ((member onoff '("off" "false" "nil"))
+         (setq *autorenumber* NIL))
+        (t (error "Expecting on|off")))
+  (message (format nil "Auto renumber is ~A" 
+                   (if *autorenumber* "on" "off")))) 
+
+;;; URL tools
+
+(defvar *browser* "chromium")
+
+(defcommand browser () ()
+  "Start browser is already running, in which case focus it."
+  (let* ((browser-name (or *browser* "firefox")) 
+         (browser-class (string-capitalize (file-namestring browser-name))))
+    (run-or-raise browser-name `(:class ,browser-class))))
+
+
+(defcommand url (url) ((:rest "URL"))
+  "Open URL in the browser in the current group"
+  (check-type url string)
+  (unless (or
+           (eql 0 (search "http://" url))
+           (eql 0 (search "https://" url))
+           (eql 0 (search "ftp://" url))
+           (eql 0 (search "file://" url)))
+    (setq url (cat "http://" url)))
+  (let* ((browser-name (or *browser* "firefox"))
+         (browser-class (string-capitalize (file-namestring browser-name)))
+         (firefoxp (search "firefox" browser-name))
+         (chromep (search "chrom" browser-name))
+         (window))
+    (flet ((run-browser (&rest args)
+             (run-prog browser-name :search t :args args :wait nil))
+           (find-browser-window (&optional all-groups)
+             (first (find-matching-windows 
+                     `(:class ,browser-class) all-groups nil))))
+      (if firefoxp 
+          (cond ((setq window (find-browser-window))
+                 ;; firefox opens new tab in the last active window, which
+                 ;; could be in another group. Raise firefox window first
+                 ;; so that tab will be opened on a window in the current 
+                 ;; group
+                 (focus-window window)
+                 (run-browser  "-remote"  (cat "openUrl(" url ")")))
+                ((find-browser-window :all)
+                 (run-browser  "-remote"  (cat "openUrl(" url ",new-window)")))
+                (t
+                 (run-browser url)))
+          (cond ((setq window (find-browser-window))
+                 (focus-window window)
+                 (run-browser url))
+                (chromep (run-browser  "--new-window" url))
+                (t (run-browser url)))))))
+
+(defcommand google (search) ((:rest "Search in Google for: "))
+  "Search Google for stuff, uses URL command"
+  (check-type search string)
+  (setq search (substitute #\Space #\+ search))
+  (url (cat "http://www.google.com/search?q=" search)))
+
+(defun add-move-keys (m key-format command-normal command-shift)
+  (dotimes (i (length *regular-map*))
+    (define-key m
+                (kbd (format nil key-format (char *regular-map* i)))
+                (format nil command-normal (elt *group-number-map* i)))
+    (define-key m
+                (kbd (format nil key-format (char *shifted-map* i)))
+                (format nil command-shift (elt *group-number-map* i)))))
+
+;; fix menu
+(defun menu-back (menu)
+  "Delete previously typed characters, thus, widen search."
+
+  ;; delete one char from the en
+  (if (> (length (menu-state-current-input menu)) 0)
+      (setf (menu-state-current-input menu) (subseq (menu-state-current-input menu) 0 (- (length (menu-state-current-input menu)) 1))))
+
+  ;; don't change selected unless necessary
+  ;;(decf (menu-state-selected menu))
+  (bound-check-menu menu))
+
+(defun menu-cycle-match (menu) 
+  "Jump ahead to the next matched result."
+
+  ;; make a list of 'matched' elements by index
+  ;; find current index
+  ;; go to next one on the list
+  (let ((matchlist (mapcar 
+		    (lambda (x) 
+		      (if (search (menu-state-current-input menu) (car x) 
+				  :test #'char-equal)
+			  t
+			  nil)) 
+		    (menu-state-table menu)
+		    ))
+	(cur (menu-state-selected menu))
+	(first-i -1)
+	(x -1)
+	(mlist (list))
+	)
+    
+    ;; get the indexes of the matches
+    (loop for i in matchlist do 
+	 (incf x)
+	 (if i
+	     (progn
+	       (if (= first-i -1) (setf first-i x))
+	       (if (> x cur) (setq mlist (append 
+					  mlist
+					  (list x)))))))
+    
+    (if mlist
+	(if (< cur first-i)
+	    (setf (menu-state-selected menu) first-i)
+	    (setf (menu-state-selected menu) (car mlist)))
+	(setf (menu-state-selected menu) first-i))))
+
+
+(define-key *menu-map* (kbd "DEL") 'menu-back)
+(define-key *menu-map* (kbd "TAB") 'menu-cycle-match)
+
+(setf *groups-map*
+      (let ((m (make-sparse-keymap)))
+        (define-key m (kbd "'") "grouplist")
+        (define-key m (kbd "\"") "gselect")
+        (define-key m (kbd "g") "gother")
+        (define-key m (kbd "C-g") "gother")
+        (define-key m (kbd "G") "vgroups")
+        (define-key m (kbd "c") "gnew")
+        (define-key m (kbd "C") "gnew-float")
+        (define-key m (kbd "n") "gnext")
+        (define-key m (kbd "p") "gprev")
+        (define-key m (kbd "C-n") "gnext")
+        (define-key m (kbd "C-p") "gprev")
+        (define-key m (kbd "SPC") "gnext")
+        (define-key m (kbd "C-SPC") "gprev")
+        (define-key m (kbd "C-N") "gnext-with-window")
+        (define-key m (kbd "C-P") "gprev-with-window")
+        (define-key m (kbd "m") "gmove")
+        (define-key m (kbd "M") "gmove-marked")
+        (define-key m (kbd "k") "gkill")
+        (define-key m (kbd "R") "grename")
+        (define-key m (kbd "Escape") '*root-map*)
+        (add-move-keys m "~A" "gselect ~A" "gmove ~A")
+        m))
+
+
+(setf *window-map*
+      (let ((m (make-sparse-keymap)))
+        (dotimes (i (length *regular-map*))
+          (define-key m
+              (kbd (format nil "~a" (char *regular-map* i)))
+            (format nil "select-window-by-number ~A" (char *window-number-map* i)))
+          (define-key m
+              (kbd (format nil "~a" (char *shifted-map* i)))
+            (format nil "pull ~A" (char *window-number-map* i))))
+        (define-key m (kbd "w") "windows")
+        m))
+
+;; Subgroup EXEC
+
+(defun goto-win (win)
+  (let ((group (window-group win)))
+    (if (typep win 'tile-window) 
+        (let ((frame (window-frame win))
+              (old-frame (tile-group-current-frame group)))
+          (frame-raise-window group frame win)
+          (focus-all win)
+          (unless (eq frame old-frame)
+            (show-frame-indicator group)))
+        (group-focus-window (window-group win) win))
+    (switch-to-group group)))
+
+(defcommand emacs () ()
+  "Start emacs unless it is already running, in which case focus it."
+  (run-or-raise "emacsemacs" '(:class "Emacs"
+                               :instance "^emacs")))
+
+
+(defun find-amarok-window ()
+  "Return (values window is-withdrawn)")
+
+(defcommand amarok () ()
+  "Start or raise amarok"
+  (labels
+      ((find-amarok ()
+         (first (find-matching-windows 
+                 '(:class "Amarok" :role "MainWindow") t t)))
+       (goto-win (win)
+         (let ((group (window-group win)))
+           (when (not (eq group (current-group)))
+             (move-window-to-group win (current-group)))
+           (if (typep win 'tile-window) 
+               (let* ((frame (window-frame win))
+                      (old-frame (tile-group-current-frame group)))
+                 (frame-raise-window group frame win)
+                 (focus-all win)
+                 (unless (eq frame old-frame)
+                   (show-frame-indicator group)))
+               (group-focus-window (window-group win) win)))))
+    (let ((win (find-amarok)))
+      (log:debug "win=~s current=~s~%" win (current-window))
+      (cond ((and win (eq win (current-window)))
+             (run-prog 
+              "qdbus"
+              :search t
+              :args `("org.kde.amarok" "/amarok/MainWindow" "setVisible" "false")
+              :wait nil))
+            (win (goto-win win))
+            (t
+             (run-prog 
+              "qdbus"
+              :search t
+              :args `("org.kde.amarok" "/amarok/MainWindow" "setVisible" "true")
+              :wait nil)
+             (hook-once *new-window-hook* (window)
+               (let ((win (find-amarok)))
+                 (when (eq win window)
+                   (goto-win win)))))))))
+
+(defun find-goto-window (props &optional (all-groups t) (all-screens t))
+  (let* ((matches (find-matching-windows
+                   props all-groups all-screens))
+         (other-matches (member (current-window) matches))
+         (win (if (> (length other-matches) 1)
+                  (second other-matches)
+                  (first matches))))
+    (if win
+        (goto-win win)
+        (message "Window not found"))))
+
+(defcommand ib () ()
+  "Switch to IB"
+  (find-goto-window '(:class "jclient-LoginFrame"
+                      :title "IB TWS")))
+
+(defcommand ensign () ()
+  "Switch to ensign"
+  (find-goto-window '(:class "Wine"
+                      :instance "Ensign.exe")))
+
+(defcommand emacs-irc () ()
+  "Start emacs-irc unless it is already running, in which case focus it."
+  (run-or-raise "connect-emacs -x irc" '(:class "Emacs"
+                                         :instance "^irc")))
+
+(defcommand wanderlust () ()
+  "Start wanderlust or raise it by using (wl-on-frame)"
+  (run-or-raise "wl" '(:class "Emacs" :title "Wanderlust")))
+
+(defun send-to-emacs (&rest forms)
+  (let* ((cmd `(progn ,@forms))
+         (cmds (let ((*print-case* :downcase)
+                     (*package* (find-package :stumpwm)))
+                 (format nil "~s" cmd))))
+    (run-prog 
+     "emacsclient"
+     :search t
+     :args `("-s" "emacs" "-e" ,cmds)
+     :wait nil)))
+
+(defun %emacs-rex (&rest forms)
+  (let* ((cmd `(progn ,@forms))
+         (cmds (let ((*print-case* :downcase)
+                     (*package* (find-package :stumpwm)))
+                 (format nil "~s" cmd)))
+         (args `("-s" "emacs" "-e" ,cmds)))
+    (ignore-errors
+      (with-input-from-string
+          (*standard-input*
+           (with-output-to-string (s)
+             (run-prog
+              "emacsclient"
+              :search t
+              :args args
+              :wait t
+              :output s)))
+        (read)))))
+
+(defmacro emacs-rex (&body body)
+  `(%emacs-rex ',@body))
+
+(defcommand screenshot () ()
+            "Make a screeshot"
+            (run-prog "imgur-screenshot"
+                      :search t
+                      :args nil
+                      :wait nil))
+
+(defcommand idletime () ()
+  "Clock in into playtime in Emacs"
+  (send-to-emacs '(mm/start-idletime)))
+
+(defcommand capture-divaradio () ()
+  (run-prog *shell-program* :args `("-c" "capture-divaradio") :wait nil))
+
+
+(defcommand amarok-toggle-label (label1 &optional label2 label3)
+    ((:string "Label: ")
+     (:string)
+     (:string))
+  "Toggle Amarok label"
+  (run-prog
+   "amarok-label"
+   :search t
+   :args `(,label1 ,@(and label2 (list label2))
+                   ,@(and label3 (list label3)))
+   :wait nil))
+
+(defcommand xscreensaver (&optional onoff) (:rest) 
+  (let (on)
+    (cond ((null onoff)
+           (setq on nil))
+          ((member onoff '("on" "true" "t"))
+           (setq on "on"))
+          ((member onoff '("off" "false" "nil"))
+           (setq on "off"))
+          (t (error "Expecting on|off")))
+    (let ((args `("-c" "toggle-xscreensaver" ,@(when on (list on)))))
+      (run-prog *shell-program* :args args :wait nil))))
+
+;; Run timer, if kaffeine or youtube is on
+(defun is-running-video ()
+  (let (title)
+    (when (and (current-window)
+               (setq title (window-title (current-window))))
+      (when (ppcre:scan "(?i)(youtube|youjizz|xhamster|youporn|redtube|kaffeine)" title)
+        t))))
+
+(defun check-for-xscreensaver ()
+  (when (is-running-video)
+    (run-prog 
+     "xscreensaver-command"
+     :search t
+     :args '("-deactivate")
+     :wait nil)))
+
+(defvar *xscreensaver-timer* nil)
+
+(unless *xscreensaver-timer*
+  (setq *xscreensaver-timer* (run-with-timer 60 60 'check-for-xscreensaver)))
+
+(defparameter pomo-warning-sound "/usr/share/sounds/KDE-Im-Nudge.ogg")
+(defparameter pomo-start-sound "/usr/share/sounds/KDE-Sys-App-Positive.ogg")
+
+(defun play-sound (file)
+  (run-prog 
+   "/usr/bin/play"
+   :search nil
+   :args (list "-q" file)
+   :wait nil))
+
+(defvar *pomo-status* nil)
+(defvar *pomo-timers* nil)
+
+(defparameter *pomo-minutes-work* 25)
+(defparameter *pomo-minutes-play* 5)
+
+(defun pomo-kill-timers ()
+  (loop while *pomo-timers* do
+       (let ((timer (pop *pomo-timers*)))
+         (log:debug "Killing timer ~s" timer)
+         (cancel-timer timer))))
+
+(defun %pomo-add-timer (seconds function &rest args)
+  (push
+   (run-with-timer seconds nil
+                   (lambda ()
+                     (handler-case
+                         (apply function args)
+                       (error (err)
+                         (message "Got error ~s" err)))))
+   *pomo-timers*))
+
+(defmacro pomo-timer (seconds &body body)
+  `(%pomo-add-timer
+    ,seconds
+    (lambda ()
+      ,@body)))
+
+(defun pomo-can-play (again-delay)
+  (let ((task (emacs-rex org-clock-current-task)))
+    (cond ((or (not task)
+               (not (ppcre:scan "^Playtime" task)))
+           (play-sound pomo-warning-sound)
+           (message "Get some playtime!")
+           (%pomo-add-timer again-delay 'pomo-can-play (* again-delay 2)))
+          (t (message "Work again in ~d minutes" *pomo-minutes-play*)
+             (play)))))
+
+(defun pomo-should-work (again-delay)
+  (let ((task (emacs-rex org-clock-current-task)))
+    (cond ((or (not task)
+               (ppcre:scan "^Playtime" task))
+           (play-sound
+            (if (< again-delay 180) pomo-warning-sound pomo-start-sound))
+           (message "Get back to work!")
+           (%pomo-add-timer again-delay 'pomo-should-work
+                            (* again-delay 1.3)))
+          (t (message "Play again in ~d minutes" *pomo-minutes-work*)
+             (work)))))
+
+(defun pomo-play-warning (minutes)
+  (play-sound
+   pomo-warning-sound)
+  (message "~d minutes left to play" minutes))
+
+(defcommand work (&optional (minutes-work *pomo-minutes-work*)
+                                 (minutes-play *pomo-minutes-play*))
+    ((:number)
+     (:number))
+  "Select window that is NUMBER windows behind top window."
+  (cond ((and (plusp minutes-work) (plusp minutes-play))
+         (setq *pomo-minutes-work* minutes-work)
+         (setq *pomo-minutes-play* minutes-play)
+         (pomo-kill-timers)
+         (setq *pomo-status* :work)
+         ;; (%pomo-add-timer (* 60 minutes-work) 'pomo-can-play 300)
+         )))
+
+(defcommand play (&optional (minutes-play *pomo-minutes-play*)
+                            (minutes-work *pomo-minutes-work*))
+    ((:number)
+     (:number))
+  "Select window that is NUMBER windows behind top window."
+  (cond ((and (plusp minutes-work) (plusp minutes-play))
+         (setq *pomo-minutes-work* minutes-work)
+         (setq *pomo-minutes-play* minutes-play)
+         (pomo-kill-timers)
+         (setq *pomo-status* :play)
+         (let ((left minutes-play))
+           (log:sexp left)
+           (decf left 5)
+           (when (>= left 5)
+             (log:debug "Here setting 5 minutens warning at ~d" left)
+             (log:sexp *pomo-timers*)
+             (%pomo-add-timer (* 60 left) 'pomo-play-warning 5)
+             (log:sexp *pomo-timers*))
+           (decf left 5)
+           (log:sexp left)
+           (when (>= left 5)
+             (log:debug "Here setting 10 minutens warning at ~d" left)
+             (%pomo-add-timer (* 60 left) 'pomo-play-warning 10)
+             (log:sexp *pomo-timers*))
+           (log:sexp *pomo-timers*))
+         (%pomo-add-timer (* 60 minutes-play) 'pomo-should-work 180))))
+
+(defcommand stop ()
+    ()
+  "Cancel pomo"
+  (pomo-kill-timers)) 
+
+(defcommand go-playtime () ()
+  "Clock in into playtime in Emacs"
+  (send-to-emacs '(mm/start-playtime))
+  (message "Work again in ~d minutes" *pomo-minutes-play*)
+  (play))
+
+(setf *exec-map*
+      (let ((m (make-sparse-keymap)))
+        (define-key m (kbd "e") "emacs")
+        (define-key m (kbd "!") "exec")
+        (define-key m (kbd "b") "ib")
+        (define-key m (kbd "n") "ensign")
+        (define-key m (kbd "i") "emacs-irc")
+        (define-key m (kbd "Escape") '*root-map*)
+        (define-key m (kbd "X") "xscreensaver")
+        (define-key m (kbd "w") "wanderlust")
+        m))
+
+(setf *xterm-map*
+      (let ((m (make-sparse-keymap)))
+        (define-key m (kbd "x") "exec xterm -geometry +400+400")
+        (define-key m (kbd "a") "exec xterm -geometry +0+0 ")
+        (define-key m (kbd "1") "exec xterm -geometry +0+0 ")
+        (define-key m (kbd "o") "exec xterm -geometry 79+807+0 ")
+        (define-key m (kbd "2") "exec xterm -geometry 79+807+0 ")
+        (define-key m (kbd "e") "exec xterm -geometry +0+468")
+        (define-key m (kbd "3") "exec xterm -geometry +0+468")
+        (define-key m (kbd "u") "exec xterm -geometry 79+807+468")
+        (define-key m (kbd "4") "exec xterm -geometry 79+807+468")
+        m))
+
+(defcommand select-window-by-zorder (num &optional (group (current-group)))
+    ((:number "How many windows behind?: "))
+  "Select window that is NUMBER windows behind top window."
+  (let ((win (nth num (group-windows group))))
+    (when win (group-focus-window group win))))
+
+;; Root Map
+(setf *root-map*
+      (let ((m (make-sparse-keymap)))
+                                        ; Windows
+        ;; (define-key m (kbd "o") "only")
+        ;; (define-key m (kbd "C-o") "only")
+        (define-key m (kbd "s") "vsplit")
+        (define-key m (kbd "C-s") "vsplit")
+        (define-key m (kbd "v") "hsplit")
+        (define-key m (kbd "C-v") "hsplit")
+                                        ; FIFO order switching
+        (define-key m (kbd "C-2") "select-window-by-zorder 1")
+        (define-key m (kbd "C-3") "select-window-by-zorder 2")
+        (define-key m (kbd "C-4") "select-window-by-zorder 3")
+                                        ; Frames
+        (define-key m (kbd "Left") "move-focus left")
+        (define-key m (kbd "Right") "move-focus right")
+        (define-key m (kbd "Up") "move-focus up")
+        (define-key m (kbd "Down") "move-focus down")
+        (define-key m (kbd "C-Left") "move-window left")
+        (define-key m (kbd "C-Right") "move-window right")
+        (define-key m (kbd "C-Up") "move-window up")
+        (define-key m (kbd "C-Down") "move-window down")
+        ;; (define-key m (kbd "h") "move-focus left")
+        ;; (define-key m (kbd "l") "move-focus right")
+        ;; (define-key m (kbd "j") "move-focus down")
+        ;; (define-key m (kbd "k") "move-focus up")
+        ;; (define-key m (kbd "C-h") "move-focus left")
+        ;; (define-key m (kbd "C-l") "move-focus right")
+        ;; (define-key m (kbd "C-j") "move-focus down")
+        ;; (define-key m (kbd "C-k") "move-focus up")
+        ;; (define-key m (kbd "H") "move-window left")
+        ;; (define-key m (kbd "L") "move-window right")
+        ;; (define-key m (kbd "J") "move-window down")
+        ;; (define-key m (kbd "K") "move-window up")
+        (define-key m (kbd "M-l") "redisplay")
+        (define-key m (kbd "=") "balance-frames")
+        (define-key m (kbd "'") "windowlist")
+        (define-key m (kbd "\"") "select")
+        (define-key m (kbd "-") "fclear")
+        (define-key m (kbd "C-t") "other")
+        (define-key m (kbd "C-r") "iresize")
+        (define-key m (kbd "C-w") "windows")
+        (define-key m (kbd "f") "fselect")
+        (define-key m (kbd "F") "curframe")
+        (define-key m (kbd "SPC") "next")
+        (define-key m (kbd "C-SPC") "prev")
+        (define-key m (kbd "TAB") "fnext")
+        (define-key m (kbd "o") "toggle-full-layout")
+        (define-key m (kbd "S-TAB") "fprev")
+        (define-key m (kbd "C-n") "pull-hidden-next")
+        (define-key m (kbd "C-p") "pull-hidden-previous")
+                                        ; Submaps
+        (define-key m (kbd "F1") '*help-map*)
+        (define-key m (kbd "e") '*exec-map*)
+        (define-key m (kbd "C-e") '*exec-map*)
+        (define-key m (kbd "g") '*groups-map*)
+        (define-key m (kbd "C-g") "abort")
+        ;; (define-key m (kbd "y") '*clipboard-yank-map*)
+        ;; (define-key m (kbd "p") '*clipboard-put-map*)
+        ;; (define-key m (kbd "a") '*status-map*)
+        ;; (define-key m (kbd "C-a") '*status-map*)
+        (define-key m (kbd "w") '*window-map*)
+        (define-key m (kbd "C-w") '*window-map*)
+                                        ; Exec
+        ;; (define-key m (kbd "V") "exec gvim")
+        ;; (define-key m (kbd "Return") (format nil "exec ~A" terminal))
+                                        ; Other
+        (define-key m (kbd "`") "exec-in-terminal")
+        (define-key m (kbd "#") "mark")
+        (define-key m (kbd ":") "eval")
+        (define-key m (kbd ";") "colon") ;
+        ;; (define-key m (kbd "A") "title")
+        (define-key m (kbd "Escape") "abort")
+        (define-key m (kbd "F11") "fullscreen")
+        ;; (define-key m (kbd "d") "delete")
+        (define-key m (kbd "k") "delete")
+        ;; (define-key m (kbd "C-d") "delete")
+        (define-key m (kbd "M-l") "redisplay")
+        (define-key m (kbd "l") "move-focus right")
+        (define-key m (kbd "h") "move-focus left")
+        (define-key m (kbd "N") "number")
+        (define-key m (kbd "R") "remove")
+        (define-key m (kbd "b") "browser")
+        (define-key m (kbd "B") "banish")
+        ;; (define-key m (kbd "C-b") "ratwarp 500 5")
+        ;; (define-key m (kbd "B") "ratwarp 500 500")
+        (define-key m (kbd "I") "info")
+        (define-key m (kbd "m") "lastmsg")
+        (define-key m (kbd "t") "send-escape")
+        (define-key m (kbd "u") "next-urgent")
+        ;; google
+        (define-key m (kbd "i") "google")
+        (define-key m (kbd "x") '*xterm-map*)
+        (define-key m (kbd "!") "exec")
+        (define-key m (kbd "d") "capture-divaradio")
+        ;; (define-key m (kbd "p")  "go-playtime")
+        (define-key m (kbd "S") "screenshot")
+        (define-key m (kbd "a") "amarok")
+        (define-key m (kbd "C-l") '*amarok-label-map*)
+        (define-key m (kbd "l") '*amarok-label-map*)
+        m))
+
+
+;; debugging tools
+(defparameter *stumpwm-thread*
+  (find "main thread" (sb-thread:list-all-threads) :key #'sb-thread:thread-name :test 'string=))
+
+(defmacro in-stump-thread (&body body)
+  (let ((ret (gensym))
+        (done (gensym))
+        (err (gensym))
+        (out (gensym))
+        (debug (gensym))
+        (in (gensym)))
+    `(let ((,err nil)
+           (,ret nil)
+           (,done nil)
+           (,out *standard-output*)
+           (,debug *debug-io*)
+           (,in *standard-input*))
+       (sb-thread:interrupt-thread 
+        *stumpwm-thread* 
+        (lambda () 
+          (unwind-protect
+               (handler-case
+                   (setq ,ret
+                         (let ((*standard-output* ,out)
+                               (*debug-io* ,debug)
+                               (*standard-input* ,in))
+                           ,@body))
+                 (error (err)
+                   (setq ,err err)))
+            (setq ,done t))))
+       (loop until ,done
+            do (sleep 0.001))
+       (values ,ret ,err))))
+
+
+(defcommand destroy-bad-windows () () 
+  "Make everything better when StumpWM screws up its window list.
+
+  Symptoms:
+
+  1. unable to switch groups
+  2. When using xfce4-panel or gnome-panel, the taskbar list of windows is not getting updated
+
+  "
+  (dolist (win (remove-duplicates (apply 'append
+                                         (all-windows)
+                                         (mapcar 'screen-withdrawn-windows *screen-list*))))
+    (handler-case 
+        (xlib:window-class (window-xwin win))
+      (error (e)
+        (log:error "Found bad window ~s error ~s" win e)
+        (destroy-window win))))
+  (dolist (s *screen-list*) 
+    (dolist (xwin (screen-mapped-windows s))
+      (handler-case (xlib:window-class xwin)
+        (error (e)
+          (log:error "Found bad mapped window ~s error ~s" xwin e)
+          (alexandria:deletef (screen-mapped-windows s) xwin))))))
+
+(defun make-cms-key-list (key)
+           (declare (type key key))
+           (flet ((frob (control meta shift)
+                    (let ((key (copy-key key)))
+                      (setf (key-control key) control)
+                      (setf (key-meta key) meta)
+                      (setf (key-shift key) shift)
+                      key)))
+             (list (frob nil nil nil)
+                   (frob t nil nil)
+                   (frob nil t nil)
+                   (frob nil nil t)
+                   (frob t t nil)
+                   (frob t nil t)
+                   (frob t t t)
+                   (frob nil t t)
+                   (frob nil nil t))))
+
+(defun make-comfort-key-list (from to)
+  (loop for key in (make-cms-key-list from)
+    as from* = (copy-key key)
+    as to* = (copy-key key)
+    do (setf (key-keysym from*) (key-keysym from)
+             (key-keysym to*) (key-keysym to)
+             (key-super from*) t)
+    collect (cons from* to*)))
+
+(defun fix-shift-key (key)
+  (let ((name (keysym->keysym-name (key-keysym key))))
+    (when (and (key-shift key)
+             (= (length name) 1))
+      (setf (key-shift key) nil)
+      (setf (key-keysym key) 
+            (keysym-name->keysym (string-upcase name))))
+    key))
+
+(defun define-comfort-key (from-key-name to-key-name)
+  (loop for (from . to) in 
+           (make-comfort-key-list (kbd from-key-name)
+            (kbd to-key-name))
+           do (setq from (fix-shift-key from))
+           do (setq to (fix-shift-key to))
+           do (dformat 0 "Mapping ~s to ~s~%" (print-key from)
+                       (print-key to))
+           do (define-key *top-map* from 
+                (format nil "meta ~a" (print-key to)))))
+
+
+(defun define-comfort-keys ()
+  (define-comfort-key "f" "Insert")
+  (define-comfort-key "d" "Delete")
+  (define-comfort-key "g" "Home")
+  (define-comfort-key "h" "End")
+  (define-comfort-key "c" "Prior")
+  (define-comfort-key "t" "Next")
+  (define-comfort-key "n" "Up")
+  (define-comfort-key "v" "Down")
+  (define-comfort-key "w" "Left")
+  (define-comfort-key "z" "Right"))
+
+;; Only on machines without comfort keyboard
+(unless (or (equal (getenv "HOST") "momoland"))
+  (define-comfort-keys))
+
+(defcommand master-volume-up (&optional (percent 5))
+    (:number)
+  "Increase master volume"
+  (run-prog
+   "pavol"
+   :search t
+   :args `("master" ,(format nil "+~d" percent))
+   :wait nil))
+
+(defcommand master-volume-down (&optional (percent 5))
+    (:number)
+  "Decrease master volume"
+  (run-prog
+   "pavol"
+   :search t
+   :args `("master" ,(format nil "-~d" percent))
+   :wait nil))
+
+(defcommand amarok-volume-up (&optional (percent 5))
+    (:number)
+  "Increase master volume"
+  (run-prog
+   "pavol"
+   :search t
+   :args `("Amarok" ,(format nil "+~d" percent))
+   :wait nil))
+
+(defcommand amarok-volume-down (&optional (percent 5))
+    (:number)
+  "Decrease master volume"
+  (run-prog
+   "pavol"
+   :search t
+   :args `("Amarok" ,(format nil "-~d" percent))
+   :wait nil))
+
+(defcommand alsa-volume-up (&optional (percent 5))
+    (:number)
+  "Increase master volume"
+  (run-prog
+   "pavol"
+   :search t
+   :args `("chromium" ,(format nil "+~d" percent))
+   :wait nil))
+
+(defcommand alsa-volume-down (&optional (percent 5))
+    (:number)
+  "Decrease master volume"
+  (run-prog
+   "pavol"
+   :search t
+   :args `("chromium" ,(format nil "-~d" percent))
+   :wait nil))
+
+(defcommand amarok-next-track-remove () ()
+  "Remove current track and advance to next one in amarok"
+  (run-prog "amarok-next-track-remove" :search t :wait nil))
+
+(defcommand amarok-restore-last-track () ()
+  "Remove current track and advance to next one in amarok"
+  (run-prog "amarok-restore-last-track" :search t :wait nil))
+
+(define-key *top-map* (kbd "s-M-,") "amarok-volume-down")
+(define-key *top-map* (kbd "s-M-.") "amarok-volume-up")
+(define-key *top-map* (kbd "s-M-o") "master-volume-down")
+(define-key *top-map* (kbd "s-M-e") "master-volume-up")
+(define-key *top-map* (kbd "s-M-q") "alsa-volume-down")
+(define-key *top-map* (kbd "s-M-j") "alsa-volume-up")
+(define-key *top-map* (kbd "s-M-a") "amarok")
+(define-key *top-map* (kbd "s-M-k") "amarok-next-track-remove")
+(define-key *top-map* (kbd "s-M-;") "amarok-restore-last-track")
+
+(defcommand none () ()
+  "Silently eats the key")
+
+;; the foot pedals
+(when (or (equal (getenv "HOST") "momoland"))
+  (define-key *top-map* (kbd "KP_Left") "none"))
+
+(define-key *input-map* (kbd "C-v") 'input-yank-selection)
+
+(defvar *layouts* (make-hash-table :test #'eql))
+
+(defcommand toggle-full-layout () ()
+  "Like \"only\" but next command restores the group"
+  (let* ((group (current-group))
+         (currlay (gethash group *layouts*)))
+    (cond (currlay
+           (restore-group (current-group) currlay)
+           (remhash group *layouts*))
+          (t
+           (setf (gethash group *layouts*) (dump-group (current-group)))
+           (run-commands "only")))))  
+
+(defparameter *amarok-label-map*
+  (let ((m (make-sparse-keymap)))
+    (define-key m (kbd "C-c") "amarok-toggle-label coding")
+    (define-key m (kbd "c") "amarok-toggle-label coding")
+    (define-key m (kbd "j") "amarok-toggle-label jazzy")
+    (define-key m (kbd "o") "amarok-toggle-label smooth")
+    (define-key m (kbd "d") "amarok-toggle-label driving")
+    (define-key m (kbd "i") "amarok-toggle-label instrumental")
+    (define-key m (kbd "e") "amarok-toggle-label uneven")
+    (define-key m (kbd "m") "amarok-toggle-label +medfast -medium -fast -slow")
+    (define-key m (kbd "M") "amarok-toggle-label +medium -medfast -fast -slow")
+    (define-key m (kbd "f") "amarok-toggle-label +fast -medfast -medium -slow")
+    (define-key m (kbd "r") "amarok-toggle-label +running -jogging")
+    (define-key m (kbd "C-r") "amarok-toggle-label +running -jogging")
+    (define-key m (kbd "R") "amarok-toggle-label -running -jogging")
+    (define-key m (kbd "C-s") "amarok-toggle-label -running +jogging")
+    (define-key m (kbd "s") "amarok-toggle-label -running +jogging")
+    m))
+
+(setq *top-level-error-action* :message)
+
+;; Fix for going back to last focused frame, when window is destroyed
+;; and it was last window on this frame
+(defun mm/frame-focus-hook (new old)
+  (log:sexp new old))
+
+
+(defvar *last-switched-from-frame* nil)
+(defvar *last-switched-to-frame* nil)
+(defvar *had-window-switch-in-frame* nil)
+
+(defun mm/focus-window-hook (new old)
+  (log:sexp new)
+  (let ((gnew (and new (window-group new)))
+        (gold (and old (window-group old))))
+    (when (and (eq gnew gold)
+               (typep gold 'tile-group))
+      (cond ((eq (window-frame old)
+                 (window-frame new))
+             (setq *had-window-switch-in-frame* t))
+            (t
+             (setq *last-switched-from-frame* (window-frame old))
+             (setq *last-switched-to-frame* (window-frame new))
+             (setq *had-window-switch-in-frame* nil)
+             (log:sexp *last-switched-from-frame*))))))
+
+(defun mm/destroy-window-hook (win)
+  (when (and
+         (typep win 'tile-window)
+         (eq (window-group win) (current-group))
+         (eq *last-switched-to-frame* (window-frame win))
+         (or (null (frame-window *last-switched-to-frame*))
+             (not *had-window-switch-in-frame*))
+         (string/= "twindow" (window-res win)))
+    (log:expr win *last-switched-to-frame* "Switching to" *last-switched-from-frame*)
+    (focus-frame (current-group) *last-switched-from-frame*)))
+
+(defun mm/map-window-hook (win)
+  (log:sexp win))
+
+(if nil (progn 
+        (add-hook *destroy-window-hook* 'mm/destroy-window-hook) 
+        (add-hook *focus-window-hook* 'mm/focus-window-hook) 
+        (add-hook *focus-frame-hook* 'mm/frame-focus-hook)
+        (add-hook *map-window-hook* 'mm/map-window-hook))
+    (progn
+      (remove-hook *destroy-window-hook* 'mm/destroy-window-hook) 
+      (remove-hook *focus-window-hook* 'mm/focus-window-hook)
+      (remove-hook *focus-frame-hook* 'mm/frame-focus-hook)
+      (remove-hook *map-window-hook* 'mm/map-window-hook)))
+
+(defun transpose-frame (frame)
+  "Transposes frame with its sibling"
+  (let* ((group (current-group))
+         (head (frame-head group frame))
+         (tree (tile-group-frame-head group head))
+         (other (closest-sibling (list tree) frame)))
+    (flet ((redisplay (window)
+             (with-slots (width height frame) window
+               (set-window-geometry window
+                                    :width (- width (window-width-inc window))
+                                    :height (- height (window-height-inc window)))
+               ;; make sure the first one goes through before sending the second
+               (xlib:display-finish-output *display*)
+               (set-window-geometry window
+                                    :width (+ width
+                                              (* (window-width-inc window)
+                                                 (floor (- (frame-width frame) width)
+                                                        (window-width-inc window))))
+                                    :height (+ height
+                                               (* (window-height-inc window)
+                                                  (floor (- (frame-height frame) height)
+                                                         (window-height-inc window)))))
+               (maximize-window window)))) 
+      (assert (and other (not (eq frame other))))
+      (log:expr frame other)
+      (log:expr (frame-x frame) (frame-x other))
+      (log:expr (- (frame-height frame) (frame-height other)))
+      (let ((frame-windows (frame-windows group frame))
+            (other-windows (frame-windows group other))) 
+        (rotatef (values (frame-number frame)
+                         (frame-window frame))
+                 (values (frame-number other)
+                         (frame-window other)))
+        (dolist (w frame-windows)
+          (setf (window-frame w) other))
+        (dolist (w other-windows)
+          (setf (window-frame w) frame))
+        (cond ((= (frame-x frame) (frame-x other))
+               (resize-frame group other (- (frame-height frame) (frame-height other)) :height))
+              ((= (frame-y frame) (frame-y other))
+               (resize-frame group other (- (frame-width frame) (frame-width other)) :width))
+              (t (error "Other frame is not really a sibling")))
+        ;; (sync-frame-windows group other)
+        ;; (sync-frame-windows group frame)
+        (when (frame-window other)
+          (redisplay (frame-window other))
+          (raise-window (frame-window other)))
+        (when (frame-window frame)
+          (redisplay (frame-window frame))
+          (raise-window (frame-window frame)))
+        (focus-frame group other)))))
+
+(defcommand (transpose tile-group)
+    (&optional (frame (tile-group-current-frame (current-group)))) ()
+  "Transpose current frame with its next sibling (or previous for last frame in the split)"
+  (log:expr frame)
+  (transpose-frame frame))
+
+(define-key *tile-group-root-map* (kbd "T") "transpose")
+
+(defcommand restore (file) ((:rest "Base file name: "))
+  "Restores the group and rules from the specified file"
+  (let* ((group-file (concat file ".group"))
+         (rules-file (concat file ".rules"))
+         (rules (if (probe-file rules-file) (read-dump-from-file rules-file)))
+         (dump (read-dump-from-file group-file))
+         (group (current-group)))
+    (flet ((grestore ()
+             (when rules
+               (setf *window-placement-rules*
+                     (remove (group-name group) *window-placement-rules*
+                             :key #'first :test #'equal))
+               (setf *window-placement-rules*
+                     (append *window-placement-rules*
+                             (remove (group-name group) rules
+                                     :key #'first :test-not #'equal))))
+             (restore-group group dump)
+             (when rules 
+               (place-existing-windows))))
+      (typecase dump
+        (gdump
+         (if (equal (gdump-name dump) (group-name group))
+             (grestore)
+             (if (find (gdump-name dump) (screen-groups (current-screen))
+                       :key #'group-name)
+                 (error "Group ~s already exist, rename it first" (gdump-name dump))
+                 (progn
+                   (setf (group-name group) (gdump-name dump))
+                   (grestore)))))
+        (error "Invalid dump")))))

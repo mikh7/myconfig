@@ -1,0 +1,43 @@
+#!/bin/zsh
+
+force=
+if getopts :f force ; then
+    shift 1
+fi
+
+if [[ ! -d $1 || $force == "?" ]] ; then
+    print "
+Usage: $0:t [-f] <package-dir> [<sys-dir>]
+
+Links all the files in the package dir into the system dir
+"
+    exit 1
+fi
+
+pkgdir=${1%/}
+sysdir=${${2:-/usr/local}%/}
+
+
+pkgdir=$(cd $pkgdir:h && pwd)/$pkgdir:t
+sysdir=$(cd $sysdir:h && pwd)/$sysdir:t
+
+for file in $pkgdir/**/*(.) ; do
+    file=${file#$pkgdir/}
+    filedir=$file:h
+    filefile=$file:t
+    if [[ ! -d $sysdir/$filedir ]] ; then
+        mkdir -p $sysdir/$filedir
+    fi
+    exists=n
+    if [[ (-f $sysdir/$file || -h $sysdir/$file ) && $force != "f" ]] ; then
+        # check if link already exists and points to the same place
+        if [[ ! -h $sysdir/$file || $pkgdir/file != $(readlink $sysdir/$file) ]] ; then
+        echo "File $sysdir/$file already exists, use force (-f) option"
+        fi
+    else
+        if [[ -f $sysdir/$file || -h $sysdir/$file ]] ; then
+            rm $sysdir/$file
+        fi
+        ln -s $pkgdir/$file $sysdir/$file
+    fi
+done

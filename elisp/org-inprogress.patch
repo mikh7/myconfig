@@ -1,0 +1,94 @@
+diff -rp -x '*.orig' -x '*.elc' -x '*~' org-5.10a.orig/org.el org-5.10a/org.el
+*** org-5.10a.orig/org.el	Wed Sep 26 13:33:20 2007
+--- org-5.10a/org.el	Wed Sep 26 16:33:52 2007
+*************** When nil, only the days which actually h
+*** 2323,2328 ****
+--- 2323,2342 ----
+    :group 'org-agenda-daily/weekly
+    :type 'boolean)
+  
++ (defcustom org-agenda-show-inprogress-todos nil
++   "Non-nil means, include the TODO's of the type specified by
++ `org-inprogress-todos' into the daily agenda."
++   :group 'org-agenda-daily/weekly
++   :type 'boolean)
++ 
++ (defcustom org-inprogress-todos "INPROGRESS"
++   "Specifies TODO type that would be automatically included into
++ the daily agenda when `org-agenda-show-inprogress-todos' is set.
++ You can specify more then one value separating them with |, for
++ example INPROGRESS|STARTED"
++   :group 'org-agenda-daily/weekly
++   :type 'string)
++ 
+  (defcustom org-agenda-format-date 'org-agenda-format-date-aligned
+    "Format string for displaying dates in the agenda.
+  Used by the daily/weekly agenda and by the timeline.  This should be
+*************** NDAYS defaults to `org-agenda-ndays'."
+*** 18056,18062 ****
+  		    (- sd (+ (if (< d 0) 7 0) d)))))
+  	 (day-numbers (list start))
+  	 (inhibit-redisplay (not debug-on-error))
+! 	 s e rtn rtnall file date d start-pos end-pos todayp nd)
+      (setq org-agenda-redo-command
+  	  (list 'org-agenda-list (list 'quote include-all) start-day ndays))
+      ;; Make the list of days
+--- 18070,18077 ----
+  		    (- sd (+ (if (< d 0) 7 0) d)))))
+  	 (day-numbers (list start))
+  	 (inhibit-redisplay (not debug-on-error))
+! 	 s e rtn rtnall file date d start-pos end-pos todayp nd
+!          args)
+      (setq org-agenda-redo-command
+  	  (list 'org-agenda-list (list 'quote include-all) start-day ndays))
+      ;; Make the list of days
+*************** NDAYS defaults to `org-agenda-ndays'."
+*** 18102,18117 ****
+  	    (setq end-pos (point))))
+        (setq files thefiles
+  	    rtnall nil)
+        (while (setq file (pop files))
+  	(catch 'nextfile
+  	  (org-check-agenda-file file)
+! 	  (if org-agenda-show-log
+! 	      (setq rtn (org-agenda-get-day-entries
+! 			 file date
+! 			 :deadline :scheduled :timestamp :sexp :closed))
+! 	    (setq rtn (org-agenda-get-day-entries
+! 		       file date
+! 		       :deadline :scheduled :sexp :timestamp)))
+  	  (setq rtnall (append rtnall rtn))))
+        (if org-agenda-include-diary
+  	  (progn
+--- 18117,18132 ----
+  	    (setq end-pos (point))))
+        (setq files thefiles
+  	    rtnall nil)
++       (setq args '(:deadline :scheduled :timestamp :sexp))
++       (when org-agenda-show-log
++         (push :closed args)) 
++       (when org-agenda-show-inprogress-todos
++         (push :inprogress args))
+        (while (setq file (pop files))
+  	(catch 'nextfile
+  	  (org-check-agenda-file file)
+!           (setq rtn (apply 'org-agenda-get-day-entries
+!                            file date args))
+  	  (setq rtnall (append rtnall rtn))))
+        (if org-agenda-include-diary
+  	  (progn
+*************** the documentation of `org-diary'."
+*** 18606,18611 ****
+--- 18621,18632 ----
+  	      ;; The way we repeatedly append to `results' makes it O(n^2) :-(
+  	      (while (setq arg (pop args))
+  		(cond
++ 		 ((and (eq arg :inprogress)
++ 		       (equal date (calendar-current-date)))
++ 		  (let ((org-select-this-todo-keyword
++                          org-inprogress-todos))
++                     (setq rtn (org-agenda-get-todos))
++                     (setq results (append results rtn))))
+  		 ((and (eq arg :todo)
+  		       (equal date (calendar-current-date)))
+  		  (setq rtn (org-agenda-get-todos))

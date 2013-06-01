@@ -1,0 +1,6 @@
+# for some reason this does not take via Xdefaults or X11/app-override
+# probably because /etc/termcap does not have xterm-256color
+TERM=xterm-256color
+# my often used dirs
+cdpath+=(~/myconfig /cygdrive/e/work /cygdrive/e/work/user_domains)
+

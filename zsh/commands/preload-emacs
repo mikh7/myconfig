@@ -1,0 +1,35 @@
+#!/bin/zsh
+
+emulate -L zsh
+
+local emacs emacsdir=$emacsdir emacsclient
+
+if [[ -n $emacsdir ]] ; then 
+    emacs=$emacsdir/src/emacs
+    emacsclient=$emacsdir/lib-src/emacsclient
+else
+    emacs=${emacs:-emacs}
+    emacsclient=${emacsclient:-emacsclient}
+fi
+
+name=$1
+waitp=$2
+screendir=/var/run/uscreens/S-$USER
+serverdir=/tmp/emacs$UID
+
+if [[ -z $name ]]; then 
+    print "Usage: preload_emacs <name> [<waitp>]" >&2
+    return 1
+fi
+set -o nullglob
+set -A tmp $screendir/*.$name 
+if [[ $#tmp == 0 ]] ; then
+    if [[ -e $serverdir/$name ]]; then
+	# Delete leftover socket (for the wait option)
+	rm $serverdir/$name
+    fi
+    screen -dmS $name $emacs -nw --eval "(setq server-name \"$name\")" -f server-start
+fi
+if [[ ! -z "$waitp" ]]; then
+    while [[ ! -e $serverdir/$name ]]; do sleep 0.1; done
+fi

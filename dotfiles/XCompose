@@ -1,0 +1,8 @@
+<Multi_key> <m> <o> : "∈" U2208  # member of
+<Multi_key> <n> <m> : "∉" U2209  # member of
+<Multi_key> <s> <s> : "⊆" U2286 # subset
+<Multi_key> <p> <s> : "⊂" U2282 # proper subset
+<Multi_key> <u> <s> : "⊇" U2287 # superset
+<Multi_key> <p> <u> : "⊃" U2283 # proper superset
+<Multi_key> <s> <u> : "∪" U222a # Set union
+<Multi_key> <s> <i> : "∩" U2229 # Set interection

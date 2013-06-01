@@ -1,0 +1,23 @@
+emulate -L zsh
+dict=${DICT:-/usr/share/dict/words}
+local -a args
+local fromend=0
+
+for opt {
+    case $opt in
+        -e) fromend=1 ;;
+        *) 
+            if [[ $fromend == 1 ]] ; then
+                args+=$opt'$'
+            else
+                args+=\^$opt
+            fi
+            ;;
+    esac
+}
+
+if [[ $#args == 0 ]] ; then
+    print "Usage: $0:t [-e] <word>\n\nSearch $dict for worlds starting (or ending) with <word>\n"
+else
+    grep ${(j:|:)args} $dict
+fi

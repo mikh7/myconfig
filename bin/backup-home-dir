@@ -1,0 +1,44 @@
+#!/bin/zsh
+
+if [[ ! -d $1 ]] ; then
+    print "Usage: $0 <backup dir>"
+    exit -1
+fi
+
+dir=/home/max
+dir2=$dir
+if [[ $dir2 == / ]] ; then
+   dir2=/root 
+fi
+if [[ $dir2[1] == /  ]] ; then
+   dir2[1]=
+fi
+
+rdiff-backup \
+    --print-statistics \
+    --create-full-path \
+    --exclude-other-filesystems \
+    --include "/home/max/Maildir/.Accounts" \
+    --include "/home/max/Maildir/.Address" \
+    --include "/home/max/Maildir/.Interactive Brokers/" \
+    --include "/home/max/Maildir/.Orders" \
+    --include "/home/max/Maildir/.sent-mail" \
+    --include "/home/max/Maildir/.Sent Items" \
+    --include "/home/max/Maildir/.Sent" \
+    --include "/home/max/Maildir/.Ameritrade" \
+    --include "/home/max/Maildir/.Amazon" \
+    --exclude "/home/max/Maildir/.*" \
+    --include "/home/max/Maildir/*" \
+    --exclude "/home/max/Maildir" \
+    --exclude "/home/max/TA/1" \
+    --exclude "/home/max/TA/debuglo*" \
+    --exclude "/home/max/.cache/" \
+    --exclude "/home/max/.gvfs/" \
+    --exclude "**/*cache*/**" \
+    --exclude "**/*Cache*/**" \
+    --exclude "**/*Trash*/**" \
+    --exclude "**/*trash*/**" \
+    --exclude "/home/max/videos" \
+    $dir \
+    $1/$HOST/$dir2
+

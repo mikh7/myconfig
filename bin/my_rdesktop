@@ -1,0 +1,10 @@
+#!/bin/zsh
+echo We are here $$ >> /tmp/log
+echo Num params are $# >> /tmp/log
+echo myself is $0 >> /tmp/log
+echo Params are $* >> /tmp/log
+echo DISPLAY is $DISPLAY >> /tmp/log
+rdesktop $* 2>&1 >>/tmp/log
+echo Result = $? >> /tmp/log
+xterm
+

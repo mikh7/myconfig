@@ -1,0 +1,121 @@
+#!/bin/sh
+
+do_cpp_file=0
+do_h_file=0
+do_class=0
+do_con=0
+do_des=0
+do_vdes=0
+do_force=0
+
+usage()
+{
+  cat << EOF
+Usage: $0 [-chodv] [<path>/]<class>
+  -c make .cpp file
+  -h make .h file
+  -o add constructor
+  -d add destructor
+  -v virtual destructor
+  -f force overwrite existing files
+EOF
+  exit 1
+}
+
+while getopts "chodvf" opt ; do
+  case $opt in 
+    c ) do_cpp_file=1           ;;
+    h ) do_h_file=1             ;;
+    o ) do_con=1                ;;
+    d ) do_des=1                ;;
+    v ) do_vdes=1               ;;
+    f ) do_force=1              ;;
+    * ) usage                   ;;
+  esac
+done
+
+shift $(($OPTIND - 1))
+
+if [ $# -ne 1 ] ; then
+  usage
+fi
+
+if [ $do_cpp_file -eq 0 -a $do_h_file -eq 0 ] ; then 
+  usage
+fi
+
+# split path/class into parts
+
+tmp="$1"
+path="${tmp%/*}"
+if [ "$path" == "$tmp" ] ; then
+  class="$tmp"
+  path=.
+else
+  class="${tmp##*/}"
+fi
+
+  
+if [ $do_h_file -ne 0 ] ; then
+  if [ -f "$path/$class.h" -a $do_force -eq 0 ] ; then
+    echo 1>&2 "File $path/$class.h alreay exists"
+    exit 2
+  fi
+  cat << EOF > $path/$class.h
+#pragma once
+#ifndef ${class}_h
+#define ${class}_h
+
+class $class
+{
+  public:
+EOF
+  if [ $do_con -eq 1 ] ; then
+    cat << EOF >> $path/$class.h
+    $class();
+EOF
+  fi
+  if [ $do_vdes -eq 1 ] ; then
+    cat << EOF >> $path/$class.h
+    virtual ~$class();
+EOF
+  fi
+  if [ $do_vdes -eq 0 -a $do_des -eq 1 ] ; then
+    cat << EOF >> $path/$class.h
+    ~$class();
+EOF
+  fi
+  cat << EOF >> $path/$class.h
+};
+
+#endif
+EOF
+fi
+
+if [ $do_cpp_file -ne 0 ] ; then
+  if [ -f "$path/$class.cpp" -a $do_force -eq 0 ] ; then
+    echo 1>&2 "File $path/$class.cpp alreay exists"
+    exit 2
+  fi
+  cat << EOF > $path/$class.cpp
+
+#include "$class.h"
+
+EOF
+  if [ $do_con -eq 1 ] ; then
+    cat << EOF >> $path/$class.cpp
+$class::$class()
+{
+}
+
+EOF
+  fi
+  if [ $do_vdes -eq 1 -o $do_des -eq 1 ] ; then
+    cat << EOF >> $path/$class.cpp
+$class::~$class()
+{
+}
+
+EOF
+  fi
+fi

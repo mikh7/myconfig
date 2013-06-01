@@ -1,0 +1,4 @@
+emulate -L zsh
+builtin bindkey -M vicmd $@
+builtin bindkey -M viins $@
+builtin bindkey -M main $@

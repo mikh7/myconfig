@@ -1,0 +1,6 @@
+iprint ~/.zprofile starts
+if [[ ! -z $HOST && -r ~/.zprofile.$HOST ]] ; then
+  . ~/.zprofile.$HOST
+fi
+
+

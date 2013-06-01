@@ -1,0 +1,11 @@
+;; -*- mode: lisp -*-
+
+(print "Starting LISPWORKS-INIT")
+
+(load (make-pathname
+       :directory
+       (append (pathname-directory (user-homedir-pathname)) 
+               '("myconfig" "dotfiles"))
+       :name "lisp-init-1"
+       :type "lisp"))
+

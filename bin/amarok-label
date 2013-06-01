@@ -1,0 +1,111 @@
+#!/usr/bin/perl
+
+use strict;
+use URI::Escape;
+use DBI;
+
+die "Usage: amarok-label <label>" unless defined ($ARGV[0]);
+
+my $uri = `qdbus org.kde.amarok /Player org.freedesktop.MediaPlayer.GetMetadata`;
+$uri =~ s/.*\nlocation: file:\/\/([^\n]+)\n.*/$1/s
+    or die "Unable to match\n";
+$uri = uri_unescape($uri);
+$uri =~ s/^\/home//;
+$uri = ".$uri";
+# print STDERR "uri=$uri\n";
+# exit;
+
+my $dsn = "DBI:mysql:database=amarok2";
+my $dbh = DBI->connect($dsn, "amarok2", "amarok2", { RaiseError => 1 } );
+
+sub select_one {
+    my ($sql, @rest) = (@_);
+    my $ret = $dbh->selectrow_array($sql, undef, @rest);
+}
+
+sub remove_label {
+    my ($label) = (@_);
+    my $url_id = select_one("select id from urls where rpath = ?", $uri);
+    my $label_id = select_one("select id from labels where label = ?", $label);
+    if (defined($url_id) and defined($label_id)) {
+        my $cnt = select_one("select count(*) from urls_labels where url = ? and label = ?", $url_id, $label_id);
+        if ($cnt > 0) {
+            $dbh->do("delete from urls_labels where url = ? and label = ?", undef, $url_id, $label_id);
+        }
+    }
+}
+
+sub add_label {
+    my ($label) = (@_);
+    my $url_id = select_one("select id from urls where rpath = ?", $uri);
+    my $label_id = select_one("select id from labels where label = ?", $label);
+    if (defined($url_id) and defined($label_id)) {
+        my $cnt = select_one("select count(*) from urls_labels where url = ? and label = ?", $url_id, $label_id);
+        if ($cnt == 0) {
+            $dbh->do("delete from urls_labels where url = ? and label = ?", undef, $url_id, $label_id);
+            $dbh->do("insert into urls_labels(url, label) values (?, ?)", undef, $url_id, $label_id);
+        }
+        return 1;
+    }
+}
+
+sub toggle_label {
+    my ($label) = (@_);
+    my $url_id = select_one("select id from urls where rpath = ?", $uri);
+    my $label_id = select_one("select id from labels where label = ?", $label);
+    if (defined($url_id) and defined($label_id)) {
+        my $cnt = select_one("select count(*) from urls_labels where url = ? and label = ?", $url_id, $label_id);
+        if ($cnt > 0) {
+            $dbh->do("delete from urls_labels where url = ? and label = ?", undef, $url_id, $label_id);
+            return 0;
+        } else {
+            $dbh->do("insert into urls_labels(url, label) values (?, ?)", undef, $url_id, $label_id);
+            return 1;
+        }
+    }
+}
+
+my @on_list = ();
+my @off_list = ();
+
+for my $label (@ARGV) {
+    if ($label =~ /^-/) {
+        $label = substr($label, 1);
+        remove_label($label);
+        push @off_list, $label
+    } elsif ($label =~ /^\+/) {
+        $label = substr($label, 1);
+        if (add_label($label) == 1) {
+            push @on_list, $label;
+        }
+    } else {
+        my $ret = toggle_label($label);
+        if ($ret == 1) {
+            push @on_list, $label;
+        } else {
+            push @off_list, $label
+        }
+    }
+}
+
+if ($#on_list >= 0 || $#off_list >= 0) {
+    my $msg = "Toggled label";
+    if ($#on_list > 0) {
+        $msg .= "s";
+    }
+    if ($#on_list >= 0) {
+        $msg .= " " . join(", ", @on_list) . " ON";
+    }
+
+    if ($#off_list >= 0) {
+        if ($#on_list >= 0) {
+            $msg .= ", and label";
+        }
+        if ($#off_list > 0) {
+            $msg .= "s ";
+        }
+        $msg .= " " . join(", ", @off_list) . " OFF";
+    }
+    system "notify-send", $msg;
+}
+

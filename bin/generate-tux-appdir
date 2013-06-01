@@ -1,0 +1,72 @@
+#!/bin/zsh
+#
+# Create tuxedo appdir:
+#
+
+if [ ! -d "$1" ] ; then
+  echo "Usage: $0 <appdir>"
+  exit
+fi
+
+templatedir=~/myconfig/templates/tux-appdir-conf
+
+appdir=`cd "$1" && pwd`
+confdir="$1/conf"
+shift
+
+declare -a cmdline
+cmdline+=m4
+
+if [ -z $tux_APPDIR ] ; then
+  tux_APPDIR="$appdir"
+fi
+
+tmp=tmp$$
+perl -pe "s/(tux_[A-Z]+)/\nkw= \1\n/g" "$templatedir"/* \
+| grep "^kw= " | awk '{print $2}' |sort|uniq > $tmp
+# sort so that oracle user/name/pass vars are in order
+(
+ egrep -v "ORAUSER|ORAPASS|ORADB|ORASECUSER|ORASECPASS|ORASECDB" $tmp
+ grep ORAUSER $tmp 
+ grep ORAPASS $tmp
+ grep ORADB $tmp
+ grep ORASECUSER $tmp 
+ grep ORASECPASS $tmp
+ grep ORASECDB $tmp
+ ) > tmp2$$
+mv tmp2$$ $tmp
+
+notset=
+for kw in `cat tmp$$` ; do
+  val="`eval echo \\$$kw`"
+  if [ -z "$val" ] ; then
+    if tty -s ; then
+      echo -n "$kw=? "
+      read val
+    else
+      echo $kw is not set
+      notset=y
+    fi
+  fi
+  cmdline+="-D$kw=$val"
+done
+
+
+echo Creating directories
+for d in conf imports exports flifodir ulogdir ; do
+  mkdir -p "$appdir/$d"
+done
+
+
+if [ -z "$notset" ] ; then
+  echo cmdline=$cmdline
+  for f in "$templatedir"/* ; do
+    fname=`basename "$f"`
+    (
+    echo "changequote([[,]])dnl"
+    cat "$f"
+    ) | $cmdline > "$confdir/$fname"
+  done
+fi
+rm tmp$$
+

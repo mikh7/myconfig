@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if [  -f "$1" ] ; then
+  grep 'G	' $1 | sort -rn
+  grep 'M	' $1 | sort -rn
+  grep 'k	' $1 | sort -rn
+fi
+

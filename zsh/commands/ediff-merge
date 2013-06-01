@@ -1,0 +1,12 @@
+#!/bin/zsh
+#
+# 3 way merge with ancestor that calls ediff via connect-emacs
+#
+emulate -L zsh
+if [[ !  $#* = 4 ]] ; then
+    echo "Usage: $0 <local> <remote> <base> <save>"
+    return 1
+fi
+local local=$PWD/$1 remote=$PWD/$2 base=$PWD/$3 save=$PWD/$4
+connect-emacs emacs --eval \
+    "(ediff-merge-files-with-ancestor ${(qqq)local} ${(qqq)remote} ${(qqq)base} nil ${(qqq)save})"

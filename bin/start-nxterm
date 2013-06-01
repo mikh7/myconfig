@@ -1,0 +1,5 @@
+#!/bin/sh
+
+xrdb -DNX -load ~/.Xresources
+export XENVIRONMENT=~/.Xdefaults-nx
+exec xterm -ls

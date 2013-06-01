@@ -1,0 +1,50 @@
+#!/bin/zsh
+# Usage: connect-emacs <name> <args>...
+#
+# Connects to the Emacs instance called NAME.  Starts up the instance
+# if it is not already running.  The rest of the arguments are passed
+# to emacsclient.
+
+
+emulate -L zsh
+
+local do_x=no
+local emacs emacsdir=$emacsdir emacsclient
+
+if [[ -n $emacsdir ]] ; then 
+    emacs=$emacsdir/src/emacs
+    emacsclient=$emacsdir/lib-src/emacsclient
+else
+    emacs=${emacs:-emacs}
+    emacsclient=${emacsclient:-emacsclient}
+fi
+
+if [ -z $1 ]; then
+    echo "Usage: connect_emacs <name> <args>..." >&2
+    return 1
+fi
+if [[ $1 == -x ]] { do_x=yes; shift }
+name=$1; shift
+if [[ $1 == -x ]] { do_x=yes; shift }
+
+if [[ $do_x != yes ]] ; then
+    local -x DISPLAY
+    unset DISPLAY
+elif [[ -z $DISPLAY ]] ; then
+    local -x DISPLAY=:0.0
+fi
+#zvvv DISPLAY
+preload-emacs $name wait
+if [[ $do_x != yes ]] ; then
+    local -x LANG
+    LANG=C
+fi
+local lastfile=$argv[-1] funcname
+if [[ -a $lastfile && -n ${(M)fpath:#$lastfile:a:h} ]] ;  then
+    funcname=$lastfile:t
+fi
+$emacsclient -s $name -c $@
+if [[ -n $funcname ]] ; then
+    unfunction $funcname 2>/dev/null
+    autoload $funcname
+fi

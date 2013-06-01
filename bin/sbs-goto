@@ -1,0 +1,114 @@
+#!/bin/sh
+function goto
+{
+if [ $GVSBSEMP != ye ]
+then
+	:
+#	return
+fi
+typeset whto=
+typeset -u cdsuf
+typeset appdir=
+typeset config=
+if [ -z "$1" ]
+then
+        print Performs a cd to a sbs data area.
+	print Enter goto XX where XX is last two characters of WHEREDATA string.
+	print XX may be entered in lower case. Example goto tr
+	wheredata |grep WHERE
+	print For Maestro you can \'goto appdir\', \'goto ulog\' or \'goto rls \' or \'go to inf\'
+	return
+fi
+case $1 in
+appdir) if [ -z "$APPDIR" ]
+	then
+	print no APPDIR env variable
+	return
+	fi
+	cd $APPDIR
+	return
+	;;
+inf) if [ -z "$INFORMIXDIR" ]
+	then
+	print no INFORMIXDIR env variable
+	return
+	fi
+	cd $INFORMIXDIR
+	return
+	;;
+ora) if [ -z "$ORACLE_HOME" ]
+	then
+	print no ORACLE_HOME env variable
+	return
+	fi
+	cd $ORACLE_HOME
+	return
+	;;
+ulog )   config=`sbsunloadcf -i |grep ULOG`
+	 if [ -z "$config" ]
+	 then
+ 	 print No config area found
+	 return
+	 fi
+         config=${config//\"/}
+	 config=${config##*=}
+	 config=`dirname $config`
+	 if [ -z "$config" ]
+	 then
+ 	 print No ulog area found
+	 return
+	 fi
+	 cd $config
+	 return
+	;;
+rls )   config=`sbsunloadcf -i |grep ENVF`
+	 if [ -z "$config" ]
+	 then
+ 	 print No envfile found
+	 return
+	 fi
+         config=${config//\"/}
+	 config=${config##*=}
+	 if [ -z "$config" ]
+	 then
+ 	 print No envfile found
+	 return
+	 fi
+         if ! test -r $config ; then 
+echo yes
+         fi
+         if [ ! -r "$config" ] ; then
+	   echo yes
+	 fi
+	 if [ ! -r $config ]
+	 then
+	      print Cannot find $config
+	      return
+         fi
+         config=`cat $config |grep '^PATH='`
+	 if [ -z "$config" ]
+	 then
+	      print Cannot find path in envfile
+	      return
+         fi
+	 config=${config##*=}
+	 if [ -z "$config" ]
+	 then
+ 	 print No path found
+	 return
+	 fi
+	 cd $config
+	 return
+	;;
+* )
+	;;
+esac
+cdsuf=$1
+whto=$(wheredata | grep WHERE${cdsuf})
+if [ -z "$whto" ]
+then
+	print $cdsuf not found. No action taken.
+fi
+whto=${whto##*=}
+cd $whto
+}

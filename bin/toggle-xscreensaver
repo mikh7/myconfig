@@ -1,0 +1,39 @@
+#!/bin/zsh
+
+pid=$(pgrep -x xscreensaver)
+
+case $1 ; in
+    (on)
+        if [[ -z $pid ]] ; then
+            setsid xscreensaver&
+            notify-send "xscreensaver started"
+        else
+            notify-send "xscreensaver already running pid $pid"
+        fi;;
+    (off)
+        if [[ -n $pid ]] ; then
+            xscreensaver-command -exit
+            sleep 1
+            pid=$(pgrep -x xscreensaver)
+            if [[ -n $pid ]] ; then
+               kill -9 $pid 
+            fi
+            notify-send "xscreensaver stopped"
+        else
+            notify-send "xscreensaver was not running"
+        fi
+        ;;
+    (*) 
+        if [[ -z $pid ]] ; then
+            setsid xscreensaver&
+            notify-send "xscreensaver started"           
+        else
+            xscreensaver-command -exit
+            sleep 1
+            pid=$(pgrep -x xscreensaver)
+            if [[ -n $pid ]] ; then
+               kill -9 $pid 
+            fi
+            notify-send "xscreensaver stopped"
+        fi
+esac

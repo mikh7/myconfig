@@ -1,0 +1,537 @@
+iprint Running ~/.zshrc
+
+# for reloading
+setopt typeset_silent
+setopt extended_glob
+
+# autoload everything in fpath
+fpath=(~/myconfig/zsh/functions ~/myconfig/zsh/commands $fpath)
+for tmp in $fpath ; do
+    files=($tmp/^($~IGNORE|$~IGNORE_FPATH)(N.:t))
+    if [[ $#files > 0 ]] ; then
+        autoload $files
+    fi
+done
+
+# interactively I want to be able to use ^ character
+#setopt no_extended_glob
+setopt extended_glob
+setopt ksh_glob
+setopt csh_null_glob
+
+
+# Apparently if its loaded in ksh mode, it wont work
+zargs --version 2>/dev/null
+
+# load some standard utilities
+. ~/myconfig/zsh/standard-hooks
+. ~/myconfig/zsh/autoreload
+. ~/myconfig/zsh/project-settings
+
+# run nicely in emacs
+[[ $EMACS == t ]] && unsetopt zle 
+
+bindkey -v
+
+# Completion configuration
+
+setopt no_menu_complete listbeep
+zmodload zsh/complist
+bindkey -M viins "\e\\" complete-word
+
+declare -g _last_num_matches _last_prefix _last_unambigious _last_insert
+zle -C my-completion complete-word _generic
+zle -N my-complete-word
+
+zstyle ':completion:my-complete-word:*' completer my-completer
+
+function my-completer {
+    local curcontext=""                                                                                     
+    _main_complete
+    _last_num_matches=$compstate[nmatches]
+    _last_prefix=$_lastcomp[prefix]
+    _last_unambigious=$compstate[unambiguous]
+    _last_insert=$compstate[insert]
+}
+
+function my-complete-word {
+    setopt localoptions
+    _last_num_matches=
+    _last_prefix=
+    _last_unambigious=
+    _last_insert=
+    builtin zle my-completion
+    if [[ $_last_num_matches -gt 1 && -n $_last_prefix && $_last_prefix != $_last_unambigious ]] ; then
+        builtin zle complete-word
+    fi
+}
+
+#hah! apprently the following opetios do the same thing I worked so hard
+# to achive with my-complete-word
+setopt auto_list no_list_ambiguous
+#bindkeyall "^I" my-complete-word
+bindkeyall "^I" complete-word
+
+zstyle ':completion:*:*:*:*' group-name ''
+zstyle ':completion:*' completer _complete _match #_expand  #_correct _approximate
+zstyle ':completion:*' max-errors 4 not-numeric
+zstyle ':completion:*' prompt 'Made %e corrections'
+#zstyle ':completion:*:*:*:*'
+#zstyle ':completion:*:*:*:*' glob 1
+#zstyle ':completion:*:expand:*:*' tag-order 'expansions all-expansions'
+#zstyle ':completion:*' file-patterns '%p:globbed-files' '*(-/):directories' '*:all-files'
+zstyle ':completion:*:*:*:*' group-order expansions all-expansions 
+zstyle ':completion:*:expand:*' substitute false
+zstyle ':completion:*:*:*:*' menu no=yes
+zstyle ':completion:*:*:*:*' verbose yes
+zstyle ':completion:*:*:*:*' ambigious true yes
+#zstyle ':completion:*:*:*:*' old-matches
+#zstyle ':completion:*:*:*:*' sort yes
+#zstyle ':completion:*:*:*:*' match-original no
+zstyle ':completion:*:*:*:*' list-suffixes yes
+#zstyle ':completion:*:*:*:*' insert-unambiguous true
+#zstyle ':completion:*:*:*:*' expand prefix
+
+
+# Alt-backspace to undo
+bindkey -M menuselect "\M-^?" undo
+bindkey -M menuselect "^Z" undo
+# Interactive search
+bindkey -M menuselect "^S" history-incremental-search-forward
+bindkey -M menuselect "^R" history-incremental-search-backward
+bindkey -M menuselect "^N" vi-insert
+# shift-tab
+bindkey -M menuselect "\e[Z" up-line-or-history
+# C-Space
+bindkey -M menuselect "^@" accept-and-infer-next-history
+bindkey -M menuselect "^M" .accept-line
+
+# when CD'ing into directories sort by date
+zstyle ':completion:*:*:cd:*' file-sort date follow
+zstyle ':completion:*:*:*:*' file-sort date follow
+
+#autoload compinit
+autoload compinit
+compinit -C
+
+# keep vi mode history search where it is
+bindkey -rM viins "\e/" 
+# make completion ignore my own generic list of 
+# ignored files
+fignore+=($ignore)
+
+zstyle ':completion:*:complete:-command-::commands' ignored-patterns $fignore
+#
+# Keyboard configuration
+#
+typeset -g hist_local
+# turn on local history initially
+zle-line-init () {
+    if [[ -z $hist_local ]] ; then
+        builtin zle set-local-history -n 1
+        hist_local=on
+    fi
+}
+builtin zle -N zle-line-init
+
+my-set-local-history () {
+    local flag
+    if [[ $hist_local == on ]] ; then
+        hist_local=off
+        flag=0
+    else
+        hist_local=on
+        flag=1
+    fi
+
+    builtin zle set-local-history -n $flag
+    PR_MSG="Local history ${hist_local}-"
+    builtin zle reset-prompt
+}
+builtin zle -N my-set-local-history
+bindkeyall "\M-h" my-set-local-history
+# Make moving up into multi-line history entry go to the 1st line
+builtin zle -N my-vi-up-line-or-history
+my-vi-up-line-or-history () {
+    local histno=$HISTNO
+    builtin zle vi-up-line-or-history
+    if [[ $histno != $HISTNO ]] ; then
+        # moved to the prev history
+        CURSOR=0
+    fi
+}
+
+
+# move cursor to the end of command line 
+# and insert space if not there
+end-of-line-ensure-space() {
+    builtin zle end-of-line
+    if [[ $BUFFER[-1] != ' ' ]] ; then
+        BUFFER+=' '
+        ((CURSOR++))
+    fi
+}
+zle -N end-of-line-ensure-space
+
+# move cursor to the end of command line
+# insert space if not there and enter
+# vi insert-mode
+end-of-line-ensure-space-append() {
+    builtin zle end-of-line
+    builtin zle vi-insert 
+    if [[ $BUFFER[-1] != ' ' ]] ; then
+        BUFFER+=' '
+        ((CURSOR++))
+    fi
+}
+zle -N end-of-line-ensure-space-append
+bindkey -M vicmd "A" end-of-line-ensure-space-append
+bindkeyall "\M-l" end-of-line-ensure-space-append
+
+
+# use smart-insert-last-word
+zle -N insert-last-word smart-insert-last-word
+
+# insert-last-word that ensures we got space before the word
+declare -g _insert_last_word_buf _insert_last_word_cur
+function ensure-space-insert-last-word () {
+    if [[ $BUFFER != "$_insert_last_word_buf" || $CURSOR != "$_insert_last_word_cur" ]] ; then
+        if [[ $CURSOR -gt 0 && $BUFFER[$CURSOR] != ' ' ]] ; then
+            #echo doing it
+                BUFFER[$CURSOR]="$BUFFER[$CURSOR] "
+                ((CURSOR++))
+                if [[ $CURSOR -lt $#BUFFER && $BUFFER[$((CURSOR+1))] != ' ' ]] ; then 
+                    BUFFER[$CURSOR]=" $BUFFER[$CURSOR]"
+                fi
+        fi
+    fi
+    builtin zle insert-last-word
+    _insert_last_word_buf=$BUFFER
+    _insert_last_word_cur=$CURSOR
+}
+zle -N ensure-space-insert-last-word
+bindkeyall "\C-n" ensure-space-insert-last-word
+zstyle :ensure-space-insert-last-word auto-previous yes
+
+# fix home/end keys 
+case $TERM in (screen|xterm*|rxvt*)
+    bindkeyall "\e[1~" beginning-of-line
+    bindkeyall "\e[4~" end-of-line-ensure-space
+    bindkeyall "\e[H" beginning-of-line
+    bindkeyall "\e[F" end-of-line-ensure-space
+esac
+bindkey -M vicmd k my-vi-up-line-or-history
+bindkey -M vicmd j vi-down-line-or-history
+bindkey -M vicmd u undo
+bindkey -M vicmd "^R" redo
+bindkeyall "ÿ" undo
+bindkeyall "^Z" undo
+zle -N edit-command-line
+bindkey -M vicmd v edit-command-line
+
+#
+# 1 => name of the array to store the config
+# 2 => template 1
+# [ 3 => template 2 ...]
+#
+declare -gA pipe_widgets
+function define-pipe-widget () {
+    local var=$1 
+    local templates=_${var}_templates
+    declare -ga $templates
+    shift
+    set -A $templates $@
+    zle -N $var insert-pipe-command
+}
+
+insert-pipe-command () {
+    emulate -L zsh
+    builtin zle end-of-line
+    local var=$WIDGET
+    local templates=_${var}_templates
+    local before after auto_accept same patnum
+    local -a match mbegin mend
+    setopt localoptions extended_glob
+
+    set nomatch
+    # see if command line is same as in our last invocation
+    if [[ $HISTNO == $pipe_widgets[histno_$var] 
+                && $BUFFER == $pipe_widgets[buffer_$var] ]] ; then
+        (( patnum = ++pipe_widgets[patnum_$var] ))
+        # wrap around
+        if [[ $patnum -gt ${#${(P)templates}}  ]] ; then
+            (( patnum = pipe_widgets[patnum_$var] = 1 ))
+        fi
+        BUFFER=$pipe_widgets[buffer_before_$var]
+        CURSOR=$pipe_widgets[cursor_before_$var]
+    else
+       # start from scratch
+       (( patnum = pipe_widgets[patnum_$var] = 1 ))
+       pipe_widgets[buffer_before_$var]=$BUFFER
+       pipe_widgets[cursor_before_$var]=$CURSOR
+    fi
+    local tmp=${${(P)templates}[$patnum]}
+    if [[ $tmp == *\\n ]] ; then
+        auto_accept=1
+        tmp=$tmp[1,-3]
+    fi
+    #set -x
+    case $BUFFER in
+        ((#b)(*[^ ]) #\| #more #)
+                BUFFER=$match
+                ;;
+    esac
+    set +x
+    # cursor in the end if not specified
+    if [[ $tmp != *@@@* ]] ; then
+        tmp="${tmp}@@@"
+    fi
+    before=${tmp%@@@*}
+    after=${tmp#*@@@}
+    set +x
+    if [[ -n ${LBUFFER## *} ]] ; then
+        if [[ $LBUFFER[-1] != ( ) ]] ; then
+            RBUFFER+=" "
+        fi
+        RBUFFER+="| "
+    else
+        if [[ $after == '' && $before[-1] != ( |-) ]] ; then
+            before+=" "
+        fi
+    fi
+    set +x
+    RBUFFER+=$before$after
+    CURSOR=$(( $#BUFFER - $#after))
+    # incase we were in vi mode
+    builtin zle vi-insert 
+    if [[ $auto_accept == 1 ]] ; then
+        builtin zle accept-line
+    fi
+    pipe_widgets[histno_$var]=$HISTNO
+    pipe_widgets[buffer_$var]=$BUFFER
+    pipe_widgets[cursor_$var]=$CURSOR
+}
+
+define-pipe-widget insert_grep   "grep @@@" "grep \"@@@\"" "grep -i \"@@@\""
+define-pipe-widget insert_grep_i "grep -i \"@@@\""
+define-pipe-widget insert_awk "awk '{print \$@@@}'"
+define-pipe-widget insert_more "more\n"
+define-pipe-widget insert_head "head " "head\n"
+define-pipe-widget insert_tail "tail " "tail\n"
+define-pipe-widget insert_l "l " "l\n"
+define-pipe-widget insert_ll "ll " "ll\n"
+define-pipe-widget insert_llt "llt " "llt\n"
+define-pipe-widget insert_l_enter "l\n"
+define-pipe-widget insert_ll_enter "ll\n"
+define-pipe-widget insert_llt_enter "llt\n"
+
+# Special bindings to speed up common commands
+bindkeyall "\C-g" insert_grep
+bindkeyall "\M-a" insert_awk
+# remove wrongly added before
+bindkey -M viins  -r "j-a"
+bindkey -M vicmd  -r "j-a"
+bindkey -M emacs  -r "j-a"
+bindkeyall "\C-l" insert_more
+bindkeyall "\M-m" insert_more
+bindkeyall "\C-h" insert_head
+bindkeyall "\C-s" insert_l
+bindkeyall "\C-t" insert_tail
+bindkeyall "\C-r" insert_tail
+
+_beep () {
+    echo -ne "\a"
+}
+zle -N _beep
+
+#
+# cmdline undo markers
+#
+declare -ga _cu_stack
+declare -g _cu_index
+declare -g _cu_hist
+declare -g _cu_curs
+
+
+zle -N cmdline-undo-push
+cmdline-undo-push () {
+    emulate -L zsh
+    # push current buffer and cursor position on the stack
+    _cu_stack+=$CURSOR
+    _cu_stack+=$BUFFER
+}
+
+zle -N cmdline-undo 
+cmdline-undo () {
+    emulate -L zsh
+    local idx cursor buffer
+    # No sense in continuing if we have no unde points
+    [[ $#_cu_stack > 0 ]] || return
+    # See if user pressed any other keys since our last invokation
+    if [[ $HISTNO != $_cu_hist || $CURSOR != $_cu_curs ]] ; then
+        # they did, start over
+        _cu_index=0
+    fi
+    # if _cu_index is zero, below evaluates to -1
+    # then to -2 etc wrapping at half cu_stack size
+    ((idx = (_cu_index-- % ($#_cu_stack / 2)) - 1))
+    ((idx = idx * 2))
+    # get old text and cursor at undo point
+    cursor=$_cu_stack[$idx]
+    buffer=$_cu_stack[$((idx+1))]
+    # restore them
+    BUFFER=$buffer
+    CURSOR=$cursor
+    _cu_hist=$HISTNO
+    _cu_curs=$CURSOR
+}
+
+#
+# Per host based .zshrc
+#
+if [[ ! -z $HOST && -r ~/.zshrc.$HOST ]] ; then
+  . ~/.zshrc.$HOST
+fi
+
+# General zsh options
+setopt IGNORE_EOF
+#
+# History configuration
+#
+HISTFILE=~/.histfile
+export HISTFILE                 # so that emacs can read it
+SAVEHIST=10000
+HISTSIZE=16384                  # give some room for dups
+
+setopt NO_HIST_VERIFY           # execute !ref immediately
+setopt SHARE_HISTORY            # share between shells
+setopt HIST_FIND_NO_DUPS        # Don't go back to dup entry
+setopt HIST_EXPIRE_DUPS_FIRST   # AaaDups expired first s histsize saaa
+setopt NO_HIST_IGNORE_ALL_DUPS  # otherwise same as this option
+setopt HIST_IGNORE_DUPS         # do not add if a dup of previous
+setopt HIST_IGNORE_SPACE        # do not add if starts with space
+
+# Push directories visited automatically onto stack
+setopt AUTO_PUSHD PUSHD_MINUS PUSHD_SILENT PUSHD_TO_HOME PUSHD_IGNORE_DUPS
+
+#
+# Configure pager
+#
+if [[ -z $LESS && -x /usr/bin/less ]] ; then
+  LESS="-M -i"
+  if [[ -x /usr/bin/lessopen.sh ]] ; then
+    LESSOPEN="lessopen.sh %s"
+    LESSCLOSE="lessclose.sh %s %s"
+    LESS_ADVANCED_PREPROCESSOR="no"
+  fi
+  if test -s /etc/lesskey.bin ; then
+    LESSKEY=/etc/lesskey.bin
+  fi
+  PAGER=less
+  MORE=-sl
+  export LESSOPEN LESSCLOSE LESS LESSKEY PAGER LESS_ADVANCED_PREPROCESSOR MORE
+fi
+export LESSHISTFILE=~/.lesshist
+LESS+=" -X"
+#
+# Set INFOPATH to tell xemacs where he can find the info files
+#
+infopath+=(/usr/local/info /usr/share/info /usr/info)
+
+# Use SUSE LANG setting script
+if [[ $TERM != dumb && $TERM != emacs && -z $SSH_SENDS_LOCALE && -r /etc/profile.d/sh.utf8 ]] ; then
+  . /etc/profile.d/sh.utf8 
+fi
+
+### below is for my cygwin machine environment
+if [ -f ~/.ssh-agent.env ] ; then
+  . ~/.ssh-agent.env
+fi
+
+# I don't like flow control
+
+if [[ $TERM != dumb && $TERM != emacs ]] ; then
+    stty erase '^?'
+    # enable flow control
+    #stty ixon 
+    # disable flow control, so I can have ^S and ^Q keys back
+    stty -ixon 
+fi
+
+test -s ~/.zalias && . ~/.zalias
+
+LS_HAS_COLOR=
+LS_HUMAN=
+# Figure out if we are using GNU ls
+if tmp=$(ls --help 2>/dev/null) ; then
+    [[ $tmp == *--color* ]]  && LS_HAS_COLOR=1
+    [[ $tmp == *--human* ]]  && LS_HUMAN=-h
+fi
+
+#
+# Colored file listings
+#
+whence dircolors >/dev/null
+if [[ $? -eq 0 && -n $LS_HAS_COLOR ]] ; then
+    if [[ $EMACS == t ]] ; then
+        eval `TERM=xterm-256color dircolors`
+    else
+        eval `dircolors`
+    fi
+fi
+#
+# ls color option depends on the terminal
+# If LS_COLROS is set but empty, the terminal has no colors.
+#
+if [[ -n $LS_COLORS && -n $LS_HAS_COLOR ]] ; then
+    LS_OPTIONS=--color=yes
+elif [[ -n $LS_HAS_COLOR ]] ; then
+    LS_OPTIONS=--color=none
+else
+    LS_OPTIONS=
+fi
+if test "$UID" = 0 ; then
+    LS_OPTIONS="-A -N $LS_OPTIONS -T 0"
+else
+    LS_OPTIONS="-N $LS_OPTIONS -T 0"
+fi
+
+LS_OPTIONS+=" -F"
+[[ -n $LS_HAS_COLOR ]] && LS_OPTIONS+=" -B"
+
+#
+# Avoid trouble with Emacs shell mode
+#
+if [[ $EMACS == t || $TERM == dumb  || $TERM == emacs ]] ; then
+    #LS_OPTIONS='-N --color=none -T 0';
+    tset -I -Q
+    stty cooked pass8 dec nl -echo
+fi
+export LS_OPTIONS
+alias ls='ls $=LS_OPTIONS'	
+alias ils='\ls'	
+
+# Make zsh completion listing colors as ls colors
+zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+
+. ~/myconfig/dotfiles/zsh-prompt
+
+#if [ "$TERM" = "screen" -o "${TERM/xterm-*/xterm}" = "xterm" ] ; then
+#  PS1='$(ppwd \l)\u@\h:\w> '
+#fi
+
+export CVS_RSH=ssh
+
+# Load colors
+if [[ $TERM == xterm* ]]; then
+    . ~/myconfig/xterm-colors.sh
+fi
+
+# xauth sudo fix
+if [ -n "$DISPLAY" -a -z "$XAUTHORITY" ] ; then
+  export XAUTHORITY=$HOME/.Xauthority
+fi
+
+# fix man displaying "Find all manual pages" since OpenSuSe 10.2
+export MAN_POSIXLY_CORRECT=1
+test1=moo2

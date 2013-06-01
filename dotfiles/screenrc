@@ -1,0 +1,17 @@
+# this is the global screenrc file. Handle with care.
+
+termcapinfo xterm* G0:is=\E[?4l\E>:ti@:te@
+termcapinfo linux me=\E[m:AX
+
+# special xterm hardstatus: use the window title.
+termcapinfo xterm-256color 'hs:ts=\E]2;:fs=\007:ds=\E]2;screen\007'
+termcapinfo xterm 'hs:ts=\E]2;:fs=\007:ds=\E]2;screen\007'
+
+termcapinfo xterm-256color 'vi=\E[?25l:ve=\E[34h\E[?25h:vs=\E[34l'
+termcapinfo xterm-256color "" "Co#256"
+
+term screen-256color
+
+defscrollback 9000
+defflow auto
+defutf8 off

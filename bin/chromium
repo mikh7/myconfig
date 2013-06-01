@@ -1,0 +1,2 @@
+#!/bin/zsh
+exec /usr/bin/chromium --allow-outdated-plugins $*

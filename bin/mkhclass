@@ -1,0 +1,24 @@
+#!/bin/sh
+
+if [ "x$1" == "x" ] ; then
+  echo "Usage: $0 <classname>"
+  exit 1
+fi
+
+cat > $1.h << EOF
+
+#pragma once
+
+#ifndef $1_h
+#define $1_h
+
+class $1
+{
+  public:
+}
+
+#endif $1_h
+
+// vim: sw=2 cindent expandtab
+
+EOF

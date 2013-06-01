@@ -1,0 +1,50 @@
+#!/bin/sh
+
+# Convert a darcs repository to git repository
+
+function usage() {
+  echo "Usage: $0 <darcs-repo-dir> <cogito-repo-dir>"
+  exit 1
+}
+
+if [ ! -d "$1" ] || [ ! -d "$2" ] ; then
+  usage
+fi
+
+darcs_repo=$1
+cg_repo=$2
+
+function  pull_one_darcs_patch () {
+  if [ -d .git ] ; then 
+    mv .git .got
+  fi
+  if [ ! -d _darcs ] ; then
+    darcs init
+  fi
+  ((echo y && echo d) | darcs pull $darcs_repo 1>/dev/null) || exit
+  darcs changes --last=1 |  perl -e \
+    '<>; while (<>) {s/^....//; $t .= $_;} print $t' > .msg
+  echo Finished pulling `cat .msg`
+  if [ -d .got ] ; then 
+    mv .got .git
+  fi
+}
+
+cd $2
+if [ ! -d .git ] ; then
+  echo _darcs >> .gitignore
+  pull_one_darcs_patch 
+  cg-init < .msg
+fi
+
+while pull_one_darcs_patch ; do
+  cg-add -r *
+  cg-commit < .msg
+done
+
+
+#mv .git .got
+#(echo y && echo d) | darcs pull ~/tt-speed
+#mv .got .git
+#cg-add -r *
+

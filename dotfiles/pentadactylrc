@@ -1,0 +1,90 @@
+javascript var dirService = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties); 
+
+javascript var homeDirFile = dirService.get("Home", Components.interfaces.nsIFile);
+
+javascript var vimperatorJs = homeDirFile.clone()
+javascript vimperatorJs.append('.pentadactyl.js')
+
+javascript dactyl.beep = function() { return false; }
+
+javascript if (vimperatorJs.exists()) { Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Components.interfaces.mozIJSSubScriptLoader).loadSubScript('file://' +  vimperatorJs.path); }
+
+set guioptions=rs
+
+" C-g to stop
+inoremap <C-g> <Esc>:stop<CR>
+cnoremap <C-g> <Esc>:stop<CR>
+vnoremap <C-g> <Esc>:stop<CR
+nnoremap <C-g> :stop<CR>
+
+" Make C-a select all again
+inoremap <C-a> <C-v><C-a>
+
+" cut-n-paste
+inoremap <C-v> <C-v><C-v>
+inoremap <C-c> <C-v><C-c>
+inoremap <C-x> <C-v><C-x>
+
+noremap <C-c> <C-v><C-c>
+cnoremap <C-v> <C-v><C-v>
+
+" Prevent C-f opening a search dialog in insert and command mode
+inoremap <C-f> <Esc><C-f>
+cnoremap <C-f> <C-f>
+" Unmap F3 so I can stop using it
+inoremap <F3> <Esc>
+cnoremap <F3> <Esc>
+nnoremap <F3> <Esc>
+vnoremap <F3> <Esc>
+inoremap <S-F3> <Esc>
+cnoremap <S-F3> <Esc>
+nnoremap <S-F3> <Esc>
+vnoremap <S-F3> <Esc>
+
+" Make M-, to be the Go back alias
+inoremap <A-,> <Esc><C-o>
+cnoremap <A-,> <Esc><C-o>
+nnoremap <A-,> <C-o>
+vnoremap <A-,> <Esc><C-o>
+
+" make M-. forward 
+inoremap <A-.> <Esc>:forward<CR>
+nnoremap <A-.> :forward<CR>
+cnoremap <A-.> <Esc>:forward<CR>
+vnoremap <A-.> <Esc>:forward<CR>
+
+" Make F9/F10 go prev/next tab
+nnoremap <F9> <C-p>
+cnoremap <F9> <Esc><C-p>
+inoremap <F9> <Esc><C-p>
+vnoremap <F9> <Esc><C-p>
+
+nnoremap <F10> <C-n>
+cnoremap <F10> <Esc><C-n>
+inoremap <F10> <Esc><C-n>
+vnoremap <F10> <Esc><C-n>
+
+" Prevent C-b from opening shit in cmdline and input
+inoremap <C-b> <Esc><C-b>
+inoremap <C-f> <Esc><C-b>
+cnoremap <C-b> <Esc><C-b>
+cnoremap <C-f> <Esc><C-b>
+
+" bookmarks
+map ;d <C-v><C-d>
+map ;D <C-v><C-B>
+map e :emenu 
+map ;R :emenu Delicious.Recently Bookmarked.
+map ;c :javascript dactyl.goFireBugConsole()<CR>
+
+" Remap C-w to C-wc
+noremap <C-w>c :tabclose<CR>
+noremap <C-w><C-w> <C-n>
+
+" Appearence
+highlight StatusLineNormal color:black; font-size: 115%; background-color: #e8e8e8;
+highlight CmdCmdLine font-size: 125%;
+highlight CompGroup font-size: 125%;
+
+" Passkeys
+set passkeys+=www.lumosity.com:<CR><Insert><Delete><PageUp><PageDown><BS><Left><Right><Up><Down><Home><End>

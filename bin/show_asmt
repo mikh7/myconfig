@@ -1,0 +1,36 @@
+#!/bin/zsh
+
+if [ "$1" = "" ] ; then
+  echo "Usage: $0 <crewid>"
+  exit 1
+fi
+
+cmseq="(select cmseqnumber from crewmember where cmidnumber = $1)"
+
+cat > tmp$$.sql << EOF
+column asmt   format a4
+column labl   format a4
+column fromdt format a12
+column todt   format a12
+column cred   format 9999
+column ecre   format 9999
+column ecor   format 9999
+
+  select 
+        nvl(to_char(TripNumber), AsmtNonFlyCode) asmt
+        ,asmtlabel labl
+        ,from_jul(AsmtBeginDate) fromdt
+        ,from_jul(AsmtEndDate) todt
+        ,AsmtCredit cred
+        ,AsmtExtraCredit ecre
+        ,AsmtExtraCoCredit ecor
+  from assignment a, crewmember c, trip t
+  where c.cmseqnumber = $cmseq
+  and a.cmseqnumber = c.cmseqnumber
+  and a.tripseqnumber = t.tripseqnumber (+) 
+  and asmtversion = 0;
+  quit;
+EOF
+#cat tmp$$.sql
+sqlplus -S badev1/badev1@ORADB @ tmp$$.sql
+rm tmp$$.sql

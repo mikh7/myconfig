@@ -1,0 +1,3 @@
+#!/bin/sh
+find ~/Maildir/.LikelySpam/new -type f -print0 | xargs -0 rm
+find ~/Maildir/.LikelySpam/cur -type f -print0 | xargs -0 rm

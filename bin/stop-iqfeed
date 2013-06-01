@@ -1,0 +1,21 @@
+#!/bin/sh
+
+PATH=~/myconfig/bin:/usr/local/bin:$PATH
+
+. shell-lib-process.sh
+
+# stop the iqfeed process
+echo Stopping iqfeed taDriver
+process_pids_matching \*taDriver\*
+for pid in ${pids[*]} ; do
+  echo IQFeed taDriver was running with pid $pid - sending kill -9...
+  kill -9 $pid
+done
+# compress the files 
+cd ~/CTA
+ls -alt /l2logs/ |  head
+echo Compressing files
+./compress_files
+ls -alt /l2logs/ |  head
+df -h
+ 

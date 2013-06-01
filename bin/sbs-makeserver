@@ -1,0 +1,7 @@
+
+function makeserver {
+  if [ -n "$1" ] ; then
+    goto rls
+    rm -f $1 && make $1 && bounce $1
+  fi
+}

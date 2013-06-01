@@ -1,0 +1,27 @@
+#!/bin/zsh
+
+emulate -L zsh
+local title artist keyword data
+
+get-divaradio-metadata.pl |\
+(
+    read artist
+    print here1 artist=$artist
+    read title
+    print here2 title=$title
+    read album
+    print here3 album=$album
+    read year
+    print here4 yaer=$year
+    print artist=$artist title=$title
+    if [[ -n $artist && -n $title ]] ; then
+        $emacsdir/lib-src/emacsclient -s emacs -e \
+            '(capture-divaradio
+  "'${${artist//\\/\\\\}//\"/\\\"}'"
+  "'${${title//\\/\\\\}//\"/\\\"}'"
+  "'${${album//\\/\\\\}//\"/\\\"}'"
+  '${${year//\\/\\\\}//\"/\\\"}'
+)'
+    fi
+) 
+ 

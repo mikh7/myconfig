@@ -1,0 +1,19 @@
+;; -*- mode: lisp -*-
+
+(print "Starting .sbclrc")
+
+(setf (sb-ext:bytes-consed-between-gcs) (* 1024 1024 1024 2))
+
+(require :sb-bsd-sockets)
+(require :sb-posix)
+(require :sb-sprof)
+
+(load (make-pathname
+       :directory
+       (append (pathname-directory (user-homedir-pathname)) 
+               '("myconfig" "dotfiles"))
+       :name "lisp-init-1"
+       :type "lisp"))
+
+
+
