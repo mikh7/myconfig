@@ -113,4 +113,9 @@ minibuffers"
 
 (add-hook 'post-command-hook 'mm/destroy-minibuffer-when-switching-windows)
 
+(defun mm/apropos-complete-and-exit ()
+  (interactive)
+  (let ((icicle-current-completion-mode 'apropos))
+    (icicle-apropos-complete-and-exit)))
+
 (provide 'my-icicles-setup)

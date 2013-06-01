@@ -570,15 +570,25 @@ If ALL-FRAMES is anything else, count only the selected frame."
 
 (require 'evil)
 
+(setq evil-normal-state-cursor  "black" 
+      evil-insert-state-cursor  '((bar . 3) "Magenta")
+      evil-motion-state-cursor  '("black")
+      evil-replace-state-cursor '((hbar . 3) "black")
+      evil-emacs-state-cursor '((bar . 3) "black"))
+
+
 (define-key evil-normal-state-map ";" (make-sparse-keymap))
 (define-key evil-normal-state-map "z" (make-sparse-keymap))
-(define-key evil-motion-state-map "z" (make-sparse-keymap))
 (define-key evil-normal-state-map "Z" nil)
+(define-key evil-motion-state-map ";" (make-sparse-keymap))
+(define-key evil-motion-state-map "z" (make-sparse-keymap))
 (define-key evil-motion-state-map "Z" nil)
+
 (define-key evil-normal-state-map "q" (make-sparse-keymap))
-(define-key evil-normal-state-map "Q" nil)
+(define-key evil-normal-state-map "Q" 'viper-nil)
 (define-key evil-normal-state-map "," (make-sparse-keymap))
 (define-key evil-normal-state-map ";c" 'comment-dwim)
+(define-key evil-visual-state-map ";c" 'comment-dwim)
 (define-key evil-normal-state-map "zz" nil)
 (define-key evil-normal-state-map "\C-c\C-g" nil)
 
@@ -655,7 +665,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
 (define-key (current-global-map) (kbd "C-/ C-p") 'describe-text-properties)
 
 (define-key evil-normal-state-map "Sp" 'newpaste)
-(define-key evil-normal-state-map ";b" 'switch-to-buffer)
+(define-key evil-motion-state-map ";b" 'switch-to-buffer)
 
 ;; I like my C-w to do same thing in insert mode
 (define-key evil-insert-state-map "\C-w" evil-window-map)
