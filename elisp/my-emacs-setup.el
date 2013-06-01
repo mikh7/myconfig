@@ -583,6 +583,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
 (define-key evil-motion-state-map ";" (make-sparse-keymap))
 (define-key evil-motion-state-map "z" (make-sparse-keymap))
 (define-key evil-motion-state-map "Z" nil)
+(define-key evil-normal-state-map "\M-." nil)
 
 (define-key evil-normal-state-map "q" (make-sparse-keymap))
 (define-key evil-normal-state-map "Q" 'viper-nil)
