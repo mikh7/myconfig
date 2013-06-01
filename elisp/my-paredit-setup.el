@@ -104,9 +104,9 @@ a line with closing paren by itself"
   (indent-sexp)
   (paredit-forward)
   (backward-down-list)
-  (when (and (boundp 'viper-current-state)
-             (eq viper-current-state 'vi-state))
-    (viper-change-state-to-insert))
+  ;; (when (and (boundp 'viper-current-state)
+  ;;            (evil-normal-state-p))
+  ;;   (evil-insert-state 1))
   (if (looking-back ")[[:space:]]*")
       (progn 
         (paredit-point-at-sexp-end)
@@ -128,7 +128,7 @@ a line with closing paren by itself"
 
 (define-key paredit-mode-map "\M-l" 'my-paredit-forward-slurp-and-add)
 (define-key paredit-mode-map "\M-h" 'my-paredit-forward-barf-sexp)
-(vimpulse-define-minor-key 'paredit-mode 'vi-state ";s" 'paredit-splice-sexp-killing-backward)
+(evil-define-key 'normal paredit-mode-map ";s" 'paredit-splice-sexp-killing-backward)
 
 (defvar my-blink-matching-open-overlay nil)
 
@@ -242,175 +242,175 @@ a line with closing paren by itself"
 (defun paredit-blink-paren-match (arg)
   (my-blink-matching-open))
 
-(defun paredit-magic-forward-word-kernel (val)
-  (while (> val 0)
-    (while (looking-at "['`,()]")
-      (forward-char)
-      (viper-move-marker-locally 'viper-com-point (point)))
-    (cond ((viper-looking-at-alpha)
-           (viper-skip-alpha-forward "_")
-           (viper-skip-separators t))
-          ((viper-looking-at-separator)
-           (viper-skip-separators t))
-          ((not (viper-looking-at-alphasep))
-           (viper-skip-nonalphasep-forward)
-           (viper-skip-separators t)))
-    (when (looking-at ")")
-      (setq val 0))
-    (setq val (1- val))))
+;; (defun paredit-magic-forward-word-kernel (val)
+;;   (while (> val 0)
+;;     (while (looking-at "['`,()]")
+;;       (forward-char)
+;;       (viper-move-marker-locally 'viper-com-point (point)))
+;;     (cond ((viper-looking-at-alpha)
+;;            (viper-skip-alpha-forward "_")
+;;            (viper-skip-separators t))
+;;           ((viper-looking-at-separator)
+;;            (viper-skip-separators t))
+;;           ((not (viper-looking-at-alphasep))
+;;            (viper-skip-nonalphasep-forward)
+;;            (viper-skip-separators t)))
+;;     (when (looking-at ")")
+;;       (setq val 0))
+;;     (setq val (1- val))))
 
-(defun paredit-magic-forward-Word-kernel (val)
-  (while (> val 0)
-    (while (looking-at "[()]")
-      (forward-char)
-      (viper-move-marker-locally 'viper-com-point (point)))
-    (let ((viper-SEP-char-class " -()"))
-      (viper-skip-nonseparators 'forward))
-    (viper-skip-separators t)
-    (when (looking-at ")")
-      (setq val 0))
-    (setq val (1- val))))
+;; (defun paredit-magic-forward-Word-kernel (val)
+;;   (while (> val 0)
+;;     (while (looking-at "[()]")
+;;       (forward-char)
+;;       (viper-move-marker-locally 'viper-com-point (point)))
+;;     (let ((viper-SEP-char-class " -()"))
+;;       (viper-skip-nonseparators 'forward))
+;;     (viper-skip-separators t)
+;;     (when (looking-at ")")
+;;       (setq val 0))
+;;     (setq val (1- val))))
 
-(defun paredit-magic-end-of-word-kernel (val)
-  (while (> val 0)
-    (while (looking-at "[()]")
-      (forward-char)
-      (viper-move-marker-locally 'viper-com-point (point)))
-    (when (viper-looking-at-separator)
-      (viper-skip-all-separators-forward))
-    (cond
-     ((viper-looking-at-alpha)
-      (viper-skip-alpha-forward "_"))
-     ((not (viper-looking-at-alphasep))
-      (viper-skip-nonalphasep-forward)))
-    (when (looking-at ")")
-      (setq val 0))
-    (setq val (1- val))))
+;; (defun paredit-magic-end-of-word-kernel (val)
+;;   (while (> val 0)
+;;     (while (looking-at "[()]")
+;;       (forward-char)
+;;       (viper-move-marker-locally 'viper-com-point (point)))
+;;     (when (viper-looking-at-separator)
+;;       (viper-skip-all-separators-forward))
+;;     (cond
+;;      ((viper-looking-at-alpha)
+;;       (viper-skip-alpha-forward "_"))
+;;      ((not (viper-looking-at-alphasep))
+;;       (viper-skip-nonalphasep-forward)))
+;;     (when (looking-at ")")
+;;       (setq val 0))
+;;     (setq val (1- val))))
 
-(defun paredit-magic-end-of-Word-kernel (val)
-  (while (> val 0)
-    (while (looking-at "[()]")
-      (forward-char)
-      (viper-move-marker-locally 'viper-com-point (point)))
-    (when (viper-looking-at-separator)
-      (viper-skip-all-separators-forward))
-    (cond
-     ((viper-looking-at-alpha)
-      (viper-skip-alpha-forward "_"))
-     ((not (viper-looking-at-alphasep))
-      (viper-skip-nonalphasep-forward)))
-    (let ((viper-SEP-char-class " -()"))
-      (viper-skip-nonseparators 'forward))
-    (setq val (1- val))))
+;; (defun paredit-magic-end-of-Word-kernel (val)
+;;   (while (> val 0)
+;;     (while (looking-at "[()]")
+;;       (forward-char)
+;;       (viper-move-marker-locally 'viper-com-point (point)))
+;;     (when (viper-looking-at-separator)
+;;       (viper-skip-all-separators-forward))
+;;     (cond
+;;      ((viper-looking-at-alpha)
+;;       (viper-skip-alpha-forward "_"))
+;;      ((not (viper-looking-at-alphasep))
+;;       (viper-skip-nonalphasep-forward)))
+;;     (let ((viper-SEP-char-class " -()"))
+;;       (viper-skip-nonseparators 'forward))
+;;     (setq val (1- val))))
 
-(defun viper-forward-word (arg)
-  "Forward word."
-  (interactive "P")
-  (viper-leave-region-active)
-  (let* ((do-paredit-magic
-          (and paredit-mode paredit-magic-mode))
-         (val (viper-p-val arg))
-         (com (viper-getcom arg)))
-    (if com (viper-move-marker-locally 'viper-com-point (point)))
-    (if do-paredit-magic (paredit-magic-forward-word-kernel val)
-      (viper-forward-word-kernel val))
-    (if com
-	(progn
-	  (cond ((viper-char-equal com ?c)
-		 (viper-separator-skipback-special 'twice viper-com-point))
-		;; Yank words including the whitespace, but not newline
-		((viper-char-equal com ?y)
-		 (viper-separator-skipback-special nil viper-com-point))
-		((viper-dotable-command-p com)
-		 (viper-separator-skipback-special nil viper-com-point)))
-	  (viper-execute-com 'viper-forward-word val com)))))
+;; (defun viper-forward-word (arg)
+;;   "Forward word."
+;;   (interactive "P")
+;;   (viper-leave-region-active)
+;;   (let* ((do-paredit-magic
+;;           (and paredit-mode paredit-magic-mode))
+;;          (val (viper-p-val arg))
+;;          (com (viper-getcom arg)))
+;;     (if com (viper-move-marker-locally 'viper-com-point (point)))
+;;     (if do-paredit-magic (paredit-magic-forward-word-kernel val)
+;;       (viper-forward-word-kernel val))
+;;     (if com
+;; 	(progn
+;; 	  (cond ((viper-char-equal com ?c)
+;; 		 (viper-separator-skipback-special 'twice viper-com-point))
+;; 		;; Yank words including the whitespace, but not newline
+;; 		((viper-char-equal com ?y)
+;; 		 (viper-separator-skipback-special nil viper-com-point))
+;; 		((viper-dotable-command-p com)
+;; 		 (viper-separator-skipback-special nil viper-com-point)))
+;; 	  (viper-execute-com 'viper-forward-word val com)))))
 
-(defun viper-forward-Word (arg)
-  "Forward word delimited by white characters."
-  (interactive "P")
-  (viper-leave-region-active)
-  (let* ((do-paredit-magic
-          (and paredit-mode paredit-magic-mode))
-         (val (viper-p-val arg))
-         (com (viper-getcom arg)))
-    (if com (viper-move-marker-locally 'viper-com-point (point)))
-    (if do-paredit-magic
-        (paredit-magic-forward-Word-kernel val)
-      (viper-loop val
-        (viper-skip-nonseparators 'forward)
-        (viper-skip-separators t)))
-    (if com (progn
-	      (cond ((viper-char-equal com ?c)
-                     (viper-separator-skipback-special 'twice viper-com-point))
-		    ;; Yank words including the whitespace, but not newline
-		    ((viper-char-equal com ?y)
-		     (viper-separator-skipback-special nil viper-com-point))
-		    ((viper-dotable-command-p com)
-		     (viper-separator-skipback-special nil viper-com-point)))
-	      (viper-execute-com 'viper-forward-Word val com)))))
+;; (defun viper-forward-Word (arg)
+;;   "Forward word delimited by white characters."
+;;   (interactive "P")
+;;   (viper-leave-region-active)
+;;   (let* ((do-paredit-magic
+;;           (and paredit-mode paredit-magic-mode))
+;;          (val (viper-p-val arg))
+;;          (com (viper-getcom arg)))
+;;     (if com (viper-move-marker-locally 'viper-com-point (point)))
+;;     (if do-paredit-magic
+;;         (paredit-magic-forward-Word-kernel val)
+;;       (viper-loop val
+;;         (viper-skip-nonseparators 'forward)
+;;         (viper-skip-separators t)))
+;;     (if com (progn
+;; 	      (cond ((viper-char-equal com ?c)
+;;                      (viper-separator-skipback-special 'twice viper-com-point))
+;; 		    ;; Yank words including the whitespace, but not newline
+;; 		    ((viper-char-equal com ?y)
+;; 		     (viper-separator-skipback-special nil viper-com-point))
+;; 		    ((viper-dotable-command-p com)
+;; 		     (viper-separator-skipback-special nil viper-com-point)))
+;; 	      (viper-execute-com 'viper-forward-Word val com)))))
 
-(defadvice vimpulse-end-of-word (around paredit-magic activate)
-  "Descend into SEXPS first"
-  (if (or (not paredit-mode)
-          (not paredit-magic-mode))
-      (setq ad-return-value ad-do-it)
-    ;; copy of code from vimpulse-viper-function-redefinitions.el
-    (viper-leave-region-active)
-    (let ((val (viper-p-val arg))
-          (com (viper-getcom arg)))
-      (paredit-magic-end-of-word-kernel val)
-      (if com
-          (viper-execute-com 'viper-end-of-word val com)
-        (viper-backward-char-carefully)))))
+;; (defadvice vimpulse-end-of-word (around paredit-magic activate)
+;;   "Descend into SEXPS first"
+;;   (if (or (not paredit-mode)
+;;           (not paredit-magic-mode))
+;;       (setq ad-return-value ad-do-it)
+;;     ;; copy of code from vimpulse-viper-function-redefinitions.el
+;;     (viper-leave-region-active)
+;;     (let ((val (viper-p-val arg))
+;;           (com (viper-getcom arg)))
+;;       (paredit-magic-end-of-word-kernel val)
+;;       (if com
+;;           (viper-execute-com 'viper-end-of-word val com)
+;;         (viper-backward-char-carefully)))))
 
-(defadvice vimpulse-end-of-Word (around paredit-magic activate)
-  "Descend into SEXPS first"
-  (if (or (not paredit-mode)
-          (not paredit-magic-mode))
-      (setq ad-return-value ad-do-it)
-    ;; copy of code from vimpulse-viper-function-redefinitions.el
-    (viper-leave-region-active)
-    (let ((val (viper-p-val arg))
-          (com (viper-getcom arg)))
-      (paredit-magic-end-of-Word-kernel val)
-      (if com
-          (viper-execute-com 'viper-end-of-word val com)
-        (viper-backward-char-carefully)))))
+;; (defadvice vimpulse-end-of-Word (around paredit-magic activate)
+;;   "Descend into SEXPS first"
+;;   (if (or (not paredit-mode)
+;;           (not paredit-magic-mode))
+;;       (setq ad-return-value ad-do-it)
+;;     ;; copy of code from vimpulse-viper-function-redefinitions.el
+;;     (viper-leave-region-active)
+;;     (let ((val (viper-p-val arg))
+;;           (com (viper-getcom arg)))
+;;       (paredit-magic-end-of-Word-kernel val)
+;;       (if com
+;;           (viper-execute-com 'viper-end-of-word val com)
+;;         (viper-backward-char-carefully)))))
 
-(defadvice vimpulse-delete (around my-paredit-dd activate)
-  ;; not in paredit or paredit-magic mode
-  (if (or (not paredit-magic-mode)
-          (not paredit-mode))
-      (setq ad-return-value ad-do-it) 
-    (let ((state (paredit-current-parse-state)))
-      (cond
-       ;; inside string or comment
-       ((or (paredit-in-string-p state)
-            (paredit-in-comment-p state)
-            (save-excursion
-              (back-to-indentation)
-              (looking-at ";")))
-        (setq ad-return-value ad-do-it))
-       ;; normal dd
-       ((not (memq vimpulse-this-motion-type '(line)))
-        (setq ad-return-value ad-do-it))
-       ;; handle deleting beginning of multi-line string
-       ((save-excursion
-          (back-to-indentation)
-          (when (looking-at "\"")
-            (let ((end-of-string (save-excursion
-                                   (forward-sexp)
-                                   (point))))
-              ;; if string is withing the delete region,
-              ;; let structural delete handle it as SEXP
-              (and (> end-of-string (line-end-position))
-                   (>= end-of-string end)))))
-        (back-to-indentation)
-        (forward-char)
-        (setq beg (point))
-        (setq ad-return-value ad-do-it))
-       ;; structural delete
-       (t (new-my-paredit-kill-line beg end))))))
+;; (defadvice vimpulse-delete (around my-paredit-dd activate)
+;;   ;; not in paredit or paredit-magic mode
+;;   (if (or (not paredit-magic-mode)
+;;           (not paredit-mode))
+;;       (setq ad-return-value ad-do-it) 
+;;     (let ((state (paredit-current-parse-state)))
+;;       (cond
+;;        ;; inside string or comment
+;;        ((or (paredit-in-string-p state)
+;;             (paredit-in-comment-p state)
+;;             (save-excursion
+;;               (back-to-indentation)
+;;               (looking-at ";")))
+;;         (setq ad-return-value ad-do-it))
+;;        ;; normal dd
+;;        ((not (memq vimpulse-this-motion-type '(line)))
+;;         (setq ad-return-value ad-do-it))
+;;        ;; handle deleting beginning of multi-line string
+;;        ((save-excursion
+;;           (back-to-indentation)
+;;           (when (looking-at "\"")
+;;             (let ((end-of-string (save-excursion
+;;                                    (forward-sexp)
+;;                                    (point))))
+;;               ;; if string is withing the delete region,
+;;               ;; let structural delete handle it as SEXP
+;;               (and (> end-of-string (line-end-position))
+;;                    (>= end-of-string end)))))
+;;         (back-to-indentation)
+;;         (forward-char)
+;;         (setq beg (point))
+;;         (setq ad-return-value ad-do-it))
+;;        ;; structural delete
+;;        (t (new-my-paredit-kill-line beg end))))))
 
 (defvar my-paredit-kill-line-kill nil)
 (defvar my-paredit-kill-line-kill-after nil)
@@ -572,27 +572,27 @@ a lot of heuristics"
     (indent-according-to-mode)
     (setq this-command 'my-dd-command)))
 
-(defun my-paredit-viper-open-line ()
-  (interactive)
+;; (defun my-paredit-viper-open-line ()
+;;   (interactive)
 
-  (end-of-line)
-  (while (and
-          ;; at closig paren
-          (looking-back ")")
-          ;; begins before current line
-          (< (scan-sexps (point) -1) (point-at-bol)))
-    (goto-char (1- (point))))
-  (viper-change-state-to-insert)
-  (viper-autoindent))
+;;   (end-of-line)
+;;   (while (and
+;;           ;; at closig paren
+;;           (looking-back ")")
+;;           ;; begins before current line
+;;           (< (scan-sexps (point) -1) (point-at-bol)))
+;;     (goto-char (1- (point))))
+;;   (evil-insert-state 1)
+;;   (viper-autoindent))
 
-(defadvice viper-open-line (around my-paredit-magic-open-line activate)
-  (cond ((and paredit-mode
-              paredit-magic-mode)
-         (my-paredit-viper-open-line))
-        ((and c-buffer-is-cc-mode
-              (fboundp 'c-paredit-viper-open-line))
-         (setq ad-return-value (or (c-paredit-viper-open-line) ad-do-it)))
-        (t (setq ad-return-value ad-do-it))))
+;; (defadvice viper-open-line (around my-paredit-magic-open-line activate)
+;;   (cond ((and paredit-mode
+;;               paredit-magic-mode)
+;;          (my-paredit-viper-open-line))
+;;         ((and c-buffer-is-cc-mode
+;;               (fboundp 'c-paredit-viper-open-line))
+;;          (setq ad-return-value (or (c-paredit-viper-open-line) ad-do-it)))
+;;         (t (setq ad-return-value ad-do-it))))
 
 (defadvice backward-down-list (around keep-line-if-just-entered activate)
   (if (and paredit-mode 
@@ -611,13 +611,13 @@ a lot of heuristics"
   '(paredit-forward paredit-backward up-list down-list 
                     backward-up-list backward-down-list))
 
-(defadvice viper-next-line-at-bol (around my-magic-enter
-                                          activate)
-  (if (or (not paredit-magic-mode)
-          (not (member last-command my-magic-enter-auto-insert)))
-      (setq ad-return-value ad-do-it)
-    (viper-change-state-to-insert)
-    (viper-autoindent)))
+;; (defadvice viper-next-line-at-bol (around my-magic-enter
+;;                                           activate)
+;;   (if (or (not paredit-magic-mode)
+;;           (not (member last-command my-magic-enter-auto-insert)))
+;;       (setq ad-return-value ad-do-it)
+;;     (evil-insert-state 1)
+;;     (viper-autoindent)))
 
 (defun my-paredit-duplicate-sexp (&optional arg)
   "Duplicate the SEXP that starts on the current line"
@@ -637,8 +637,8 @@ a lot of heuristics"
     (back-to-indentation)
     (goto-char (+ (point) (- pt start)))))
 
-(define-key paredit-mode-map "\C-d" 'my-paredit-duplicate-sexp)
-(define-key viper-vi-basic-map "\C-d" nil)
+(evil-define-key 'normal paredit-mode-map "\C-d" 'my-paredit-duplicate-sexp)
+(evil-define-key 'insert paredit-mode-map "\C-d" 'my-paredit-duplicate-sexp)
 
 (defadvice create-scratch-buffer (after enable-paredit activate)
   (paredit-mode t)

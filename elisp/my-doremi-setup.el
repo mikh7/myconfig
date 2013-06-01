@@ -71,8 +71,8 @@
           (eq (selected-window) fw)))
     (setq ad-return-value ad-do-it)))
 
-(define-key vimpulse-window-map "\C-h" 'doremi-window-height+)
-(define-key vimpulse-window-map "H" 'doremi-window-height+)
+(define-key evil-window-map "\C-h" 'doremi-window-height+)
+(define-key evil-window-map "H" 'doremi-window-height+)
 
 (provide 'my-doremi-setup)
 ;;; my-doremi-setup.el ends here

@@ -1,21 +1,21 @@
 (require 'my-shell-mode-setup)
 
 (dolist (mode '(sql-interactive-mode))
-  (remove-from-list 'viper-emacs-state-mode-list mode)
-  (add-to-list 'viper-insert-state-mode-list mode))
+  (remove-from-list 'evil-emacs-state-modes mode)
+  (add-to-list 'evil-insert-state-modes mode))
 
 ;; fix the viper key bindings
-(vimpulse-define-key 'sql-interactive-mode 'vi-state 
+(evil-define-key 'normal sql-interactive-mode-map 
                     "\C-m" 'viper-comint-enter)
-(vimpulse-define-key 'sql-interactive-mode 'insert-state 
-                    "\C-m" 'viper-exec-key-in-emacs)
-(vimpulse-define-key 'sql-interactive-mode 'vi-state "j" 'viper-comint-j)
-(vimpulse-define-key 'sql-interactive-mode 'vi-state "k" 'viper-comint-k)
-(vimpulse-define-key 'sql-interactive-mode 'vi-state 
+(evil-define-key 'insert sql-interactive-mode-map 
+                    "\C-m" 'evil-execute-in-emacs-state)
+(evil-define-key 'normal sql-interactive-mode-map "j" 'viper-comint-j)
+(evil-define-key 'normal sql-interactive-mode-map "k" 'viper-comint-k)
+(evil-define-key 'normal sql-interactive-mode-map 
                     "/" 'viper-comint-start-search)
-(vimpulse-define-key 'sql-interactive-mode 'vi-state 
+(evil-define-key 'normal sql-interactive-mode-map 
                     "n" 'viper-comint-search-next)
-(vimpulse-define-key 'sql-interactive-mode 'vi-state 
+(evil-define-key 'normal sql-interactive-mode-map 
                     "N" 'viper-comint-search-prev)
 
 (provide 'my-sqlmode-setup)

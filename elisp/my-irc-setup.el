@@ -31,10 +31,11 @@
 ;; fix viper enter key
 (defun ted-viper-erc-hook ()
   "Make RET DTRT when you use Viper and ERC together."
-  (viper-add-local-keys 'insert-state
-                        `((,(kbd "RET") . erc-send-current-line)))
-  (viper-add-local-keys 'vi-state
-                        `((,(kbd "RET") . erc-send-current-line))))
+  ;; (viper-add-local-keys 'insert-state
+  ;;                       `((,(kbd "RET") . erc-send-current-line)))
+  ;; (viper-add-local-keys 'vi-state
+  ;;                       `((,(kbd "RET") . erc-send-current-line)))
+  )
 
 (add-hook 'erc-mode-hook 'ted-viper-erc-hook)
 

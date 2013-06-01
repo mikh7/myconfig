@@ -37,16 +37,16 @@ for the diff switches"
                (setq ad-return-value (vc-diff (equal arg 4) t)))))
           (t (setq ad-return-value ad-do-it)))))
 
-(define-key viper-vi-basic-map ";v" 'vc-prefix-map)
+(define-key evil-normal-state-map ";v" 'vc-prefix-map)
 
 (dolist (mode '(log-edit-mode))
-  (remove-from-list 'viper-emacs-state-mode-list mode)
-  (add-to-list 'viper-insert-state-mode-list mode))
+  (remove-from-list 'evil-emacs-state-modes mode)
+  (add-to-list 'evil-insert-state-modes mode))
 
 (dolist (mode '(vc-dir-mode vc-git-log-view-mode vc-hg-log-view-mode
                             diff-mode))
-  (remove-from-list 'viper-emacs-state-mode-list mode)
-  (add-to-list 'viper-vi-state-mode-list mode))
+  (remove-from-list 'evil-emacs-state-modes mode)
+  (add-to-list 'evil-normal-state-modes mode))
 
 
 (define-key log-view-mode-map "\C-n" 'log-view-msg-next)
@@ -59,18 +59,18 @@ for the diff switches"
 (define-key diff-mode-shared-map (kbd "C-M-n") 'diff-file-next)
 (define-key diff-mode-shared-map (kbd "C-M-p") 'diff-file-prev)
 
-(viper-give-back-keys-in-mode '(vc-dir-mode special-mode) viper-give-back-keys-updown-only)
+(evil-give-back-keys-in-mode '(vc-dir-mode special-mode) evil-give-back-keys-updown-only)
 
-(viper-give-back-keys-in-mode '(vc-git-log-view-mode log-view-mode))
-(viper-give-back-keys-in-mode '(vc-hg-log-view-mode log-view-mode))
-(viper-give-back-keys-in-mode '(diff-mode diff-mode-shared))
+(evil-give-back-keys-in-mode '(vc-git-log-view-mode log-view-mode))
+(evil-give-back-keys-in-mode '(vc-hg-log-view-mode log-view-mode))
+(evil-give-back-keys-in-mode '(diff-mode diff-mode-shared))
 
-(vimpulse-define-key 'diff-mode 'vi-state "z" nil)
-(vimpulse-define-key 'diff-mode 'vi-state "zk" 'diff-hunk-kill)
+(evil-define-key 'normal diff-mode-map "z" nil)
+(evil-define-key 'normal diff-mode-map "zk" 'diff-hunk-kill)
 
 
 ;; Egg mode setup
-(vimpulse-define-minor-key 'egg-minor-mode 'vi-state ";v" egg-file-cmd-map)
+(evil-define-key 'normal egg-minor-mode-map ";v" egg-file-cmd-map)
 (define-key egg-hide-show-map (kbd "TAB") 'egg-section-cmd-toggle-hide-show)
 
 (dolist (mode '(egg-commit-buffer-mode
@@ -81,15 +81,15 @@ for the diff switches"
                 (egg-reflog-buffer-mode egg-log-buffer-mode)))
   (let ((modes mode)
         (mode (if (symbolp mode) mode (car mode))))
-    (add-to-list 'viper-vi-state-mode-list mode)
-    (remove-from-list 'viper-emacs-state-mode-list mode)
-    (remove-from-list 'viper-insert-state-mode-list mode)
-    (viper-give-back-keys-in-mode modes)
-    (vimpulse-define-major-key mode 'vi-state ";v" egg-file-cmd-map)))
+    (add-to-list 'evil-normal-state-modes mode)
+    (remove-from-list 'evil-emacs-state-modes mode)
+    (remove-from-list 'evil-insert-state-modes mode)
+    (evil-give-back-keys-in-mode modes)
+    (evil-define-key 'normal ode-map ";v" egg-file-cmd-map)))
 
 (dolist (mode '(egg-commit-buffer-mode))
-  (remove-from-list 'viper-vi-state-mode-list mode)
-  (add-to-list 'viper-insert-state-mode-list mode))
+  (remove-from-list 'evil-normal-state-modes mode)
+  (add-to-list 'evil-insert-state-modes mode))
 
 (defadvice vc-dir (around use-egg-instead-of-git activate)
   (let ((backend (vc-responsible-backend dir)))
@@ -366,8 +366,8 @@ operation."
           (goto-char restore-pt))))))
 
 (when (fboundp 'egg-add-log-message)
-  (defadvice egg-add-log-message (after viper-go-insert activate)
-    (viper-change-state-to-insert)))
+  (defadvice egg-add-log-message (after evil-go-insert activate)
+    (evil-insert-state)))
 
 ;; done in the end of my-emacs-setup anyway
 ;; (viper-apply-major-mode-modifiers)

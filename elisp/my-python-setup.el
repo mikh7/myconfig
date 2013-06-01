@@ -100,17 +100,17 @@ emacs.eimport = eimport
     (python-replace-emacs-eexecfile)))
 
 ;; fix the viper key bindings
-(vimpulse-define-key 'inferior-python-mode 'vi-state 
+(evil-define-key 'normal inferior-python-mode-map 
                     "\C-m" 'viper-comint-enter)
-(vimpulse-define-key 'inferior-python-mode 'insert-state 
-                    "\C-m" 'viper-exec-key-in-emacs)
-(vimpulse-define-key 'inferior-python-mode 'vi-state "j" 'viper-comint-j)
-(vimpulse-define-key 'inferior-python-mode 'vi-state "k" 'viper-comint-k)
-(vimpulse-define-key 'inferior-python-mode 'vi-state 
+(evil-define-key 'insert inferior-python-mode-map 
+                    "\C-m" 'evil-execute-in-emacs-state)
+(evil-define-key 'normal inferior-python-mode-map "j" 'viper-comint-j)
+(evil-define-key 'normal inferior-python-mode-map "k" 'viper-comint-k)
+(evil-define-key 'normal inferior-python-mode-map 
                     "/" 'viper-comint-start-search)
-(vimpulse-define-key 'inferior-python-mode 'vi-state 
+(evil-define-key 'normal inferior-python-mode-map 
                     "n" 'viper-comint-search-next)
-(vimpulse-define-key 'inferior-python-mode 'vi-state 
+(evil-define-key 'normal inferior-python-mode-map 
                     "N" 'viper-comint-search-prev)
 
 

@@ -28,10 +28,10 @@
 ;; make return key autoindent
 
 ;; make C-RET enter vi insert state
-(add-hook 'org-insert-heading-hook
-          (lambda ()
-            (if (eq viper-current-state 'vi-state)
-                (viper-change-state-to-insert))))
+;; (add-hook 'org-insert-heading-hook
+;;           (lambda ()
+;;             (if (evil-normal-state-p)
+;;                 (evil-insert-state 1))))
 ;; set my variables
 (setq 
  org-todo-keywords 
@@ -284,52 +284,52 @@
   (defun invisible-p (pos)
     (line-move-invisible-p pos)))
 
-(defadvice viper-next-line-carefully (around org-include-folded-lines activate)
-  (if (not (org-mode-p))
-      (setq ad-return-value ad-do-it)
-    ;; for org-mode, withing a single heading jump
-    ;; over invisible lines
-    (let ((limit (point-max)))
-      (save-restriction
-        (save-excursion
-          (let ((done nil))
-            (org-back-to-heading t)
-            (while (not done)
-              (or (org-goto-sibling)
-                  (ignore-errors (org-up-heading-all 1)
-                                 (org-goto-sibling))
-                  (goto-char (point-max)))
-              (setq done (or (eobp) (invisible-p (point))))))
-          (setq limit (point)))
-        (condition-case nil
-            ;; do not use forward-line! need to keep column
-            (progn
-              (with-no-warnings 
-                (call-interactively 'next-line arg)
-                (if (> (point) limit)
-                    (progn
-                      (goto-char limit)))
-                (forward-line -1)))
-          (error nil))))))
+;; (defadvice viper-next-line-carefully (around org-include-folded-lines activate)
+;;   (if (not (org-mode-p))
+;;       (setq ad-return-value ad-do-it)
+;;     ;; for org-mode, withing a single heading jump
+;;     ;; over invisible lines
+;;     (let ((limit (point-max)))
+;;       (save-restriction
+;;         (save-excursion
+;;           (let ((done nil))
+;;             (org-back-to-heading t)
+;;             (while (not done)
+;;               (or (org-goto-sibling)
+;;                   (ignore-errors (org-up-heading-all 1)
+;;                                  (org-goto-sibling))
+;;                   (goto-char (point-max)))
+;;               (setq done (or (eobp) (invisible-p (point))))))
+;;           (setq limit (point)))
+;;         (condition-case nil
+;;             ;; do not use forward-line! need to keep column
+;;             (progn
+;;               (with-no-warnings 
+;;                 (call-interactively 'next-line arg)
+;;                 (if (> (point) limit)
+;;                     (progn
+;;                       (goto-char limit)))
+;;                 (forward-line -1)))
+;;           (error nil))))))
 
-(defadvice vimpulse-line-range (around org-include-folded-lines activate)
-  (if (not (org-mode-p))
-      (setq ad-return-value ad-do-it)
-    ;; for org-mode, withing a single heading jump
-    ;; over invisible lines
-    (setq ad-return-value
-          (let* ((beg (min from to))
-                 (end (max from to)))
-            (vimpulse-make-motion-range
-             (save-excursion
-               (goto-char beg)
-               (line-beginning-position))
-             (save-excursion
-               (goto-char end)
-               (line-beginning-position)
-               (line-move 1 t)
-               (line-beginning-position))
-             'line)))))
+;; (defadvice vimpulse-line-range (around org-include-folded-lines activate)
+;;   (if (not (org-mode-p))
+;;       (setq ad-return-value ad-do-it)
+;;     ;; for org-mode, withing a single heading jump
+;;     ;; over invisible lines
+;;     (setq ad-return-value
+;;           (let* ((beg (min from to))
+;;                  (end (max from to)))
+;;             (vimpulse-make-motion-range
+;;              (save-excursion
+;;                (goto-char beg)
+;;                (line-beginning-position))
+;;              (save-excursion
+;;                (goto-char end)
+;;                (line-beginning-position)
+;;                (line-move 1 t)
+;;                (line-beginning-position))
+;;              'line)))))
 
 (defun org-next-visible-line-same-heading ()
  (when (org-mode-p)
@@ -347,44 +347,44 @@
 
 ;; Fix open line to go to the next visible line, skipping invisible ones
 ;; the limit is the current heading
-(defadvice viper-open-line (before my-org-mode-open-line-visible activate)
-  (when (org-mode-p)
-    (let ((org-show-hierarchy-above t)
-          (org-show-following-heading t))
-      (org-show-context))
-    (org-next-visible-line-same-heading)))
+;; (defadvice viper-open-line (before my-org-mode-open-line-visible activate)
+;;   (when (org-mode-p)
+;;     (let ((org-show-hierarchy-above t)
+;;           (org-show-following-heading t))
+;;       (org-show-context))
+;;     (org-next-visible-line-same-heading)))
 
-(defadvice org-insert-todo-heading (after go-insert-mode activate)
-  (and viper-mode
-       (viper-change-state-to-insert)))
+;; (defadvice org-insert-todo-heading (after go-insert-mode activate)
+;;   (and viper-mode
+;;        (evil-insert-state 1)))
 
 ;; get the o after a headline automatically do TAB for indentation
-(defadvice viper-open-line (after my-org-mode-vi-open-line activate)
-  (when (org-mode-p)
-    (org-cycle)
-    ;; TODO same thing but for pressing on headline, should skip all the 
-    ;; state entries
+;; (defadvice viper-open-line (after my-org-mode-vi-open-line activate)
+;;   (when (org-mode-p)
+;;     (org-cycle)
+;;     ;; TODO same thing but for pressing on headline, should skip all the 
+;;     ;; state entries
 
-    ;; TODO below needs fixing so that it detects any amount of whitespace before
-    ;; not just prev line
-    (when (save-excursion
-            (forward-line -1)
-            (looking-at "^\\([ \t]+\\)\\(- State \"\\|:PROPERTIES:\\|:END:\\|:LOGBOOK\\|SCHEDULED:\\|DEADLINE:\\|CLOSED:\\)"))
-      (let ((len (length (match-string 1))))
-        ;; TODO only need if wasnt empty line there before
-        (push-mark)
-        (forward-line 0)
-        (delete-region (point) (mark))
-        (pop-mark)
-        (insert (format "%s" (make-string len ?\ )))))))
+;;     ;; TODO below needs fixing so that it detects any amount of whitespace before
+;;     ;; not just prev line
+;;     (when (save-excursion
+;;             (forward-line -1)
+;;             (looking-at "^\\([ \t]+\\)\\(- State \"\\|:PROPERTIES:\\|:END:\\|:LOGBOOK\\|SCHEDULED:\\|DEADLINE:\\|CLOSED:\\)"))
+;;       (let ((len (length (match-string 1))))
+;;         ;; TODO only need if wasnt empty line there before
+;;         (push-mark)
+;;         (forward-line 0)
+;;         (delete-region (point) (mark))
+;;         (pop-mark)
+;;         (insert (format "%s" (make-string len ?\ )))))))
 
 ;; Fix paste in the same way
-(defadvice viper-put-back (before my-org-mode-put-back-visible  activate)
-  (when (org-mode-p)
-    (let ((org-show-hierarchy-above t)
-          (org-show-entry-below t))
-      (org-show-context))
-    (org-next-visible-line-same-heading)))
+;; (defadvice viper-put-back (before my-org-mode-put-back-visible  activate)
+;;   (when (org-mode-p)
+;;     (let ((org-show-hierarchy-above t)
+;;           (org-show-entry-below t))
+;;       (org-show-context))
+;;     (org-next-visible-line-same-heading)))
 
 
 ;; close the current most outer level
@@ -459,7 +459,8 @@ skipping headings of the same level as the starting position"
       (end-of-line 0)
       (org-reveal nil)
       (org-insert-todo-heading-respect-content)
-      (viper-change-state-to-insert))))
+      ;; (evil-insert-state 1)
+      )))
 
 (defun my-org-insert-todo-heading-start (arg)
   "Insert TODO heading at the end of the current project"
@@ -470,7 +471,8 @@ skipping headings of the same level as the starting position"
   (beginning-of-line)
   (org-reveal)
   (org-insert-todo-heading-respect-content)
-  (viper-change-state-to-insert))
+  ;; (evil-insert-state 1)
+  )
 
 (defun my-org-sort (&optional arg)
   "Sort current item if it has any TODO children, otherwise sort
@@ -533,8 +535,8 @@ any children"
 (define-key org-agenda-mode-map "w" nil)
 (define-key org-agenda-mode-map "\C-m" 'my-org-agenda-switch-to)
 
-(viper-reset-overrides 'org-agenda-mode 'vi-state)
-(viper-give-back-keys-in-mode '(org-agenda-mode) nil)
+;; (viper-reset-overrides 'org-agenda-mode 'vi-state)
+(evil-give-back-keys-in-mode '(org-agenda-mode) nil)
 
 (defun mm/org-agenda-refile (&optional arg)
   "Like `org-agenda-refile' but does not refresh agenda"
@@ -542,16 +544,16 @@ any children"
   (org-agenda-refile arg nil t))
 
 ;; give back z as zz
-(vimpulse-define-key 'org-agenda-mode 'vi-state "zz" 'org-agenda-add-note)
-(vimpulse-define-key 'org-agenda-mode 'vi-state ";r" 'mm/org-agenda-refile)
-(vimpulse-define-key 'org-agenda-mode 'vi-state "Yt" 'org-agenda-todo-yesterday)
-(vimpulse-define-key 'org-agenda-mode 'vi-state "yt" 'org-agenda-todo-yesterday)
-(vimpulse-define-key 'org-agenda-mode 'vi-state ";;" 'org-agenda-filter-by-tag)
-(vimpulse-define-key 'org-agenda-mode 'vi-state ";/" 'org-agenda-filter-by-tag)
+(evil-define-key 'normal org-agenda-mode-map "zz" 'org-agenda-add-note)
+(evil-define-key 'normal org-agenda-mode-map ";r" 'mm/org-agenda-refile)
+(evil-define-key 'normal org-agenda-mode-map "Yt" 'org-agenda-todo-yesterday)
+(evil-define-key 'normal org-agenda-mode-map "yt" 'org-agenda-todo-yesterday)
+(evil-define-key 'normal org-agenda-mode-map ";;" 'org-agenda-filter-by-tag)
+(evil-define-key 'normal org-agenda-mode-map ";/" 'org-agenda-filter-by-tag)
 
-(vimpulse-define-key 'org-agenda-mode 'vi-state "st" 'org-agenda-show-tags)
-(vimpulse-define-key 'org-agenda-mode 'vi-state "k" 'org-agenda-previous-line)
-(vimpulse-define-key 'org-agenda-mode 'vi-state "j" 'org-agenda-next-line)
+(evil-define-key 'normal org-agenda-mode-map "st" 'org-agenda-show-tags)
+(evil-define-key 'normal org-agenda-mode-map "k" 'org-agenda-previous-line)
+(evil-define-key 'normal org-agenda-mode-map "j" 'org-agenda-next-line)
 
 
 (define-key org-mode-map [C-next] 'my-org-skip-forward)
@@ -563,30 +565,28 @@ any children"
 (define-key org-mode-map "\M-j" 'org-metadown)
 (define-key org-mode-map "\M-c" 'org-metaup)
 (define-key org-mode-map "\M-t" 'org-metadown)
-;; (vimpulse-define-key 'org-mode 'vi-state ";c" 'my-org-fold-toplevel)
-(vimpulse-define-key 'org-mode 'vi-state ";;" 'my-org-fold-all)
-(vimpulse-define-key 'org-mode 'vi-state ";r" 'org-refile)
-(vimpulse-define-key 'org-mode 'vi-state ";n" 'my-org-insert-todo-heading-end)
-(vimpulse-define-key 'org-mode 'vi-state ";N" 'my-org-insert-todo-heading-start)
-(vimpulse-define-key 'org-mode 'vi-state ";w" 'org-cut-special)
-(vimpulse-define-key 'org-mode 'vi-state ";y" 'org-paste-special)
-(vimpulse-define-key 'org-mode 'vi-state ";t" 'mm/org-set-tags)
-(vimpulse-define-key 'org-mode 'vi-state ";l" 'org-shiftright)
-(vimpulse-define-key 'org-mode 'vi-state ";h" 'org-shiftleft)
-(vimpulse-define-key 'org-mode 'vi-state "zt" 'org-todo)
-(vimpulse-define-key 'org-mode 'vi-state ";s" 'my-org-sort)
-(vimpulse-define-key 'org-mode 'vi-state "za" 'org-archive-subtree-default)
-(vimpulse-define-key 'org-mode 'vi-state ";e" 'org-gfm-export-to-markdown)
-(vimpulse-define-key 'org-mode 'vi-state "; " 'mm/org-cc-space)
-(vimpulse-define-key 'org-mode 'vi-state ";c" 'mm/org-cc-space)
-(vimpulse-define-key 'org-mode 'vi-state ";=" 'mm/org-cc-=)
-(vimpulse-define-key 'org-mode 'vi-state "zl" 'org-open-at-point)
-(vimpulse-define-key 'org-mode nil "\C-p" 'outline-previous-visible-heading)
-(vimpulse-define-key 'org-mode nil "\C-n" 'outline-next-visible-heading)
+;; (evil-define-key 'normal org-mode-map ";c" 'my-org-fold-toplevel)
+(evil-define-key 'normal org-mode-map ";;" 'my-org-fold-all)
+(evil-define-key 'normal org-mode-map ";r" 'org-refile)
+(evil-define-key 'normal org-mode-map ";n" 'my-org-insert-todo-heading-end)
+(evil-define-key 'normal org-mode-map ";N" 'my-org-insert-todo-heading-start)
+(evil-define-key 'normal org-mode-map ";w" 'org-cut-special)
+(evil-define-key 'normal org-mode-map ";y" 'org-paste-special)
+(evil-define-key 'normal org-mode-map ";t" 'mm/org-set-tags)
+(evil-define-key 'normal org-mode-map ";l" 'org-shiftright)
+(evil-define-key 'normal org-mode-map ";h" 'org-shiftleft)
+(evil-define-key 'normal org-mode-map "zt" 'org-todo)
+(evil-define-key 'normal org-mode-map ";s" 'my-org-sort)
+(evil-define-key 'normal org-mode-map "za" 'org-archive-subtree-default)
+(evil-define-key 'normal org-mode-map ";e" 'org-gfm-export-to-markdown)
+(evil-define-key 'normal org-mode-map "; " 'mm/org-cc-space)
+(evil-define-key 'normal org-mode-map ";c" 'mm/org-cc-space)
+(evil-define-key 'normal org-mode-map ";=" 'mm/org-cc-=)
+(evil-define-key 'normal org-mode-map "zl" 'org-open-at-point)
+(evil-define-key 'normal org-mode-map "\C-p" 'outline-previous-visible-heading)
+(evil-define-key 'normal org-mode-map "\C-n" 'outline-next-visible-heading)
 
 (define-key org-mode-map (kbd "RET") 'org-return-indent)
-
-(viper-apply-major-mode-modifiers)
 
 (defun mm/org-set-tags (&optional arg just-align)
   "Go back to heading the do org-set-tags"
@@ -670,8 +670,9 @@ one"
               (save-excursion (goto-char itemp)
                               (looking-at "[ \t]*-"))) 
       (mm/insert-parent-headline-cookie 0))
-    (unless (eq viper-current-state 'insert-state)
-      (viper-change-state-to-insert))))
+    ;; (unless (eq viper-current-state 'insert-state)
+    ;;   (evil-insert-state 1))
+    ))
 
 (defun mm/org-m-ret-continue-checkboxes ()
   "If current item has a checkbox, make new item a checkbox"
@@ -686,19 +687,19 @@ one"
 
 (add-to-list 'org-metareturn-hook 'mm/org-m-ret-continue-checkboxes)
 
-(vimpulse-define-key 'org-agenda-mode 'vi-state ";e" 'org-agenda-set-effort)
+(evil-define-key 'normal org-agenda-mode-map ";e" 'org-agenda-set-effort)
 ;; seems better suited for z map
-(vimpulse-define-key 'org-mode 'vi-state "ze" 'org-set-effort)
-(vimpulse-define-key 'org-agenda-mode 'vi-state "ze" 'org-agenda-set-effort)
+(evil-define-key 'normal org-mode-map "ze" 'org-set-effort)
+(evil-define-key 'normal org-agenda-mode-map "ze" 'org-agenda-set-effort)
 ;; (vimpulse-define-key 'org-mode nil "\C-h\C-h" 'org-insert-heading-after-current)
 ;; (vimpulse-define-key 'org-mode nil "\C-hh" 'org-insert-heading-after-current)
-(vimpulse-define-key 'org-mode 'vi-state "g'" 'org-edit-special)
-(vimpulse-define-minor-key 'org-src-mode 'vi-state "g'" 'org-edit-src-exit)
+(evil-define-key 'normal org-mode-map "g'" 'org-edit-special)
+(evil-define-key 'normal org-src-mode-map "g'" 'org-edit-src-exit)
 
-(vimpulse-define-key 'org-agenda-mode 'vi-state ";w" 'org-agenda-week-view)
-(vimpulse-define-key 'org-mode 'vi-state "Th" 'org-remove-occur-highlights)
-(vimpulse-define-key 'org-mode 'vi-state "zn" 'org-add-note      )
-(vimpulse-define-key 'org-agenda-mode 'vi-state "zn" 'org-agenda-add-note)
+(evil-define-key 'normal org-agenda-mode-map ";w" 'org-agenda-week-view)
+(evil-define-key 'normal org-mode-map "Th" 'org-remove-occur-highlights)
+(evil-define-key 'normal org-mode-map "zn" 'org-add-note)
+(evil-define-key 'normal org-agenda-mode-map "zn" 'org-agenda-add-note)
 
 (define-key org-src-mode-map "\C-c" nil)
 
@@ -715,9 +716,9 @@ one"
   (org-insert-heading-after-current)
   (org-demote-subtree))
 
-;; (vimpulse-define-key 'org-mode nil "\C-h\C-s"
+;; (evil-define-key 'normal org-mode-map "\C-h\C-s"
 ;;                     'my-insert-subheading-after-current)
-;; (vimpulse-define-key 'org-mode nil "\C-hs"
+;; (evil-define-key 'normal org-mode-map "\C-hs"
 ;;                     'my-insert-subheading-after-current)
 
 
@@ -727,12 +728,12 @@ one"
          (org-table-copy-down arg))
         (t (org-insert-subheading arg))))
 
-(vimpulse-define-key 'org-mode 'vi-state (kbd "<S-return>") 'mm/org-shift-return)
-(vimpulse-define-key 'org-mode 'insert-state  (kbd "<S-return>") 'mm/org-shift-return)
+(evil-define-key 'normal org-mode-map (kbd "<S-return>") 'mm/org-shift-return)
+(evil-define-key 'insert org-mode-map  (kbd "<S-return>") 'mm/org-shift-return)
 
-(vimpulse-define-key 'org-mode 'vi-state "\C-m" 'org-cycle)
-(vimpulse-define-key 'org-mode 'insert-state "\C-m" 
-                    'viper-exec-key-in-emacs)
+(evil-define-key 'normal org-mode-map "\C-m" 'org-cycle)
+;; (vimpulse-define-key 'org-mode 'insert-state "\C-m" 
+;;                     'evil-execute-in-emacs-state)
 
 
 (defun mm/org-insert-mode-tab (&optional arg)
@@ -741,7 +742,7 @@ one"
          (org-cycle arg))
         (t (org-cycle arg))))
 
-(vimpulse-define-key 'org-mode 'insert-state (kbd "<tab>")
+(evil-define-key 'normal org-mode-map (kbd "<tab>")
                     'org-cycle)
 
 ;;; custom agenda keys
@@ -808,11 +809,12 @@ one"
 
 
 (defun my-org-maybe-go-insert ()
-  (when (and viper-mode (org-mode-p)
-             (or (string-match "^\\*Org Note" (buffer-name)) 
-                 (string-match "^\\*Capture" (buffer-name))
-                 (string-match "^CAPTURE" (buffer-name))))
-    (viper-change-state-to-insert)))
+  ;; (when (and viper-mode (org-mode-p)
+  ;;            (or (string-match "^\\*Org Note" (buffer-name)) 
+  ;;                (string-match "^\\*Capture" (buffer-name))
+  ;;                (string-match "^CAPTURE" (buffer-name))))
+  ;;   (evil-insert-state 1))
+  )
 
 (defun mgm-after-org-mode ()
   (my-org-maybe-go-insert))
@@ -864,7 +866,8 @@ one"
     (org-reveal t)))
 
 (defadvice org-capture-place-template (after go-viper-insert-mode activate)
-  (viper-change-state-to-insert))
+  ;; (evil-insert-state 1)
+  )
 
 (defun capture-divaradio (artist title album year)
   "Called by capture-divaradio shell script"
@@ -1210,19 +1213,19 @@ the default task."
          (mm/punch-out))
         (t (org-clock-out))))
 
-(define-key viper-vi-basic-map ";g" (make-sparse-keymap))
-(define-key viper-vi-basic-map ";gg" 'mm/org-clock-goto)
-(define-key viper-vi-basic-map ";gG" (lambda (&optional arg)
+(define-key evil-normal-state-map ";g" (make-sparse-keymap))
+(define-key evil-normal-state-map ";gg" 'mm/org-clock-goto)
+(define-key evil-normal-state-map ";gG" (lambda (&optional arg)
                                       (interactive)
                                       (org-clock-goto '(4))))
-(define-key viper-vi-basic-map ";gO" 'mm/clock-in-organization-task-as-default)
-(define-key viper-vi-basic-map ";go" 'mm/clock-out)
-(define-key viper-vi-basic-map ";gi" 'mm/clock-in)
-(define-key viper-vi-basic-map ";gI" 'mm/punch-in)
-(define-key viper-vi-basic-map ";gr" 'mm/set-agenda-restriction-lock)
-(define-key viper-vi-basic-map ";gR" 'mm/remove-restriction-lock)
-(define-key viper-vi-basic-map ";gdi" 'mm/toggle-auto-clock-out)
-(define-key viper-vi-basic-map ";gm" 'org-mark-ring-goto)
+(define-key evil-normal-state-map ";gO" 'mm/clock-in-organization-task-as-default)
+(define-key evil-normal-state-map ";go" 'mm/clock-out)
+(define-key evil-normal-state-map ";gi" 'mm/clock-in)
+(define-key evil-normal-state-map ";gI" 'mm/punch-in)
+(define-key evil-normal-state-map ";gr" 'mm/set-agenda-restriction-lock)
+(define-key evil-normal-state-map ";gR" 'mm/remove-restriction-lock)
+(define-key evil-normal-state-map ";gdi" 'mm/toggle-auto-clock-out)
+(define-key evil-normal-state-map ";gm" 'org-mark-ring-goto)
 
 (defun mm/clock-in ()
   (interactive)

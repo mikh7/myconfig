@@ -54,18 +54,18 @@
 
 (put 'lisp-mode 'flyspell-mode-predicate 'my-flyspell-lisp-mode-predicate)
 
-(vimpulse-define-minor-key 'flyspell-mode 'insert-state "\M-z" 'flyspell-auto-correct-previous-word)
-(vimpulse-define-minor-key 'flyspell-mode 'vi-state "\M-z" 'flyspell-auto-correct-previous-word)
+(evil-define-key 'normal flyspell-mode-map "\M-z" 'flyspell-auto-correct-previous-word)
+(evil-define-key 'normal flyspell-mode-map "\M-z" 'flyspell-auto-correct-previous-word)
 
-(dolist (command '(viper-forward-char
-                   viper-backward-char
-                   viper-next-line viper-previous-line
-                   viper-forward-word viper-forward-Word
-                   viper-backward-word viper-backward-Word
-                   viper-end-of-word viper-end-of-Word
-                   viper-bol-and-skip-white viper-goto-eol
-                   viper-goto-char-forward viper-find-char-forward
-                   viper-scroll-screen viper-scroll-screen-back))
+(dolist (command '(evil-forward-char
+                   evil-backward-char
+                   evil-next-line evil-previous-line
+                   evil-forward-word evil-forward-Word
+                   evil-backward-word evil-backward-Word
+                   evil-end-of-word evil-end-of-Word
+                   evil-bol-and-skip-white evil-goto-eol
+                   evil-goto-char-forward evil-find-char-forward
+                   evil-scroll-screen evil-scroll-screen-back))
   (add-to-list 'flyspell-deplacement-commands command))
 
 (add-hook 'after-change-major-mode-hook 'my-flyspell-after-major-mode-change-hook)

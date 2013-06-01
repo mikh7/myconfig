@@ -127,8 +127,8 @@
       (rec system-name 0))))
 (cl:in-package :cl-user)
 
-#+sbcl (in-package :sb-impl)
-#+sbcl (sb-ext:without-package-locks 
+#+sbclno (in-package :sb-impl)
+#+sbclno (sb-ext:without-package-locks 
          (defun decode-universal-time (universal-time &optional time-zone)
            "Converts a universal-time to decoded time format returning the following
    nine values: second, minute, hour, date, month, year, day of week (0 =

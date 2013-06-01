@@ -124,7 +124,7 @@ forced"
              (frame-live-p cycle-buffer-force-frame))
     (if (eq (selected-frame) cycle-buffer-force-frame) 'yes 'no)))
 
-(define-key viper-vi-basic-map "g\C-l" 'cycle-buffer-toggle-visibility)
+(define-key evil-normal-state-map "g\C-l" 'cycle-buffer-toggle-visibility)
 
 ;; this is the filter that should only leave the "permissive" stuff
 (defun cycle-buffer-ok? (name)

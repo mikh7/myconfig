@@ -9,23 +9,23 @@
 (require 'kmacro)
 
 ;; i like kmacro on K
-(define-key viper-vi-basic-map "K" kmacro-keymap)
+(define-key evil-normal-state-map "K" kmacro-keymap)
 
 (defun kmacro-append-macro ()
   (interactive)
   (start-kbd-macro t t))
 
-(define-key viper-vi-basic-map "qv" 'kmacro-view-macro)
-(define-key viper-vi-basic-map "qn" 'kmacro-cycle-ring-next)
-(define-key viper-vi-basic-map "qN" 'kmacro-cycle-ring-previous)
-(define-key viper-vi-basic-map "qp" 'kmacro-cycle-ring-previous)
-(define-key viper-vi-basic-map "qd" 'kmacro-delete-ring-head)
-(define-key viper-vi-basic-map "qt" 'kmacro-swap-ring)
-(define-key viper-vi-basic-map "ql" 'kmacro-call-ring-2nd-repeat)
-(define-key viper-vi-basic-map "qe" 'kmacro-end-or-call-macro)
-(define-key viper-vi-basic-map "qs" 'kmacro-start-macro-or-insert-counter)
-(define-key viper-vi-basic-map "qq" 'kmacro-start-macro-or-insert-counter)
-(define-key viper-vi-basic-map "qa" 'kmacro-append-macro)
+(define-key evil-normal-state-map "qv" 'kmacro-view-macro)
+(define-key evil-normal-state-map "qn" 'kmacro-cycle-ring-next)
+(define-key evil-normal-state-map "qN" 'kmacro-cycle-ring-previous)
+(define-key evil-normal-state-map "qp" 'kmacro-cycle-ring-previous)
+(define-key evil-normal-state-map "qd" 'kmacro-delete-ring-head)
+(define-key evil-normal-state-map "qt" 'kmacro-swap-ring)
+(define-key evil-normal-state-map "ql" 'kmacro-call-ring-2nd-repeat)
+(define-key evil-normal-state-map "qe" 'kmacro-end-or-call-macro)
+(define-key evil-normal-state-map "qs" 'kmacro-start-macro-or-insert-counter)
+(define-key evil-normal-state-map "qq" 'kmacro-start-macro-or-insert-counter)
+(define-key evil-normal-state-map "qa" 'kmacro-append-macro)
 
 (defvar mm/macro-undo-list nil)
 
@@ -75,6 +75,6 @@
   (undo-tree-save-state-to-register ?q)
   (setq ad-return-value ad-do-it))
 
-(define-key viper-vi-basic-map "qu" 'kmacro-undo)
+(define-key evil-normal-state-map "qu" 'kmacro-undo)
 
 (provide 'my-kmacro-setup)

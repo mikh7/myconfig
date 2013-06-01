@@ -447,7 +447,8 @@ If ALL-FRAMES is anything else, count only the selected frame."
     (eldoc-mode))
   (when (fboundp 'paredit-magic-mode)
     (paredit-magic-mode))
-  (setq viper-syntax-preference 'emacs))
+  ;; (setq viper-syntax-preference 'emacs)
+  )
 
 (define-key emacs-lisp-mode-map "\C-c\C-c" 'eval-defun)
 (define-key lisp-interaction-mode-map "\C-c\C-c" 'eval-defun)
@@ -459,7 +460,8 @@ If ALL-FRAMES is anything else, count only the selected frame."
     (eldoc-mode))
   (when (fboundp 'paredit-magic-mode)
     (paredit-magic-mode))
-  (setq viper-syntax-preference 'emacs))
+  ;; (setq viper-syntax-preference 'emacs)
+  )
 
 (unless (fboundp 'ignore-errors)
   (defmacro ignore-errors (body)
@@ -565,7 +567,23 @@ If ALL-FRAMES is anything else, count only the selected frame."
 
 (global-set-key (kbd "C-/") nil)
 
+
+(require 'evil)
+
+(define-key evil-normal-state-map ";" (make-sparse-keymap))
+(define-key evil-normal-state-map "z" (make-sparse-keymap))
+(define-key evil-motion-state-map "z" (make-sparse-keymap))
+(define-key evil-normal-state-map "Z" nil)
+(define-key evil-motion-state-map "Z" nil)
+(define-key evil-normal-state-map "q" (make-sparse-keymap))
+(define-key evil-normal-state-map "Q" nil)
+(define-key evil-normal-state-map "," (make-sparse-keymap))
+(define-key evil-normal-state-map ";c" 'comment-dwim)
+(define-key evil-normal-state-map "zz" nil)
+(define-key evil-normal-state-map "\C-c\C-g" nil)
+
 (require 'dired)
+
 (when (require-if-available 'dired+)
   (define-key dired-mode-map (kbd "C-h RET")        nil)
   (define-key dired-mode-map (kbd "C-h C-<return>") nil)
@@ -574,36 +592,34 @@ If ALL-FRAMES is anything else, count only the selected frame."
   (define-key dired-mode-map (kbd "<f1> RET")        'diredp-describe-file)
   (define-key dired-mode-map (kbd "<f1> C-<return>") 'diredp-describe-file))
 
-(setq viper-mode t)
+(evil-mode 1)
 
-(setq vimpulse-want-quit-like-Vim nil
-      vimpulse-want-C-i-like-Vim  nil
-      vimpulse-want-change-undo   nil
-      viper-want-ctl-h-help       nil)
+;; (setq vimpulse-want-quit-like-Vim nil
+;;       vimpulse-want-C-i-like-Vim  nil
+;;       vimpulse-want-change-undo   nil
+;;       viper-want-ctl-h-help       nil)
 
-(require 'vimpulse)
+;; (defun fix-emulation-mode-map-alists-for-cua ()
+;;   (when (and (fboundp 'add-to-ordered-list) (boundp 'emulation-mode-map-alists))
+;;     ;; needs to be as early as possible
+;;     (add-to-ordered-list
+;;      'emulation-mode-map-alists 'viper--intercept-key-maps 100)
+;;     ;; needs to be after cua-mode
+;;     (add-to-ordered-list 'emulation-mode-map-alists 'viper--key-maps 500)))
 
-(defun fix-emulation-mode-map-alists-for-cua ()
-  (when (and (fboundp 'add-to-ordered-list) (boundp 'emulation-mode-map-alists))
-    ;; needs to be as early as possible
-    (add-to-ordered-list
-     'emulation-mode-map-alists 'viper--intercept-key-maps 100)
-    ;; needs to be after cua-mode
-    (add-to-ordered-list 'emulation-mode-map-alists 'viper--key-maps 500)))
+;; (defadvice vimpulse-normalize-minor-mode-map-alist
+;;   (after fix-cua-copy-and-cut activate)
+;;   (fix-emulation-mode-map-alists-for-cua))
 
-(defadvice vimpulse-normalize-minor-mode-map-alist
-  (after fix-cua-copy-and-cut activate)
-  (fix-emulation-mode-map-alists-for-cua))
-
-(setq viper-vi-kbd-map (make-sparse-keymap))
-(setq search-invisible 'open)
-(setq vimpulse-flash-delay 5)
+;; (setq viper-vi-kbd-map (make-sparse-keymap))
+;; (setq search-invisible 'open)
+;; (setq vimpulse-flash-delay 5)
 
 ;; (global-set-key "\C-x" 'Control-X-prefix)
 (global-set-key "\C-q" 'Control-X-prefix)
 
 ;; get rid of C-x map
-(define-key viper-vi-basic-map "X" 'viper-delete-backward-char)
+(define-key evil-normal-state-map "X" 'viper-delete-backward-char)
 
 (define-key ctl-x-map "e" 'eval-last-sexp)
 (define-key ctl-x-map "f" 'find-file)
@@ -618,46 +634,46 @@ If ALL-FRAMES is anything else, count only the selected frame."
                               (make-frame '((name . "emacs-small-agenda")))))
 
 (define-key (current-global-map) (kbd "C-/") (make-sparse-keymap))
-(define-key viper-vi-basic-map "s" (make-sparse-keymap))
-(define-key viper-vi-basic-map "S" (make-sparse-keymap))
+(define-key evil-normal-state-map "s" (make-sparse-keymap))
+(define-key evil-normal-state-map "S" (make-sparse-keymap))
 ;; T is move until char backward, which I don't use anyway
-(define-key viper-vi-basic-map "T" (make-sparse-keymap))
+(define-key evil-normal-state-map "T" (make-sparse-keymap))
 
 ;; rather hten alternate meta key, use it for visual mode
-(define-key viper-vi-basic-map "\C-\\" 'vimpulse-visual-toggle-block)
+(define-key evil-normal-state-map "\C-\\" 'evil-visual-toggle-block)
 
 ;; I like C-z to undo, screw switching to emacs mode
-(define-key viper-vi-intercept-map "\C-z" nil)
-(define-key viper-emacs-intercept-map "\C-z" nil)
+;; (define-key viper-vi-intercept-map "\C-z" nil)
+;; (define-key viper-emacs-intercept-map "\C-z" nil)
 ; I like my C-r to stay on reverse search
-(define-key viper-vi-basic-map "\C-r" nil)
+;; (define-key evil-normal-state-map "\C-r" nil)
 ;; I never use gg
-(define-key viper-vi-basic-map "gg" 'jump-to-register)
+;; (define-key evil-normal-state-map "gg" 'jump-to-register)
 ;; also sg (for start grep)
-(define-key viper-vi-basic-map "sg" 'grep)
-(define-key viper-vi-basic-map "sp" 'describe-text-properties)
+(define-key evil-normal-state-map "sg" 'grep)
+(define-key evil-normal-state-map "sp" 'describe-text-properties)
 (define-key (current-global-map) (kbd "C-/ C-p") 'describe-text-properties)
 
-(define-key viper-vi-basic-map "Sp" 'newpaste)
-(define-key viper-vi-basic-map ";b" 'switch-to-buffer)
+(define-key evil-normal-state-map "Sp" 'newpaste)
+(define-key evil-normal-state-map ";b" 'switch-to-buffer)
 
 ;; I like my C-w to do same thing in insert mode
-(define-key viper-insert-basic-map "\C-w" vimpulse-window-map)
-(define-key global-map "\C-w" vimpulse-window-map)
-(when (require-if-available 'hexl)
-  (define-key hexl-mode-map "\C-w" vimpulse-window-map))
+(define-key evil-insert-state-map "\C-w" evil-window-map)
+;; (define-key global-map "\C-w" evil-window-map)
+;; (when (require-if-available 'hexl)
+;;   (define-key hexl-mode-map "\C-w" vimpulse-window-map))
 ;; C-r belongs to reverse search
-(define-key viper-insert-basic-map "\C-r" nil)
+;; (define-key evil-insert-state-map "\C-r" nil)
 
 ;; fix cua-mode C-c and C-x keys in insert state
-(define-key viper-insert-basic-map "\C-c" nil)
-(define-key viper-insert-basic-map "\C-x" nil)
+;; (define-key evil-insert-state-map "\C-c" nil)
+;; (define-key evil-insert-state-map "\C-x" nil)
 
 ;; Visual mode
-(define-key vimpulse-visual-basic-map "u" 'undo-tree-undo)
+;; (define-key evil-visual-state-map "u" 'undo-tree-undo)
 ;; Delete these
-(define-key vimpulse-visual-basic-map "s" nil)
-(define-key vimpulse-visual-basic-map "S" nil)
+;; (define-key evil-visual-state-map "s" nil)
+;; (define-key evil-visual-state-map "S" nil)
 
 (defun transpose-windows (arg)
   "Transpose the buffers shown in two windows."
@@ -672,11 +688,11 @@ If ALL-FRAMES is anything else, count only the selected frame."
       (setq arg (if (plusp arg) (1- arg) (1+ arg))))))
 
 (define-key ctl-x-4-map (kbd "t") 'transpose-windows)
-(define-key vimpulse-window-map "\C-s" 'transpose-windows)
-(define-key vimpulse-window-map "t" 'transpose-windows)
+;; (define-key vimpulse-window-map "\C-s" 'transpose-windows)
+;; (define-key vimpulse-window-map "t" 'transpose-windows)
 
-(viper-harness-minor-mode "mime-edit")
-(viper-harness-minor-mode "view-mode")
+;; (viper-harness-minor-mode "mime-edit")
+;; (viper-harness-minor-mode "view-mode")
 
 (defun remove-from-list (var element)
   (do ((head (symbol-value var) (cdr head))
@@ -716,69 +732,41 @@ If ALL-FRAMES is anything else, count only the selected frame."
             (hl-line-mode 1)))
 
 ;; force these modes to start in viper insert mode
-(dolist (mode '(erc-mode eshell-mode inferior-python-mode))
-  (remove-from-list 'viper-emacs-state-mode-list mode)
-  (add-to-list 'viper-insert-state-mode-list mode))
+;; (dolist (mode '(erc-mode eshell-mode inferior-python-mode))
+;;   (remove-from-list 'evil-emacs-state-modes mode)
+;;   (add-to-list 'evil-insert-state-modes mode))
 
 ;; force going into viper mode
-(dolist (mode '(Info-mode help-mode Man-mode 
-                          grep-mode  compilation-mode
-                          org-agenda-mode
-                          Custom-mode
-                          speedbar-mode
-                          occur-mode
-                          fundamental-mode
-                          mime-view-mode))
-  (remove-from-list 'viper-emacs-state-mode-list mode)
-  (add-to-list 'viper-vi-state-mode-list mode))
+;; (dolist (mode '(Info-mode help-mode Man-mode 
+;;                           grep-mode  compilation-mode
+;;                           org-agenda-mode
+;;                           Custom-mode
+;;                           speedbar-mode
+;;                           occur-mode
+;;                           fundamental-mode
+;;                           mime-view-mode))
+;;   (remove-from-list 'evil-emacs-state-modes mode)
+;;   (add-to-list 'evil-normal-state-modes mode))
 
 ;; prevent from going viper mode
 ;; (dolist (mode '(gdb-inferior-io-mode gud-mode))
-;;   (remove-from-list 'viper-vi-state-mode-list mode)
-;;   (add-to-list 'viper-emacs-state-mode-list mode))
+;;   (remove-from-list 'evil-normal-state-modes mode)
+;;   (add-to-list 'evil-emacs-state-modes mode))
 
-(defun viper-all-keysequences-in-keymap (keymap &optional so-far)
+(defun all-keysequences-in-keymap (keymap &optional so-far)
   (if (null keymap) so-far
     (loop for c being the key-seqs of keymap
           using (key-bindings b)
           unless (assoc c so-far)
           do (push (cons (copy-sequence c) b) so-far))
-    (viper-all-keysequences-in-keymap (keymap-parent keymap) so-far)))
+    (all-keysequences-in-keymap (keymap-parent keymap) so-far)))
 
-(viper-all-keysequences-in-keymap help-mode-map)
-(viper-all-keysequences-in-keymap view-mode-map)
-(viper-all-keysequences-in-keymap grep-mode-map)
-(viper-all-keysequences-in-keymap compilation-mode-map)
+(all-keysequences-in-keymap help-mode-map)
+(all-keysequences-in-keymap view-mode-map)
+(all-keysequences-in-keymap grep-mode-map)
+(all-keysequences-in-keymap compilation-mode-map)
 
-
-;;
-;; TODO
-
-;; Curretnly vimpulse-define-key only works for major modes
-;;
-;; This is because viper only has viper-major-mode-modifier-list
-;; but no viper-minor-mode-modifier-alist
-;;
-;; We can implement it for minor modes also. To do that would require
-;; to make a variable: viper-minor-mode-modifier-alist
-;;   
-;; Then advice the viper-normalize-minor-mode-map-alist function and insert
-;; a keymap for each of the insert/vi/emacs modifiers for each minor mode
-;;
-;; into 
-;;
-;; (assoc 'viper-vi-state-modifier-minor-mode viper--key-maps)
-;; (assoc 'viper-insert-state-modifier-minor-mode viper--key-maps)
-;;
-;; After above is done, one does not need to do the below trick
-;; with gathering keys from minor modes in order to enable them under viper
-;; in some major mode.
-;;
-;; Instead would be able to do: (viper-give-back-keys-in-minor-mode mode)
-;; and then these keys would be automatically active no matter in which
-;; major mode minor mode was turned on or not
-
-(defvar viper-give-back-keys-exception 
+(defvar evil-give-back-keys-exception 
   `([?k] [?j] [?l] [?h] 
     ,(kbd "\C-f")
     ,(kbd "\C-b")
@@ -787,9 +775,9 @@ If ALL-FRAMES is anything else, count only the selected frame."
     [?G]
     [?n]
     [?N])
-  "Default list of keys to retain in the `viper-give-back-keys-in-mode'")
+  "Default list of keys to retain in the `evil-give-back-keys-in-mode'")
 
-(defvar viper-give-back-keys-updown-only 
+(defvar evil-give-back-keys-updown-only 
   `([?k] [?j] 
     ,(kbd "\C-f")
     ,(kbd "\C-b")
@@ -799,17 +787,13 @@ If ALL-FRAMES is anything else, count only the selected frame."
     [?n]
     [?N])
   "Minimum list of keys to for
-  `viper-give-back-keys-in-mode'. Only vertical movement
+  `evil-give-back-keys-in-mode'. Only vertical movement
   commands")
 
-(defun viper-reset-overrides (mode state)
-  "Delete any bindings created by `vimpulse-define-key'"
-  (unintern (intern (format "%s-viper-%s-map" mode state))))
-
-(defun viper-give-back-keys-in-mode (mode &optional exception)
+(defun evil-give-back-keys-in-mode (mode &optional exception)
   "Binds all the keys that are defined to something other then
 self-insert in the major mode mode to
-viper-exec-key-in-emacs. Exception is a list of exceptions which
+evil-execute-in-emacs-state Exception is a list of exceptions which
 defaults to jklh C-f C-b /?GnN
 
 If mode is a list, then the 1st element is a major mode and the
@@ -821,12 +805,10 @@ unconditinally, regardless if minor mode is actually active.
 
 Example usage would be '(help-mode view-mode).
 
-Note: you have to run (viper-apply-major-mode-modifiers) after
-calling this function for changes to take effect
 "
-  (or exception (setq exception viper-give-back-keys-exception))
-  (let ((vi-keys (viper-all-keysequences-in-keymap
-                  viper-vi-basic-map))
+  (or exception (setq exception evil-give-back-keys-exception))
+  (let ((vi-keys (all-keysequences-in-keymap
+                  evil-normal-state-map))
         modes bind-mode)
     (if (listp mode)
         (setq modes mode bind-mode (car mode))
@@ -838,57 +820,54 @@ calling this function for changes to take effect
                        (symbol-value mode-map-symb))))))
        
         (when map
-          (loop for (c . b) in (viper-all-keysequences-in-keymap map)
+          (loop for (c . b) in (all-keysequences-in-keymap map)
                 ;; so that q gets bound because its not in vi keys
                 do (if (and ;; (assoc c vi-keys)
                         (not (member c exception)))
-                       (vimpulse-define-key bind-mode 'vi-state c b)
-                     (vimpulse-define-key bind-mode 'vi-state c nil)))))))
-  (viper-apply-major-mode-modifiers))
+                       (evil-define-key 'normal map c b)
+                     (evil-define-key 'normal map c nil))))))))
 
-(viper-give-back-keys-in-mode '(help-mode view-mode)
-                              `([?w] [?y] [?g] [?s] [?z] ,@viper-give-back-keys-exception))
-(viper-give-back-keys-in-mode '(Info-mode)
-                              `([?w] [?z] ,@viper-give-back-keys-exception))
-(viper-give-back-keys-in-mode '(Man-mode) nil)
-(viper-give-back-keys-in-mode '(grep-mode) nil)
-(viper-give-back-keys-in-mode '(compilation-mode) nil)
-(viper-give-back-keys-in-mode '(occur-mode))
+(evil-give-back-keys-in-mode '(help-mode view-mode)
+                              `([?w] [?y] [?g] [?s] [?z] ,@evil-give-back-keys-exception))
+(evil-give-back-keys-in-mode '(Info-mode)
+                              `([?w] [?z] ,@evil-give-back-keys-exception))
+(evil-give-back-keys-in-mode '(Man-mode) nil)
+(evil-give-back-keys-in-mode '(grep-mode) nil)
+(evil-give-back-keys-in-mode '(compilation-mode) nil)
+(evil-give-back-keys-in-mode '(occur-mode))
 
 
 (defun my-reconfigure-speedbar-hook ()
   (ignore-errors
-    (viper-give-back-keys-in-mode (list 'speedbar-mode (current-local-map)))))
+    (evil-give-back-keys-in-mode (list 'speedbar-mode (current-local-map)))))
 
 (add-hook 'speedbar-reconfigure-keymaps-hook 'my-reconfigure-speedbar-hook)
 
 ;; I like my backspace just the way it is
-(define-key viper-insert-basic-map [backspace] 'viper-exec-key-in-emacs)
-(define-key viper-insert-basic-map (kbd "DEL") 'viper-exec-key-in-emacs)
-(define-key viper-insert-global-user-map  [backspace] 'viper-exec-key-in-emacs)
-(define-key viper-insert-global-user-map (kbd "DEL") 'viper-exec-key-in-emacs)
+;; (define-key evil-insert-state-map [backspace] 'evil-execute-in-emacs-state)
+;; (define-key evil-insert-state-map (kbd "DEL") 'evil-execute-in-emacs-state)
 
 ;; simularly for del key
-(define-key viper-insert-basic-map (kbd "<delete>") 'viper-exec-key-in-emacs)
-(define-key viper-insert-basic-map (kbd "<deletechar>") 'viper-exec-key-in-emacs)
+;; (define-key evil-insert-state-map (kbd "<delete>") 'evil-execute-in-emacs-state)
+;; (define-key evil-insert-state-map (kbd "<deletechar>") 'evil-execute-in-emacs-state)
 
 ;; I hate it when I switch to some buffer and its
 ;; accidently left in the insert mode. In vim
 ;; buffers are always left in the command mode when
 ;; you switch buffers, therefore simulatio the
 ;; same thing in Viper
-(defun mgm-reset-all-viper-buffers-to-vi-state ()
-  "Reset all the buffers where viper is active VI state"
+(defun mgm-reset-all-evil-buffers-to-vi-state ()
+  "Reset all the buffers where evil is active VI state"
   (dolist (buffer (frame-buffer-list))
     (when (and (not (eq (selected-window)
                         (get-buffer-window buffer nil))))
       (with-current-buffer buffer
-        (when (and (eq viper-current-state 'insert-state)
-                   (not (member major-mode viper-insert-state-mode-list)))
-          (viper-change-state-to-vi))))))
+        (when (and (evil-insert-state-p) 
+                   (not (member major-mode evil-insert-state-modes)))
+          (evil-normal-state))))))
 
 (defun my-window-configuration-change-hook ()
-  (mgm-reset-all-viper-buffers-to-vi-state))
+  (mgm-reset-all-evil-buffers-to-vi-state))
 
 (add-hook 'window-configuration-change-hook 
           'my-window-configuration-change-hook)
@@ -920,23 +899,23 @@ calling this function for changes to take effect
 ;; 
 (require 'refill)
 
-(define-key viper-vi-basic-map "TT" 'toggle-truncate-lines)
-(define-key viper-vi-basic-map "TD" 'toggle-debug-on-error)
-(define-key viper-vi-basic-map "TH" 'hl-line-mode)
-(define-key viper-vi-basic-map "TG" 'toggle-gud-popups)
-(define-key viper-vi-basic-map "TR" 'refill-mode)
-(define-key viper-vi-basic-map "TC" 'toggle-case-fold-search)
-(define-key viper-vi-basic-map "TP" 'show-point-mode)
+(define-key evil-normal-state-map "TT" 'toggle-truncate-lines)
+(define-key evil-normal-state-map "TD" 'toggle-debug-on-error)
+(define-key evil-normal-state-map "TH" 'hl-line-mode)
+(define-key evil-normal-state-map "TG" 'toggle-gud-popups)
+(define-key evil-normal-state-map "TR" 'refill-mode)
+(define-key evil-normal-state-map "TC" 'toggle-case-fold-search)
+(define-key evil-normal-state-map "TP" 'show-point-mode)
 
-(define-key viper-vi-basic-map ";m" 'imenu)
+(define-key evil-normal-state-map ";m" 'imenu)
 ;; make sure C-v pastes in insert mode
-(define-key viper-insert-basic-map "\C-v" nil)
+(define-key evil-insert-state-map "\C-v" nil)
 
 ;; make Y key in visual mode paste
-(defadvice viper-yank-line (around fix-Yank-with-region-active activate)
-  (if (region-active-p)
-      (call-interactively 'vimpulse-yank)
-    (setq ad-return-value ad-do-it)))
+;; (defadvice viper-yank-line (around fix-Yank-with-region-active activate)
+;;   (if (region-active-p)
+;;       (call-interactively 'vimpulse-yank)
+;;     (setq ad-return-value ad-do-it)))
 
 (defun mm/find-file-home ()
   "Find file starting at home dir"
@@ -952,21 +931,21 @@ calling this function for changes to take effect
       (if icicle-mode (call-interactively 'icicle-file)
         (call-interactively 'find-file))))
 
-(defvar viper-zopen-map (make-sparse-keymap)
+(defvar evil-zopen-map (make-sparse-keymap)
   "Keymap for zo command in viper mode")
 
-(define-key viper-vi-basic-map "gh" 'mm/find-file-home)
-(define-key viper-vi-basic-map "zl" nil)
-(define-key viper-vi-basic-map "zh" nil)
+(define-key evil-normal-state-map "gh" 'mm/find-file-home)
+(define-key evil-normal-state-map "zl" nil)
+(define-key evil-normal-state-map "zh" nil)
 
-(define-key viper-vi-basic-map "zo" 'find-file)
-(define-key viper-vi-basic-map "Z" viper-zopen-map)
+(define-key evil-normal-state-map "zo" 'find-file)
+(define-key evil-normal-state-map "Z" evil-zopen-map)
 
-(define-key viper-zopen-map "o" 'find-file)
-(define-key viper-zopen-map "O" 'find-file-other-window)
+(define-key evil-zopen-map "o" 'find-file)
+(define-key evil-zopen-map "O" 'find-file-other-window)
 
-(define-key viper-zopen-map "h" 'mm/find-file-home)
-(define-key viper-zopen-map "e" 'mm/find-file-elisp)
+(define-key evil-zopen-map "h" 'mm/find-file-home)
+(define-key evil-zopen-map "e" 'mm/find-file-elisp)
 ;;;
 ;;; End of Viper setup
 ;;;
@@ -1058,7 +1037,7 @@ calling this function for changes to take effect
           (kill-region eshell-last-output-end (point-max))
           (call-interactively 'eshell-previous-input)
           (beginning-of-line))
-      (call-interactively 'viper-previous-line)))
+      (call-interactively 'evil-previous-line)))
 
   (defun viper-eshell-j (arg)
     "Go to previous line if not on the last line of the
@@ -1069,7 +1048,7 @@ calling this function for changes to take effect
           (kill-region eshell-last-output-end (point-max))
           (call-interactively 'eshell-next-input)
           (beginning-of-line))
-      (call-interactively 'viper-next-line)))
+      (call-interactively 'evil-next-line)))
 
   ;; Esc / search in eshell mode
   (defvar viper-eshell-search-idx 0)
@@ -1100,14 +1079,14 @@ calling this function for changes to take effect
       (setq viper-eshell-search-idx (1- viper-eshell-search-idx))))
 
   ;; keys
-  (vimpulse-define-key 'eshell-mode 'vi-state "\C-m" 'viper-comint-enter)
-  (vimpulse-define-key 'eshell-mode 'insert-state "\C-m" 
-                      'viper-exec-key-in-emacs)
-  (vimpulse-define-key 'eshell-mode 'vi-state "j" 'viper-eshell-j)
-  (vimpulse-define-key 'eshell-mode 'vi-state "k" 'viper-eshell-k)
-  (vimpulse-define-key 'eshell-mode 'vi-state "/" 'viper-eshell-start-search)
-  (vimpulse-define-key 'eshell-mode 'vi-state "n" 'viper-eshell-search-next)
-  (vimpulse-define-key 'eshell-mode 'vi-state "N" 'viper-eshell-search-prev)
+  (evil-define-key 'normal eshell-mode-map "\C-m" 'viper-comint-enter)
+  (evil-define-key 'normal eshell-mode-map "\C-m" 
+                      'evil-execute-in-emacs-state)
+  (evil-define-key 'normal eshell-mode-map "j" 'viper-eshell-j)
+  (evil-define-key 'normal eshell-mode-map "k" 'viper-eshell-k)
+  (evil-define-key 'normal eshell-mode-map "/" 'viper-eshell-start-search)
+  (evil-define-key 'normal eshell-mode-map "n" 'viper-eshell-search-next)
+  (evil-define-key 'normal eshell-mode-map "N" 'viper-eshell-search-prev)
 
   ;; global binding to switch to the eshell buffer
   )
@@ -1224,10 +1203,10 @@ calling this function for changes to take effect
 (require 'newcomment)
 ;; (define-key global-map "\M-c" 'comment-indent)
 ;; (defadvice comment-indent (after viper-go-insert activate)
-;;   (when (and (interactive-p) (eq viper-current-state 'vi-state))
-;;     (viper-change-state-to-insert)))
+;;   (when (and (interactive-p) (evil-normal-state-p))
+;;     (evil-insert-state 1)))
 
-;; (define-key viper-vi-basic-map ";c" 'comment-dwim)
+;; (define-key evil-normal-state-map ";c" 'comment-dwim)
   
 ;; (when (boundp 'viper-visual-line-map)
 ;;   (define-key viper-visual-line-map ";" nil) ;
@@ -1246,7 +1225,7 @@ calling this function for changes to take effect
 ;;           (if (and mark-active transient-mark-mode)
 ;;               (setq ad-return-value ad-do-it)
 ;;             (setq ad-return-value ad-do-it)
-;;             (viper-change-state-to-insert)))
+;;             (evil-insert-state 1)))
 ;;       (comment-or-uncomment-region (viper-overlay-start viper-visual-overlay)
 ;;                                    (viper-overlay-end viper-visual-overlay))
 ;;       (viper-visual-end))))
@@ -1429,8 +1408,8 @@ The optional second argument indicates whether to kill internal buffers too."
           (server-delete-client (frame-parameter frame 'client)))))))
 
 (when (require-if-available 'increment-number)
-  (define-key viper-vi-basic-map "z+" 'my-increment-number-decimal)
-  (define-key viper-vi-basic-map "z-" 'my-decrement-number-decimal))
+  (define-key evil-normal-state-map "z+" 'my-increment-number-decimal)
+  (define-key evil-normal-state-map "z-" 'my-decrement-number-decimal))
 
 (ignore-errors
   (require-if-available 'my-browse-url))
@@ -1489,7 +1468,6 @@ C-u argument surround it by double-quotes"
           (lambda ()
             (when (fboundp 'icy-mode)
               (icy-mode))
-            (viper-apply-major-mode-modifiers)
             (kill-buffer (get-buffer "*scratch*"))
             (create-scratch-buffer)))
 

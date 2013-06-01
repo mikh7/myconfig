@@ -186,7 +186,7 @@ selection of (0 1 2) means (elt 2 (elt 1 (elt 0 menu)))"
 (define-key status-menu-default-keymap [f9] 'status-menu-backward)
 
 (defvar status-menu-esc-keymap (make-sparse-keymap))
-(define-key status-menu-esc-keymap "\e" 'viper-intercept-ESC-key)
+;; (define-key status-menu-esc-keymap "\e" 'viper-intercept-ESC-key)
 
 (defvar status-menu-esc-maps 
   (list
@@ -241,7 +241,7 @@ selection of (0 1 2) means (elt 2 (elt 1 (elt 0 menu)))"
                       ;; use same idea as viper uses, which is figure out if stuff after ESC key
                       ;; translates into a keyseq, and if so treat it as a function key, otherwise
                       ;; treat it as ESC out of the menu
-                      (setq keyseq (viper-envelop-ESC-key))
+                      (setq keyseq (read-key-sequence nil))
                       (setq cmd (status-menu-key-binding keyseq))
                       ;; (message "cmdloop ESC key enveloping result keyseq=%s cmd=%s" keyseq cmd)
                       (if (or (equal keyseq [27])

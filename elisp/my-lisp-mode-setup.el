@@ -658,10 +658,10 @@ Will setup match data as follows:
     (paredit-mode))
   (when (fboundp 'paredit-magic-mode)
     (paredit-magic-mode))
-  (setq viper-syntax-preference 'emacs)
+  ;; (setq viper-syntax-preference 'emacs)
   (set (make-local-variable 'add-log-current-defun-function) 'mm/lisp-current-defun))
 
-(vimpulse-define-key 'lisp-mode  'insert-state (kbd "DEL") 'viper-exec-key-in-emacs)
+;; (vimpulse-define-key 'lisp-mode  'insert-state (kbd "DEL") 'evil-execute-in-emacs-state)
 
 (defun redshank--end-of-sexp-column ()
   "Move point to end of current form, neglecting trailing whitespace."

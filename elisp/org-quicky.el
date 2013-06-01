@@ -42,7 +42,7 @@
        (org-insert-todo-subheading nil)
        (org-narrow-to-subtree)
        (pop-to-buffer buffer)
-       (viper-change-state-to-insert)
+       (evil-insert-state 1)
        (end-of-line)
        (local-set-key "\C-c\C-c" 'org-quicky-finish)
        (local-set-key "\C-c\C-K" 'org-quicky-cancel)

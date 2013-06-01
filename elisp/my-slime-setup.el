@@ -366,19 +366,19 @@
 
 ;; force these modes to start in viper insert mode
 (dolist (mode '(slime-repl-mode))
-  (remove-from-list 'viper-emacs-state-mode-list mode)
-  (remove-from-list 'viper-vi-state-mode-list mode)
-  (add-to-list 'viper-insert-state-mode-list mode))
+  (remove-from-list 'evil-emacs-state-modes mode)
+  (remove-from-list 'evil-normal-state-modes mode)
+  (add-to-list 'evil-insert-state-modes mode))
 
 (dolist (mode '(slime-xref-mode slime-compiler-notes-mode slime-connection-list-mode
                                 slime-thread-control-mode))
-  (remove-from-list 'viper-emacs-state-mode-list mode)
-  (remove-from-list 'viper-insert-state-mode-list mode)
-  (add-to-list 'viper-vi-state-mode-list mode)
-  (viper-give-back-keys-in-mode mode))
+  (remove-from-list 'evil-emacs-state-modes mode)
+  (remove-from-list 'evil-insert-state-modes mode)
+  (add-to-list 'evil-normal-state-modes mode)
+  (evil-give-back-keys-in-mode mode))
 
-(vimpulse-define-key 'slime-thread-control-mode 'vi-state "\C-k" 'slime-thread-kill)
-(vimpulse-define-key 'slime-connection-list-mode 'vi-state "D" 'slime-disconnect)
+(evil-define-key 'normal slime-thread-control-mode-map "\C-k" 'slime-thread-kill)
+(evil-define-key 'normal slime-connection-list-mode-map "D" 'slime-disconnect)
 
 (defun slime-comint-k (arg)
   "Go to previous line if not on the last line of the
@@ -421,17 +421,17 @@
 	(move-end-of-line nil))
     (call-interactively 'viper-search-Next)))
 
-(vimpulse-define-key 'slime-repl-mode 'vi-state "j" 'slime-comint-j)
-(vimpulse-define-key 'slime-repl-mode 'vi-state "k" 'slime-comint-k)
-(vimpulse-define-key 'slime-repl-mode 'vi-state "\C-m" 'viper-exec-key-in-emacs)
-(vimpulse-define-key 'slime-repl-mode 'vi-state "/" 'slime-repl-previous-matching-input)
-(vimpulse-define-key 'slime-repl-mode 'vi-state "n" 'slime-comint-n)
-(vimpulse-define-key 'slime-repl-mode 'vi-state "N" 'slime-comint-N)
-(vimpulse-define-key 'slime-repl-mode 'insert-state (kbd "DEL") 'viper-exec-key-in-emacs)
-(vimpulse-define-key 'slime-repl-mode 'vi-state "\C-m" 'viper-comint-enter)
-(vimpulse-define-key 'slime-repl-mode 'vi-state (kbd "<return>") 'viper-comint-enter)
-(vimpulse-define-key 'slime-repl-mode 'vi-state (kbd "RET") 'viper-comint-enter)
-(vimpulse-define-key 'slime-repl-mode 'insert-state (kbd "RET") 'slime-repl-return)
+(evil-define-key 'normal slime-repl-mode-map "j" 'slime-comint-j)
+(evil-define-key 'normal slime-repl-mode-map "k" 'slime-comint-k)
+(evil-define-key 'normal slime-repl-mode-map "\C-m" 'evil-execute-in-emacs-state)
+(evil-define-key 'normal slime-repl-mode-map "/" 'slime-repl-previous-matching-input)
+(evil-define-key 'normal slime-repl-mode-map "n" 'slime-comint-n)
+(evil-define-key 'normal slime-repl-mode-map "N" 'slime-comint-N)
+(evil-define-key 'insert slime-repl-mode-map (kbd "DEL") 'evil-execute-in-emacs-state)
+(evil-define-key 'normal slime-repl-mode-map "\C-m" 'viper-comint-enter)
+(evil-define-key 'normal slime-repl-mode-map (kbd "<return>") 'viper-comint-enter)
+(evil-define-key 'normal slime-repl-mode-map (kbd "RET") 'viper-comint-enter)
+(evil-define-key 'insert slime-repl-mode-map (kbd "RET") 'slime-repl-return)
 
 
 (defun mm/setup-slime-viper-stuff ()
@@ -619,7 +619,7 @@ successful. Suitable for using in keyboard macros"
 (defadvice end-of-buffer (after slime-go-insert-mode activate)
   (when (and (eq major-mode 'slime-repl-mode)
              viper-mode)
-    (viper-change-state-to-insert)))
+    (evil-insert-state 1)))
 
 ;; fix it so that M-. correctly records buffer order
 (defun slime-pop-to-location (location &optional where)

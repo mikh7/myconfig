@@ -89,99 +89,99 @@ ie Enter")
 
 (setq paredit-magic-close-paren nil)
 
-(defadvice viper-put-back (after paredit-magic-auto-indent activate)
-  (when (and paredit-magic-mode
-             (not (paredit-in-string-p))
-             (not (paredit-in-comment-p)))
-    (ignore-errors
-      (save-excursion
-        (backward-up-list)
-        (ignore-errors (backward-up-list))
-        (indent-sexp)))))
+;; (defadvice viper-put-back (after paredit-magic-auto-indent activate)
+;;   (when (and paredit-magic-mode
+;;              (not (paredit-in-string-p))
+;;              (not (paredit-in-comment-p)))
+;;     (ignore-errors
+;;       (save-excursion
+;;         (backward-up-list)
+;;         (ignore-errors (backward-up-list))
+;;         (indent-sexp)))))
 
-(defadvice viper-put-back (around paredit-magic-structural-paste activate)
-  (if (not paredit-magic-mode) (setq ad-return-value ad-do-it)
-    (let ((val (viper-p-val arg))
-          (text (if viper-use-register
-                    (cond ((viper-valid-register viper-use-register '(digit))
-                           (current-kill
-                            (- viper-use-register ?1) 'do-not-rotate))
-                          ((viper-valid-register viper-use-register)
-                           (get-register (downcase viper-use-register)))
-                          (t (error viper-InvalidRegister viper-use-register)))
-                  (current-kill 0)))
-          sv-point chars-inserted lines-inserted)
-      (if (null text)
-          (if viper-use-register
-              (let ((reg viper-use-register))
-                (setq viper-use-register nil)
-                (error viper-EmptyRegister reg))
-            (error "Viper bell")))
-      (setq viper-use-register nil)
-      (if (viper-end-with-a-newline-p text)
-          (progn
-            (end-of-line)
-            (while (and
-                    ;; at closing parenthesis
-                    (looking-back ")")
-                    ;; begins before current line
-                    (< (scan-sexps (point) -1) (point-at-bol)))
-              (goto-char (1- (point))))
-            (if (eobp)
-                (insert "\n")
-              (if (and (looking-at ")"))
-                  (unless (looking-back "\n[ \t]*")
-                    (insert "\n")
-                    (indent-according-to-mode))
-                (forward-line 1))))
-        (if (not (eolp)) (viper-forward-char-carefully)))
-      (paredit-magic-before-yank text)
-      (set-marker (viper-mark-marker) (point) (current-buffer))
-      (viper-set-destructive-command
-       (list 'viper-put-back val nil viper-use-register nil nil))
-      (setq sv-point (point))
-      (viper-loop val (viper-yank text))
-      (setq chars-inserted (abs (- (point) sv-point))
-            lines-inserted (abs (count-lines (point) sv-point)))
-      (if (or (> chars-inserted viper-change-notification-threshold)
-              (> lines-inserted viper-change-notification-threshold))
-          (unless (viper-is-in-minibuffer)
-            (message "Inserted %d character(s), %d line(s)"
-                     chars-inserted lines-inserted))))
-    ;; Vi puts cursor on the last char when the yanked text doesn't contain a
-    ;; newline; it leaves the cursor at the beginning when the text contains
-    ;; a newline
-    (if (viper-same-line (point) (mark))
-        (or (= (point) (mark)) (viper-backward-char-carefully))
-      (exchange-point-and-mark)
-      (if (bolp)
-          (back-to-indentation)))
-    (viper-deactivate-mark)))
+;; (defadvice viper-put-back (around paredit-magic-structural-paste activate)
+;;   (if (not paredit-magic-mode) (setq ad-return-value ad-do-it)
+;;     (let ((val (viper-p-val arg))
+;;           (text (if viper-use-register
+;;                     (cond ((viper-valid-register viper-use-register '(digit))
+;;                            (current-kill
+;;                             (- viper-use-register ?1) 'do-not-rotate))
+;;                           ((viper-valid-register viper-use-register)
+;;                            (get-register (downcase viper-use-register)))
+;;                           (t (error viper-InvalidRegister viper-use-register)))
+;;                   (current-kill 0)))
+;;           sv-point chars-inserted lines-inserted)
+;;       (if (null text)
+;;           (if viper-use-register
+;;               (let ((reg viper-use-register))
+;;                 (setq viper-use-register nil)
+;;                 (error viper-EmptyRegister reg))
+;;             (error "Viper bell")))
+;;       (setq viper-use-register nil)
+;;       (if (viper-end-with-a-newline-p text)
+;;           (progn
+;;             (end-of-line)
+;;             (while (and
+;;                     ;; at closing parenthesis
+;;                     (looking-back ")")
+;;                     ;; begins before current line
+;;                     (< (scan-sexps (point) -1) (point-at-bol)))
+;;               (goto-char (1- (point))))
+;;             (if (eobp)
+;;                 (insert "\n")
+;;               (if (and (looking-at ")"))
+;;                   (unless (looking-back "\n[ \t]*")
+;;                     (insert "\n")
+;;                     (indent-according-to-mode))
+;;                 (forward-line 1))))
+;;         (if (not (eolp)) (viper-forward-char-carefully)))
+;;       (paredit-magic-before-yank text)
+;;       (set-marker (viper-mark-marker) (point) (current-buffer))
+;;       (viper-set-destructive-command
+;;        (list 'viper-put-back val nil viper-use-register nil nil))
+;;       (setq sv-point (point))
+;;       (viper-loop val (viper-yank text))
+;;       (setq chars-inserted (abs (- (point) sv-point))
+;;             lines-inserted (abs (count-lines (point) sv-point)))
+;;       (if (or (> chars-inserted viper-change-notification-threshold)
+;;               (> lines-inserted viper-change-notification-threshold))
+;;           (unless (viper-is-in-minibuffer)
+;;             (message "Inserted %d character(s), %d line(s)"
+;;                      chars-inserted lines-inserted))))
+;;     ;; Vi puts cursor on the last char when the yanked text doesn't contain a
+;;     ;; newline; it leaves the cursor at the beginning when the text contains
+;;     ;; a newline
+;;     (if (viper-same-line (point) (mark))
+;;         (or (= (point) (mark)) (viper-backward-char-carefully))
+;;       (exchange-point-and-mark)
+;;       (if (bolp)
+;;           (back-to-indentation)))
+;;     (viper-deactivate-mark)))
 
-(defadvice viper-autoindent (after paredit-magic-auto-indent activate)
-  (when (and paredit-magic-mode)
-    (cond ((paredit-in-string-p)
-           (indent-relative-maybe))
-          ((not (paredit-in-comment-p))
-           (ignore-errors
-             (save-excursion
-               (backward-up-list)
-               (indent-sexp)))))))
+;; (defadvice viper-autoindent (after paredit-magic-auto-indent activate)
+;;   (when (and paredit-magic-mode)
+;;     (cond ((paredit-in-string-p)
+;;            (indent-relative-maybe))
+;;           ((not (paredit-in-comment-p))
+;;            (ignore-errors
+;;              (save-excursion
+;;                (backward-up-list)
+;;                (indent-sexp)))))))
 
-(defadvice viper-Put-back (after paredit-magic-auto-indent activate)
-  (when (and paredit-magic-mode
-             (not (paredit-in-string-p))
-             (not (paredit-in-comment-p)))
-    (ignore-errors
-      (save-excursion
-        (backward-up-list)
-        (ignore-errors (backward-up-list))
-        (indent-sexp)))
-    (let ((indent (save-excursion
-                    (back-to-indentation)
-                    (point))))
-      (when (< (point) indent)
-        (goto-char indent)))))
+;; (defadvice viper-Put-back (after paredit-magic-auto-indent activate)
+;;   (when (and paredit-magic-mode
+;;              (not (paredit-in-string-p))
+;;              (not (paredit-in-comment-p)))
+;;     (ignore-errors
+;;       (save-excursion
+;;         (backward-up-list)
+;;         (ignore-errors (backward-up-list))
+;;         (indent-sexp)))
+;;     (let ((indent (save-excursion
+;;                     (back-to-indentation)
+;;                     (point))))
+;;       (when (< (point) indent)
+;;         (goto-char indent)))))
 
 (defun paredit-magic-forward-delete (&optional arg)
   "Same as `paredit-forward-delete' but passes t to `delete-char'
@@ -216,37 +216,37 @@ to save result in the kill ring"
         ((not (eq (char-syntax (char-after)) ?\)))
          (delete-char 1 t))))
 
-(defadvice viper-delete-char (around paredit-magic-forward-delete activate)
-  (if (not paredit-magic-mode) (setq ad-return-value ad-do-it)
-    ;; basically replacement of viper-delete-char that
-    ;; preserves parentesis
-    (let ((val (viper-p-val arg))
-          end-del-pos)
-      (viper-set-destructive-command
-       (list 'viper-delete-char val nil nil nil nil))
-      (if (and viper-ex-style-editing
-               (> val (viper-chars-in-region (point) (viper-line-pos 'end))))
-          (setq val (viper-chars-in-region (point) (viper-line-pos 'end))))
-      (if (and viper-ex-style-motion (eolp))
-          (if (bolp) (error "Viper bell") (setq val 0))) ; not bol---simply back 1 ch
-      (save-excursion
-        (viper-forward-char-carefully val)
-        (setq end-del-pos (point)))
-      (if viper-use-register
-          (progn
-            (cond ((viper-valid-register viper-use-register '((Letter)))
-                   (viper-append-to-register
-                    (downcase viper-use-register) (point) end-del-pos))
-                  ((viper-valid-register viper-use-register)
-                   (copy-to-register
-                    viper-use-register (point) end-del-pos nil))
-                  (t (error viper-InvalidRegister viper-use-register)))
-            (setq viper-use-register nil)))
+;; (defadvice viper-delete-char (around paredit-magic-forward-delete activate)
+;;   (if (not paredit-magic-mode) (setq ad-return-value ad-do-it)
+;;     ;; basically replacement of viper-delete-char that
+;;     ;; preserves parentesis
+;;     (let ((val (viper-p-val arg))
+;;           end-del-pos)
+;;       (viper-set-destructive-command
+;;        (list 'viper-delete-char val nil nil nil nil))
+;;       (if (and viper-ex-style-editing
+;;                (> val (viper-chars-in-region (point) (viper-line-pos 'end))))
+;;           (setq val (viper-chars-in-region (point) (viper-line-pos 'end))))
+;;       (if (and viper-ex-style-motion (eolp))
+;;           (if (bolp) (error "Viper bell") (setq val 0))) ; not bol---simply back 1 ch
+;;       (save-excursion
+;;         (viper-forward-char-carefully val)
+;;         (setq end-del-pos (point)))
+;;       (if viper-use-register
+;;           (progn
+;;             (cond ((viper-valid-register viper-use-register '((Letter)))
+;;                    (viper-append-to-register
+;;                     (downcase viper-use-register) (point) end-del-pos))
+;;                   ((viper-valid-register viper-use-register)
+;;                    (copy-to-register
+;;                     viper-use-register (point) end-del-pos nil))
+;;                   (t (error viper-InvalidRegister viper-use-register)))
+;;             (setq viper-use-register nil)))
 
-      (viper-loop val
-        (paredit-magic-forward-delete))
-      (if viper-ex-style-motion
-          (if (and (eolp) (not (bolp))) (backward-char 1))))))
+;;       (viper-loop val
+;;         (paredit-magic-forward-delete))
+;;       (if viper-ex-style-motion
+;;           (if (and (eolp) (not (bolp))) (backward-char 1))))))
 
 (defvar mytext nil)
 
@@ -284,13 +284,13 @@ to save result in the kill ring"
                  (indent-according-to-mode))))))))
 
 ;; this requires changing viper-yank to defun from defsubst
-(defadvice viper-yank (around paredit-magic-fix-sexps activate)
-  (paredit-magic-before-yank text)
-  (setq ad-return-value ad-do-it))
+;; (defadvice viper-yank (around paredit-magic-fix-sexps activate)
+;;   (paredit-magic-before-yank text)
+;;   (setq ad-return-value ad-do-it))
 
-(defadvice insert-for-yank (around paredit-magic-fix-sexps activate)
-  (paredit-magic-before-yank string)
-  (setq ad-return-value ad-do-it))
+;; (defadvice insert-for-yank (around paredit-magic-fix-sexps activate)
+;;   (paredit-magic-before-yank string)
+;;   (setq ad-return-value ad-do-it))
 
 (defadvice cua-paste-pop (after paredit-magic-auto-indent activate)
   (when (and paredit-magic-mode
@@ -301,14 +301,14 @@ to save result in the kill ring"
         (backward-up-list)
         (indent-sexp)))))
 
-(defadvice vimpulse-join (after paredit-magic-auto-indent activate)
-  (when (and paredit-magic-mode
-             (not (paredit-in-string-p))
-             (not (paredit-in-comment-p)))
-    (ignore-errors
-      (save-excursion
-        (backward-up-list)
-        (indent-sexp)))))
+;; (defadvice vimpulse-join (after paredit-magic-auto-indent activate)
+;;   (when (and paredit-magic-mode
+;;              (not (paredit-in-string-p))
+;;              (not (paredit-in-comment-p)))
+;;     (ignore-errors
+;;       (save-excursion
+;;         (backward-up-list)
+;;         (indent-sexp)))))
 
 (defvar paredit-magic-get-path-maxdepth 5)
 
@@ -995,7 +995,7 @@ structure move functions"
   (backward-down-list)
   (when (and (boundp viper-current-state)
              (eq viper-current-statie 'insert-state))
-    (viper-change-state-to-insert))
+    (evil-insert-state 1))
   (unless (looking-back "[[:space:]]")
     (insert " ")))
 

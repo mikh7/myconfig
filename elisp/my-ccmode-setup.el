@@ -194,50 +194,50 @@ mode) then remove that newline."
       (c-paredit-close-brace nil))
     t))
 
-(defadvice viper-exit-insert-state (after ccmode-cancel-auto-newline activate)
-  (when c-buffer-is-cc-mode
-    (let* ((opoint (point))
-           (did-removed-newline
-            (my-maybe-delete-previous-electric-newline)))
-      (when did-removed-newline
-        ;; maybe-do-cleanups calls c-paredit-close-brace
-        ;; when it detects possible cleanup, which already does our thing
-        (unless (or
-                 ;; Common ideom is pressing o key on
-                 ;;
-                 ;; Go to inline hanging_defun() {return blah;}
-                 ;; 
-                 ;; which our magic opens into 
-                 ;;
-                 ;; inline hanging_defun()
-                 ;; {
-                 ;;   return blah;
-                 ;;   ^
-                 ;; }
-                 ;;
-                 ;; At this point a very common thing is to do Esc O to start adding
-                 ;; text before return
-                 ;;
-                 ;; Therefore don't run the cleanups if previous command was o
-                 (memq last-command '(viper-open-line viper-Open-line))
-                 (maybe-do-cleanups))
-          (let ((next-mark (catch 'found
-                             (mapc
-                              (function
-                               (lambda (mark)
-                                 (if (< (point) mark)
-                                     (throw 'found mark))))
-                              tempo-marks)
-                             ;; return nil if not found
-                             nil)))
-            (when (and next-mark
-                       (< (- next-mark (point)) 10))
-              (goto-char next-mark)
-              (back-to-indentation))))))))
+;; (defadvice viper-exit-insert-state (after ccmode-cancel-auto-newline activate)
+;;   (when c-buffer-is-cc-mode
+;;     (let* ((opoint (point))
+;;            (did-removed-newline
+;;             (my-maybe-delete-previous-electric-newline)))
+;;       (when did-removed-newline
+;;         ;; maybe-do-cleanups calls c-paredit-close-brace
+;;         ;; when it detects possible cleanup, which already does our thing
+;;         (unless (or
+;;                  ;; Common ideom is pressing o key on
+;;                  ;;
+;;                  ;; Go to inline hanging_defun() {return blah;}
+;;                  ;; 
+;;                  ;; which our magic opens into 
+;;                  ;;
+;;                  ;; inline hanging_defun()
+;;                  ;; {
+;;                  ;;   return blah;
+;;                  ;;   ^
+;;                  ;; }
+;;                  ;;
+;;                  ;; At this point a very common thing is to do Esc O to start adding
+;;                  ;; text before return
+;;                  ;;
+;;                  ;; Therefore don't run the cleanups if previous command was o
+;;                  (memq last-command '(viper-open-line viper-Open-line))
+;;                  (maybe-do-cleanups))
+;;           (let ((next-mark (catch 'found
+;;                              (mapc
+;;                               (function
+;;                                (lambda (mark)
+;;                                  (if (< (point) mark)
+;;                                      (throw 'found mark))))
+;;                               tempo-marks)
+;;                              ;; return nil if not found
+;;                              nil)))
+;;             (when (and next-mark
+;;                        (< (- next-mark (point)) 10))
+;;               (goto-char next-mark)
+;;               (back-to-indentation))))))))
 
-(defadvice viper-change-state-to-insert (after ccmode-auto-indent activate)
-  (when c-buffer-is-cc-mode
-    (c-indent-line)))
+;; (defadvice evil-insert-state 1 (after ccmode-auto-indent activate)
+;;   (when c-buffer-is-cc-mode
+;;     (c-indent-line)))
 
 (defadvice tempo-forward-mark (before ccmode-cancel-auto-newline activate)
   (when c-buffer-is-cc-mode

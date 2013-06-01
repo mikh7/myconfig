@@ -533,31 +533,31 @@ considered by cycle-buffer when cycle-buffer-interesting is t."
     binding))
      
 
-(defun viper-intercept-ESC-key ()
-  "Function that implements ESC key in Viper emulation of Vi."
-  (interactive)
-  (let* ((cmd (or (key-binding-ignoring-modifiers (viper-envelop-ESC-key))
-		  'viper-intercept-ESC-key)))
+;; (defun viper-intercept-ESC-key ()
+;;   "Function that implements ESC key in Viper emulation of Vi."
+;;   (interactive)
+;;   (let* ((cmd (or (key-binding-ignoring-modifiers (viper-envelop-ESC-key))
+;; 		  'viper-intercept-ESC-key)))
 
-    ;; fix macros
-    (when (keymapp cmd)
-      (setq cmd 'viper-intercept-ESC-key))
+;;     ;; fix macros
+;;     (when (keymapp cmd)
+;;       (setq cmd 'viper-intercept-ESC-key))
 
-    ;; call the actual function to execute ESC (if no other symbols followed)
-    ;; or the key bound to the ESC sequence (if the sequence was issued
-    ;; with very short delay between characters).
-    (if (eq cmd 'viper-intercept-ESC-key)
-	(setq cmd
-	      (cond ((eq viper-current-state 'vi-state)
-		     'viper-ESC)
-		    ((eq viper-current-state 'insert-state)
-		     'viper-exit-insert-state)
-		    ((eq viper-current-state 'replace-state)
-		     'viper-replace-state-exit-cmd)
-		    (t 'viper-change-state-to-vi))))
-    (setq this-command cmd)
-    (run-hooks 'pre-command-hook)
-    (call-interactively cmd)))
+;;     ;; call the actual function to execute ESC (if no other symbols followed)
+;;     ;; or the key bound to the ESC sequence (if the sequence was issued
+;;     ;; with very short delay between characters).
+;;     (if (eq cmd 'viper-intercept-ESC-key)
+;; 	(setq cmd
+;; 	      (cond ((evil-normal-state-p)
+;; 		     'viper-ESC)
+;; 		    ((evil-insert-state-p)
+;; 		     'evil-normal-state)
+;; 		    ((evil-replace-state-p)
+;; 		     'evil-normal-state)
+;; 		    (t 'evil-normal-state))))
+;;     (setq this-command cmd)
+;;     (run-hooks 'pre-command-hook)
+;;     (call-interactively cmd)))
 
 
 (run-hooks 'cycle-buffer-load-hook)

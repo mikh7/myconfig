@@ -22,27 +22,22 @@
             (unless mm/dired-no-omit
               (dired-omit-mode 1))))
 
-(dolist (mode '(dired-mode))
-  (remove-from-list 'viper-emacs-state-mode-list mode)
-  (add-to-list 'viper-vi-state-mode-list mode))
-
 (define-key dired-mode-map "K" 'dired-do-kill-lines)
 ;; get rid of the epa decrypt shit
 (define-key dired-mode-map ":" nil)
 (define-key dired-mode-map "s" nil)
 
-(viper-give-back-keys-in-mode 'dired-mode
-                              (remove 
-                               [?l] 
-                               (remove
-                                [?h] 
-                                viper-give-back-keys-exception)))
+(evil-give-back-keys-in-mode 'dired-mode
+                             (remove 
+                              [?l] 
+                              (remove
+                               [?h] 
+                               evil-give-back-keys-exception)))
 
-(vimpulse-define-key 'dired-mode 'vi-state ";G" 'diredp-do-grep)
-(vimpulse-define-key 'dired-mode 'vi-state ";l" 'dired-do-redisplay)
+(evil-define-key 'normal dired-mode-map ";G" 'diredp-do-grep)
+(evil-define-key 'normal dired-mode-map ";l" 'dired-do-redisplay)
 
 (defvar dired-sort-map (make-sparse-keymap))
-(define-key dired-mode-map "s" dired-sort-map)
 
 (defvar dired-gnu-ls-p
   (equal 0 (call-process-shell-command "ls --version | grep -q GNU"))
@@ -148,32 +143,31 @@ if several exist, choose the buffer with outermost parent"
 
 (add-to-list 'find-directory-functions 'dired-open-subdir-noselect)
 
-(vimpulse-define-key 'dired-mode 'vi-state "s" dired-sort-map)
-(vimpulse-define-key 'dired-mode 'vi-state ",o" 'diredp-omit-marked)
-(vimpulse-define-key 'dired-mode 'vi-state ";m" 'dired-mark-files-regexp)
-(vimpulse-define-key 'dired-mode 'vi-state ";M"
+(evil-define-key 'normal dired-mode-map "s" dired-sort-map)
+(evil-define-key 'normal dired-mode-map ",o" 'diredp-omit-marked)
+(evil-define-key 'normal dired-mode-map ";m" 'dired-mark-files-regexp)
+(evil-define-key 'normal dired-mode-map ";M"
                      (lambda ()
                        (interactive)
                        (let ((current-prefix-arg '(4)))
                          (call-interactively 'dired-mark-files-regexp))))
 
-(vimpulse-define-key 'dired-mode 'vi-state ";o" 'diredp-omit-marked)
-(vimpulse-define-key 'dired-mode 'vi-state ";O" 'diredp-omit-unmarked)
-(vimpulse-define-key 'dired-mode 'vi-state "I" 'dired-kill-subdir)
+(evil-define-key 'normal dired-mode-map ";o" 'diredp-omit-marked)
+(evil-define-key 'normal dired-mode-map ";O" 'diredp-omit-unmarked)
+(evil-define-key 'normal dired-mode-map "I" 'dired-kill-subdir)
 
-(defun mm/dired-start-grep ()
+(defun mm/dired-start-grep (&optional arg)
   "Start grep with default dir being current subdir"
   (interactive)
   (let* ((default-directory (dired-current-directory)))
     (call-interactively 'grep)))
 
-(vimpulse-define-key 'dired-mode 'vi-state "sg" 'mm/dired-start-grep)
+(evil-define-key 'normal dired-mode-map "sg" 'mm/dired-start-grep)
+(evil-define-key 'normal dired-mode-map "ss" dired-sort-map)
 
 (defadvice dired-hide-subdir (around dont-move-point activate)
   (save-excursion
     (setq ad-return-value ad-do-it)))
-
-(viper-apply-major-mode-modifiers)
 
 (provide 'my-dired-setup)
 

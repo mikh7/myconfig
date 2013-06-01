@@ -66,13 +66,13 @@
 
 (define-key viper-vi-basic-map "u" 'undo)
 
-(defun viper-envelop-ESC-key ()
+(defun my-envelop-ESC-key ()
   (let ((event last-input-event)
         (keyseq [nil])
         (inhibit-quit t))
-    (if (viper-ESC-event-p event)
+    (if (eql event ?\e)
         (progn
-          (if (viper-fast-keysequence-p)
+          (if t
               (progn
                 (let (minor-mode-map-alist emulation-mode-map-alists)
                   (viper-set-unread-command-events event)

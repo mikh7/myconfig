@@ -52,9 +52,9 @@ temporary break point."
 
 ;; (add-to-list 'vimpulse-extra-minor-mode-maps '(gud-minor-mode vi-state gud-viper-vi-map))
 
-(define-key viper-vi-basic-map ",b" 'gud-toggle-breakpoint)
+(define-key evil-normal-state-map ",b" 'gud-toggle-breakpoint)
 (global-set-key [C-f9] 'gud-toggle-breakpoint)
-(define-key viper-vi-basic-map ",w" 'gud-watch)
+(define-key evil-normal-state-map ",w" 'gud-watch)
 
 (defun my-gud-find-newest-binary (dir)
   (let ((file nil))

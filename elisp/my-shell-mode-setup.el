@@ -47,8 +47,8 @@
 (defun viper-comint-enter (arg)
   "Enter key in comint mode"
   (interactive "P")
-  (viper-change-state-to-insert)
-  (call-interactively 'viper-exec-key-in-emacs))
+  (evil-insert-state 1)
+  (call-interactively 'evil-execute-in-emacs-state))
 
 ;; Esc / search in comint mode
 (defvar viper-comint-search-idx 0)
@@ -78,12 +78,12 @@
    viper-comint-search-regexp viper-comint-search-idx)
   (setq viper-comint-search-idx (1- viper-comint-search-idx))))
 
-(vimpulse-define-key 'shell-mode 'vi-state "j" 'viper-comint-j)
-(vimpulse-define-key 'shell-mode 'vi-state "k" 'viper-comint-k)
-(vimpulse-define-key 'shell-mode 'vi-state "\C-m" 'viper-comint-enter)
-(vimpulse-define-key 'shell-mode 'vi-state "/" 'viper-comint-start-search)
-(vimpulse-define-key 'shell-mode 'vi-state "n" 'viper-comint-search-next)
-(vimpulse-define-key 'shell-mode 'vi-state "N" 'viper-comint-search-prev)
+(evil-define-key 'normal shell-mode-map "j" 'viper-comint-j)
+(evil-define-key 'normal shell-mode-map "k" 'viper-comint-k)
+(evil-define-key 'normal shell-mode-map "\C-m" 'viper-comint-enter)
+(evil-define-key 'normal shell-mode-map "/" 'viper-comint-start-search)
+(evil-define-key 'normal shell-mode-map "n" 'viper-comint-search-next)
+(evil-define-key 'normal shell-mode-map "N" 'viper-comint-search-prev)
 
 (defun comint-clear-buffer ()
   (interactive)
