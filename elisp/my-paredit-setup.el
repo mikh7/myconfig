@@ -1,5 +1,6 @@
 
 (ignore-errors (require-if-available 'paredit-magic))
+(ignore-errors (require-if-available 'evil))
 
 ;; fix slurping not to include top level
 (defun my-paredit-forward-slurp-sexp (&optional arg)
@@ -104,9 +105,8 @@ a line with closing paren by itself"
   (indent-sexp)
   (paredit-forward)
   (backward-down-list)
-  ;; (when (and (boundp 'viper-current-state)
-  ;;            (evil-normal-state-p))
-  ;;   (evil-insert-state 1))
+  (when (evil-normal-state-p)
+    (evil-insert-state))
   (if (looking-back ")[[:space:]]*")
       (progn 
         (paredit-point-at-sexp-end)
