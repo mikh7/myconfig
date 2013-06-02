@@ -1,5 +1,7 @@
 ;; -*- mode: emacs-lisp -*-
 
+(require 'wl-score)
+
 (setq wl-thread-indent-level 2)
 (setq wl-thread-have-younger-brother-str "+"
       wl-thread-youngest-child-str	 "+"
@@ -13,6 +15,13 @@
 (add-to-list 'wl-summary-score-marks nil)
 (add-to-list 'wl-summary-score-marks "U")
 (add-to-list 'wl-summary-score-marks "u")
+
+(setq wl-score-folder-alist-matchone nil)
+(setq wl-score-folder-alist
+      '(("^-comp.lang.*" "comp.lang.SCORE")
+        ("^-.*" "news.SCORE")
+        (".*"
+         "all.SCORE")))
 
 ;; FCC the outgoing messages to the parent folder
 

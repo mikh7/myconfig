@@ -874,7 +874,7 @@ Example usage would be '(help-mode view-mode).
                 do (if (and ;; (assoc c vi-keys)
                         (not (member c exception)))
                        (progn 
-                         (log-expr c b)
+                         ;; (log-expr c b)
                          (evil-define-key 'normal bind-map c b)
                          (evil-define-key 'motion bind-map c b))
                      (progn 

@@ -122,8 +122,6 @@
         ;; archive by year and month (numbers discarded)
         ))
 
-
-
 ;;;
 ;;; key bindings
 ;;;
