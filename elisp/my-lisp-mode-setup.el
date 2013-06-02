@@ -654,7 +654,6 @@ Will setup match data as follows:
 ;;; Lisp mode customizations
 (defun mgm-after-lisp-mode ()
   "Automatically turn on paredit and paredit-magic"
-  (evil-normal-state)
   (when (fboundp 'paredit-mode)
     (paredit-mode))
   (when (fboundp 'paredit-magic-mode)

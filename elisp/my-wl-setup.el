@@ -28,6 +28,7 @@
 (require 'wl)
 (require 'wl-draft)
 (require 'wl-expire)
+(require 'wl-summary)
 
 (setq wl-folder-use-frame nil)
 (setq elmo-archive-treat-file t)
@@ -120,6 +121,34 @@
         ("^%INBOX.Emacs-Org-Mode$"   (date 365) wl-expire-archive-date)
         ;; archive by year and month (numbers discarded)
         ))
+
+
+
+;;;
+;;; key bindings
+;;;
+
+;; fix the j/k keys where I need them
+(define-key wl-folder-mode-map "j" 'next-line)
+(define-key wl-folder-mode-map "k" 'previous-line)
+(define-key wl-folder-mode-map "q" 'bury-wl)
+(define-key wl-folder-mode-map "Q" 'wl-exit)
+(define-key wl-folder-mode-map "\C-b" 'scroll-down)
+(define-key wl-folder-mode-map "\C-f" 'scroll-up)
+(define-key wl-folder-mode-map "\C-w" nil)
+
+(define-key wl-summary-mode-map "j" 'next-line)
+(define-key wl-summary-mode-map "k" 'previous-line)
+(define-key wl-summary-mode-map "\C-i" 'wl-scroll-msg-to-next-text)
+(define-key wl-summary-mode-map "\C-b" 'scroll-down)
+(define-key wl-summary-mode-map "\C-f" 'scroll-up)
+
+(evil-give-back-keys-in-mode 'wl-folder-mode)
+(evil-give-back-keys-in-mode 'wl-summary-mode
+                             (reverse 
+                              (set-exclusive-or '([?n] [?N])
+                                                evil-give-back-keys-exception
+                                                :test #'equal)))
 
 (provide 'my-wl-setup)
 

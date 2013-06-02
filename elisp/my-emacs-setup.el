@@ -61,17 +61,6 @@ If ALL-FRAMES is anything else, count only the selected frame."
     (dolist (window (window-list nil 'no-minibuff) buffers)
       (push (window-buffer window) buffers))))
 
-;;;
-;;; Customization per major mode. Defining the funciton mgm-after-some-mode and
-;;; it will get automatically called when major mode changes
-;;; 
-(defun mgm-after-major-mode-hook (&optional arg)
-  (let ((symbol (intern (format "mgm-after-%s" major-mode))))
-    (when (fboundp symbol)
-      (funcall symbol))))
-
-(add-hook 'after-change-major-mode-hook 'mgm-after-major-mode-hook)
-
 ;;; Allow buffers to have a say how they are displayed
 (defvar local-display-buffer-function nil
   "Buffer local equivalent `display-buffer-function'. ")
@@ -478,8 +467,6 @@ If ALL-FRAMES is anything else, count only the selected frame."
     (setq w3m-goto-article-function 'browse-url-default-browser)
     (require-if-available 'w3m 'mime-w3m)))
 
-(require-if-available 'my-wl-setup)
-
 ;;; CUA mode setup
 (when (= emacs-major-version 21)
   (require-if-available 'cua)
@@ -883,10 +870,11 @@ Example usage would be '(help-mode view-mode).
                 ;; so that q gets bound because its not in vi keys
                 if (and (vectorp c)
                         (not (eq (elt c 0) 'remap))
-                        (commandp b))
+                        (or (commandp b) (symbolp b)))
                 do (if (and ;; (assoc c vi-keys)
                         (not (member c exception)))
                        (progn 
+                         (log-expr c b)
                          (evil-define-key 'normal bind-map c b)
                          (evil-define-key 'motion bind-map c b))
                      (progn 
@@ -1017,6 +1005,7 @@ Example usage would be '(help-mode view-mode).
 ;;;
 
 (require-if-available 'my-kmacro-setup)
+(require-if-available 'my-wl-setup)
 
 ;; (require 'autoinsert)
 ;; (auto-insert-mode nil)
@@ -1529,13 +1518,19 @@ C-u argument surround it by double-quotes"
       (setq window (selected-window)))
   (setq ad-return-value ad-do-it))
 
+(defun mgm-after-major-mode-hook (&optional arg)
+  (let ((symbol (intern (format "mgm-after-%s" major-mode))))
+    (when (fboundp symbol)
+      (funcall symbol)))
+  (evil-normalize-keymaps))
+
 (add-hook 'emacs-startup-hook
           (lambda ()
             (when (fboundp 'icy-mode)
               (icy-mode))
+            (add-hook 'after-change-major-mode-hook 'mgm-after-major-mode-hook)
             (kill-buffer (get-buffer "*scratch*"))
             (create-scratch-buffer)))
-
 
 (when (require-if-available 'zoom-frm)
   (global-set-key (if (boundp 'mouse-wheel-down-event) ; Emacs 22+

@@ -650,19 +650,12 @@ a lot of heuristics"
     (goto-char (+ (point) (- pt start)))))
 
 (evil-define-key 'motion paredit-mode-map "\C-d" 'my-paredit-duplicate-sexp)
+(evil-define-key 'normal paredit-mode-map "\C-d" 'my-paredit-duplicate-sexp)
 (evil-define-key 'insert paredit-mode-map "\C-d" 'my-paredit-duplicate-sexp)
 
 (defadvice create-scratch-buffer (after enable-paredit activate)
   (paredit-mode t)
   (paredit-magic-mode t))
-
-(add-hook 'emacs-startup-hook (lambda ()
-                                (let ((buffer (get-buffer "*scratch*")))
-                                  (when buffer
-                                    (with-current-buffer buffer
-                                      (paredit-mode t)
-                                      (paredit-magic-mode t))))))
-
 
 (require 'eldoc)
 
