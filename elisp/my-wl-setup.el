@@ -94,8 +94,8 @@
 
 (add-hook 'delete-frame-functions 'mm/wl-frame-delete-hook)
 
-(defadvice mime-display-message (after switch-to-viper activate)
-  (viper-change-state-to-vi))
+;; (defadvice mime-display-message (after switch-to-viper activate)
+;;   (evil-change-state-to-vi))
 
 (setq mime-situation-examples-file "~/.mime-example")
 (setq mime-play-delete-file-immediately nil)

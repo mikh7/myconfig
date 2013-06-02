@@ -101,6 +101,8 @@ minibuffers"
 
 (defun my-quit ()
   (interactive)
+  (if (evil-visual-state-p)
+      (evil-exit-visual-state))
   (deactivate-mark)
   (if (fboundp 'kmacro-keyboard-quit)
       (kmacro-keyboard-quit))

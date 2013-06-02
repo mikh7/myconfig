@@ -37,18 +37,18 @@ Example usage:
 ")
 
 (defadvice tempo-insert-template (after tempo-go-insert-mode activate)
-  (when (and viper-mode (evil-normal-state-p))
+  (when (evil-normal-state-p)
     (evil-insert-state 1)))
 
 (defadvice tempo-forward-mark (after tempo-go-insert-mode activate)
-  (when (and viper-mode (evil-normal-state-p))
+  (when (evil-normal-state-p)
     (evil-insert-state 1)))
 
 (defadvice tempo-backward-mark (after tempo-go-insert-mode activate)
-  (when (and viper-mode (evil-normal-state-p))
+  (when (evil-normal-state-p)
     (evil-insert-state 1)))
 
-(define-key viper-vi-basic-map " " 'tempo-forward-mark)
+(define-key evil-motion-state-map " " 'tempo-forward-mark)
 
 
 ;; (global-set-key "\M-n" 'tempo-forward-mark)

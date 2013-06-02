@@ -242,50 +242,62 @@ a line with closing paren by itself"
 (defun paredit-blink-paren-match (arg)
   (my-blink-matching-open))
 
-;; (defun paredit-magic-forward-word-kernel (val)
-;;   (while (> val 0)
-;;     (while (looking-at "['`,()]")
-;;       (forward-char)
-;;       (viper-move-marker-locally 'viper-com-point (point)))
-;;     (cond ((viper-looking-at-alpha)
-;;            (viper-skip-alpha-forward "_")
-;;            (viper-skip-separators t))
-;;           ((viper-looking-at-separator)
-;;            (viper-skip-separators t))
-;;           ((not (viper-looking-at-alphasep))
-;;            (viper-skip-nonalphasep-forward)
-;;            (viper-skip-separators t)))
-;;     (when (looking-at ")")
-;;       (setq val 0))
-;;     (setq val (1- val))))
+(evil-define-union-move paredit-magic-move-word (val)
+  (let ((limit (point))
+        (opoint (point)))
+    (ignore-errors (setq limit (scan-sexps (point) val)))
+    (evil-move-word val)
+    (cond
+     ((and (> val 0)
+           (> (point) limit))
+      (goto-char limit))
+     ((and (< val 0)
+           (< (point) limit))
+      (goto-char limit)))
+    (if (= (point) opoint) 0 1)))
 
-;; (defun paredit-magic-forward-Word-kernel (val)
-;;   (while (> val 0)
-;;     (while (looking-at "[()]")
-;;       (forward-char)
-;;       (viper-move-marker-locally 'viper-com-point (point)))
-;;     (let ((viper-SEP-char-class " -()"))
-;;       (viper-skip-nonseparators 'forward))
-;;     (viper-skip-separators t)
-;;     (when (looking-at ")")
-;;       (setq val 0))
-;;     (setq val (1- val))))
+(evil-define-motion paredit-magic-forward-word-begin (count &optional bigword)
+  "Move the cursor to the beginning of the COUNT-th next word.
+If BIGWORD is non-nil, move by WORDS."
+  :type exclusive
+  (or count (setq count 1))
+  (let* ((beg (or (ignore-errors (scan-sexps (point) count)) (point)))
+         (end (or (ignore-errors (scan-sexps (point) (- count))) (point)))
+         (move
+          ;; (if bigword #'paredit-magic-move-WORD #'paredit-magic-move-word)
+          (if bigword #'evil-move-WORD #'evil-move-word))
+         (orig (point)))
+    (save-restriction 
+      (narrow-to-region beg end)
+      (prog1 (if (and evil-want-change-word-to-end
+                      (not (looking-at "[[:space:]]"))
+                      (eq evil-this-operator #'evil-change))
+                 (evil-move-end count move)
+               (evil-move-beginning count move))
+        ;; if we reached the beginning of a word on a new line in
+        ;; Operator-Pending state, go back to the end of the previous
+        ;; line
+        (when (and (evil-operator-state-p)
+                   (> (line-beginning-position) orig)
+                   (looking-back "^[[:space:]]*" (line-beginning-position)))
+          ;; move cursor back as long as the line contains only
+          ;; whitespaces and is non-empty
+          (evil-move-end-of-line 0)
+          ;; skip non-empty lines containing only spaces
+          (while (and (looking-back "^[[:space:]]+$" (line-beginning-position))
+                      (not (<= (line-beginning-position) orig)))
+            (evil-move-end-of-line 0))
+          ;; but if the previous line is empty, delete this line
+          (when (bolp) (forward-char)))))))
 
-;; (defun paredit-magic-end-of-word-kernel (val)
-;;   (while (> val 0)
-;;     (while (looking-at "[()]")
-;;       (forward-char)
-;;       (viper-move-marker-locally 'viper-com-point (point)))
-;;     (when (viper-looking-at-separator)
-;;       (viper-skip-all-separators-forward))
-;;     (cond
-;;      ((viper-looking-at-alpha)
-;;       (viper-skip-alpha-forward "_"))
-;;      ((not (viper-looking-at-alphasep))
-;;       (viper-skip-nonalphasep-forward)))
-;;     (when (looking-at ")")
-;;       (setq val 0))
-;;     (setq val (1- val))))
+(evil-define-motion paredit-magic-forward-WORD-begin (count)
+  "Move the cursor to the beginning of the COUNT-th next WORD."
+  :type exclusive
+  (paredit-magic-forward-word-begin count t))
+
+(evil-define-key 'motion paredit-magic-mode-map "w" 'paredit-magic-forward-word-begin)
+(evil-define-key 'motion paredit-magic-mode-map "W" 'paredit-magic-forward-WORD-begin)
+
 
 ;; (defun paredit-magic-end-of-Word-kernel (val)
 ;;   (while (> val 0)
@@ -637,7 +649,7 @@ a lot of heuristics"
     (back-to-indentation)
     (goto-char (+ (point) (- pt start)))))
 
-(evil-define-key 'normal paredit-mode-map "\C-d" 'my-paredit-duplicate-sexp)
+(evil-define-key 'motion paredit-mode-map "\C-d" 'my-paredit-duplicate-sexp)
 (evil-define-key 'insert paredit-mode-map "\C-d" 'my-paredit-duplicate-sexp)
 
 (defadvice create-scratch-buffer (after enable-paredit activate)

@@ -27,15 +27,11 @@
 (define-key dired-mode-map ":" nil)
 (define-key dired-mode-map "s" nil)
 
-(evil-give-back-keys-in-mode 'dired-mode
-                             (remove 
-                              [?l] 
-                              (remove
-                               [?h] 
-                               evil-give-back-keys-exception)))
+;; (evil-give-back-keys-in-mode 'dired-mode)
 
 (evil-define-key 'normal dired-mode-map ";G" 'diredp-do-grep)
 (evil-define-key 'normal dired-mode-map ";l" 'dired-do-redisplay)
+;; (evil-define-key 'motion dired-mode-map (kbd "RET") 'dired-find-file)
 
 (defvar dired-sort-map (make-sparse-keymap))
 

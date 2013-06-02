@@ -364,7 +364,7 @@
   (unless timeout (setq timeout 0.9))
   (setq ad-return-value ad-do-it))
 
-;; force these modes to start in viper insert mode
+;; force these modes to start in EVIL insert mode
 (dolist (mode '(slime-repl-mode))
   (remove-from-list 'evil-emacs-state-modes mode)
   (remove-from-list 'evil-normal-state-modes mode)
@@ -388,7 +388,7 @@
       (progn
 	(call-interactively 'slime-repl-previous-input)
         (slime-repl-bol))
-    (call-interactively 'viper-previous-line)))
+    (call-interactively 'evil-previous-line)))
 
 (defun slime-comint-j (arg)
   "Go to previous line if not on the last line of the
@@ -398,7 +398,7 @@
       (progn
 	(call-interactively 'slime-repl-next-input)
 	(slime-repl-bol))
-    (call-interactively 'viper-next-line)))
+    (call-interactively 'evil-next-line)))
 
 
 (defun slime-comint-n (arg)
@@ -409,7 +409,7 @@
       (progn
 	(call-interactively 'slime-repl-previous-input)
 	(move-end-of-line nil))
-    (call-interactively 'viper-search-next)))
+    (call-interactively 'evil-search-next)))
 
 (defun slime-comint-N (arg)
   "Go to previous line if not on the last line of the
@@ -419,7 +419,7 @@
       (progn
 	(call-interactively 'slime-repl-next-input)
 	(move-end-of-line nil))
-    (call-interactively 'viper-search-Next)))
+    (call-interactively 'evil-search-previous)))
 
 (evil-define-key 'normal slime-repl-mode-map "j" 'slime-comint-j)
 (evil-define-key 'normal slime-repl-mode-map "k" 'slime-comint-k)
@@ -434,10 +434,11 @@
 (evil-define-key 'insert slime-repl-mode-map (kbd "RET") 'slime-repl-return)
 
 
-(defun mm/setup-slime-viper-stuff ()
-  (set (make-local-variable 'viper-ex-style-motion) nil)
-  (set (make-local-variable 'viper-ESC-moves-cursor-back) nil)
-  (set (make-local-variable 'require-final-newline) nil))
+(defun mm/setup-slime-vi-stuff ()
+  ;; (set (make-local-variable 'viper-ex-style-motion) nil)
+  ;; (set (make-local-variable 'viper-ESC-moves-cursor-back) nil)
+  ;; (set (make-local-variable 'require-final-newline) nil)
+  )
 
 (defadvice slime-repl-replace-input (after delete-trailing-whitespace activate)
   (when (looking-back "[ \t\n]+"  slime-repl-input-start-mark t)
@@ -495,7 +496,7 @@ REPL")
       (select-window win))))
 
 
-(add-hook 'slime-repl-mode-hook 'mm/setup-slime-viper-stuff)
+(add-hook 'slime-repl-mode-hook 'mm/setup-slime-vi-stuff)
 (add-hook 'slime-repl-mode-hook
           (lambda ()
             (setq local-display-buffer-function 'mm/repl-display-buffer-function)))
@@ -617,9 +618,8 @@ successful. Suitable for using in keyboard macros"
 (define-key slime-mode-map "\C-c\C-k" 'mm/compile-and-load-file)
 
 (defadvice end-of-buffer (after slime-go-insert-mode activate)
-  (when (and (eq major-mode 'slime-repl-mode)
-             viper-mode)
-    (evil-insert-state 1)))
+  (when (and (eq major-mode 'slime-repl-mode) evil-mode)
+    (evil-insert-state)))
 
 ;; fix it so that M-. correctly records buffer order
 (defun slime-pop-to-location (location &optional where)

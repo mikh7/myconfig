@@ -1,5 +1,4 @@
 (require 'cl)
-(require 'viper-cmd) ;; for viper-envelop-ESC-key
 
 (defvar status-menu-callback nil
   "Function to call when selection changes, or timeout occurs The
@@ -186,7 +185,6 @@ selection of (0 1 2) means (elt 2 (elt 1 (elt 0 menu)))"
 (define-key status-menu-default-keymap [f9] 'status-menu-backward)
 
 (defvar status-menu-esc-keymap (make-sparse-keymap))
-;; (define-key status-menu-esc-keymap "\e" 'viper-intercept-ESC-key)
 
 (defvar status-menu-esc-maps 
   (list

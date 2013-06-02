@@ -1,8 +1,8 @@
 (require 'ebrowse)
 
-;; (dolist (mode '(ebrowse-tree-mode ebrowse-member-mode))
-;;   (remove-from-list 'evil-emacs-state-modes mode)
-;;   (add-to-list 'evil-normal-state-modes mode))
+(dolist (mode '(ebrowse-tree-mode ebrowse-member-mode))
+  (remove-from-list 'evil-emacs-state-modes mode)
+  (add-to-list 'evil-normal-state-modes mode))
 
 (evil-give-back-keys-in-mode 'ebrowse-tree-mode)
 (evil-give-back-keys-in-mode 'ebrowse-member-mode)

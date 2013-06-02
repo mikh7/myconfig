@@ -42,17 +42,18 @@ If ALL-FRAMES is anything else, count only the selected frame."
     (condition-case err
         (mapc (lambda (e)
                 (setq lib e)
+                (message "Loading %S" lib)
                 (cond
                  ((stringp e) (load-library e))
                  ((symbolp e) (require e)))) args)
-      (error  (progn (message "Error while loading extension %s: %s"
+      (quit (progn (message "Error while loading extension %S: %S"
+                            lib err) nil))
+      (error  (progn (message "Error while loading extension %S: %S"
                               lib err) nil)))))
 
 
 (require 'view)
 (require 'help-mode)
-
-
 
 (defun frame-buffer-list ()
   "Return buffer list on selected frame"
@@ -278,7 +279,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
     (define-tty-key-with-modifiers 'f10 "\e[21~" "\e[21;2~")
     (define-tty-key-with-modifiers 'f11 "\e[23~" "\e[23;2~")
     (define-tty-key-with-modifiers 'f12 "\e[24~" "\e[24;2~")
-    ;; ESC O really sucks in viper mode, therefore switch App keys mode off
+    ;; ESC O really sucks in VI mode, therefore switch App keys mode off
     ;; and delete that map
     (send-string-to-terminal "\e[?1l")
     (define-key (get-input-decode-map) "\eO" nil)
@@ -446,9 +447,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
   (when (fboundp 'eldoc-mode)
     (eldoc-mode))
   (when (fboundp 'paredit-magic-mode)
-    (paredit-magic-mode))
-  ;; (setq viper-syntax-preference 'emacs)
-  )
+    (paredit-magic-mode)))
 
 (define-key emacs-lisp-mode-map "\C-c\C-c" 'eval-defun)
 (define-key lisp-interaction-mode-map "\C-c\C-c" 'eval-defun)
@@ -459,9 +458,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
   (when (fboundp 'eldoc-mode)
     (eldoc-mode))
   (when (fboundp 'paredit-magic-mode)
-    (paredit-magic-mode))
-  ;; (setq viper-syntax-preference 'emacs)
-  )
+    (paredit-magic-mode 1)))
 
 (unless (fboundp 'ignore-errors)
   (defmacro ignore-errors (body)
@@ -542,7 +539,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
 (require-if-available 'newpaste)
 
 ;;;;
-;;;; viper setup
+;;;; EVIL setup
 ;;;;
 ;;;; We assume that viper is always available in our Emacs
 ;;;;
@@ -552,6 +549,57 @@ If ALL-FRAMES is anything else, count only the selected frame."
     "Return t if buffer is a minibuffer"
     (string-match "Minibuf" (buffer-name buffer))))
 
+
+(require 'evil)
+
+(setq evil-normal-state-cursor  "black" 
+      evil-insert-state-cursor  '((bar . 3) "Magenta")
+      evil-motion-state-cursor  '("black")
+      evil-replace-state-cursor '((hbar . 3) "black")
+      evil-emacs-state-cursor '((bar . 3) "black"))
+
+(defun evil-execute-com-in-emacs-state (&optional com)
+  "Execute the COM in Emacs state."
+  (unwind-protect
+      (let ((buffer (current-buffer))) 
+        (evil-emacs-state) 
+        (setq this-command com) 
+        (call-interactively com))
+    (when (buffer-live-p buffer)
+      (with-current-buffer buffer
+        (evil-change-to-previous-state)))))
+
+(defun my-exec-key-in-emacs (&optional prefix)
+  "Execute last command key in emacs state"
+  (interactive "P")
+  (let ((key last-command-event)
+        com) 
+    (setq
+     unread-command-events
+     (let ((new-events
+            (cond ((eventp key) (list key))
+                  ((listp key) key)
+                  ((sequencep key)
+                   (listify-key-sequence key))
+                  (t (error
+                      "exec-key-in-emacs: Invalid argument, %S"
+                      key)))))
+       (if (not (eventp nil))
+           (setq new-events (delq nil new-events)))
+       (append new-events unread-command-events)))
+    (condition-case nil
+        (evil-with-state emacs 
+          (setq com
+                (key-binding (setq key (read-key-sequence nil))))
+          (while (vectorp com) (setq com (key-binding com)))
+          ;; this-command, last-command-char, last-command-event
+         (setq this-command com)
+         (setq last-command-event key)
+          (when (commandp com)
+            (setq prefix-arg (or prefix-arg prefix))
+            (command-execute com)))
+      (quit (ding))
+      (error (beep 1)))))
 
 (when (require-if-available 'undo-tree)
   ;; Undo its own bindings, I use u and C-a-z 
@@ -567,16 +615,6 @@ If ALL-FRAMES is anything else, count only the selected frame."
 
 (global-set-key (kbd "C-/") nil)
 
-
-(require 'evil)
-
-(setq evil-normal-state-cursor  "black" 
-      evil-insert-state-cursor  '((bar . 3) "Magenta")
-      evil-motion-state-cursor  '("black")
-      evil-replace-state-cursor '((hbar . 3) "black")
-      evil-emacs-state-cursor '((bar . 3) "black"))
-
-
 (define-key evil-normal-state-map ";" (make-sparse-keymap))
 (define-key evil-normal-state-map "z" (make-sparse-keymap))
 (define-key evil-normal-state-map "Z" nil)
@@ -585,13 +623,24 @@ If ALL-FRAMES is anything else, count only the selected frame."
 (define-key evil-motion-state-map "Z" nil)
 (define-key evil-normal-state-map "\M-." nil)
 
+(define-key evil-motion-state-map "q" (make-sparse-keymap))
+(define-key evil-motion-state-map "Q" 'undefined)
 (define-key evil-normal-state-map "q" (make-sparse-keymap))
-(define-key evil-normal-state-map "Q" 'viper-nil)
+(define-key evil-motion-state-map "Q" 'undefined)
 (define-key evil-normal-state-map "," (make-sparse-keymap))
 (define-key evil-normal-state-map ";c" 'comment-dwim)
 (define-key evil-visual-state-map ";c" 'comment-dwim)
 (define-key evil-normal-state-map "zz" nil)
 (define-key evil-normal-state-map "\C-c\C-g" nil)
+(define-key evil-motion-state-map (kbd "TAB") 'my-exec-key-in-emacs)
+(define-key evil-insert-state-map (kbd "TAB") 'my-exec-key-in-emacs)
+(define-key evil-insert-state-map (kbd "RET") 'my-exec-key-in-emacs)
+(define-key evil-motion-state-map (kbd "TAB") 'my-exec-key-in-emacs)
+;; I like C-r to do search
+(define-key evil-normal-state-map "\C-r" nil)
+;; and C-d to be lisp thingy
+
+(evil-mode 1)
 
 (require 'dired)
 
@@ -603,24 +652,16 @@ If ALL-FRAMES is anything else, count only the selected frame."
   (define-key dired-mode-map (kbd "<f1> RET")        'diredp-describe-file)
   (define-key dired-mode-map (kbd "<f1> C-<return>") 'diredp-describe-file))
 
-(evil-mode 1)
+(defun fix-emulation-mode-map-alists-for-cua ()
+  (let ((tmp (memq 'cua--keymap-alist emulation-mode-map-alists))) 
+    (when (and tmp (not (eq tmp emulation-mode-map-alists))) 
+      (setq emulation-mode-map-alists
+            (cons 'cua--keymap-alist
+                  (remq 'cua--keymap-alist
+                        emulation-mode-map-alists))))))
 
-;; (setq vimpulse-want-quit-like-Vim nil
-;;       vimpulse-want-C-i-like-Vim  nil
-;;       vimpulse-want-change-undo   nil
-;;       viper-want-ctl-h-help       nil)
-
-;; (defun fix-emulation-mode-map-alists-for-cua ()
-;;   (when (and (fboundp 'add-to-ordered-list) (boundp 'emulation-mode-map-alists))
-;;     ;; needs to be as early as possible
-;;     (add-to-ordered-list
-;;      'emulation-mode-map-alists 'viper--intercept-key-maps 100)
-;;     ;; needs to be after cua-mode
-;;     (add-to-ordered-list 'emulation-mode-map-alists 'viper--key-maps 500)))
-
-;; (defadvice vimpulse-normalize-minor-mode-map-alist
-;;   (after fix-cua-copy-and-cut activate)
-;;   (fix-emulation-mode-map-alists-for-cua))
+(defadvice evil-local-mode (after fix-cua-copy-and-cut activate)
+  (fix-emulation-mode-map-alists-for-cua))
 
 ;; (setq viper-vi-kbd-map (make-sparse-keymap))
 ;; (setq search-invisible 'open)
@@ -651,7 +692,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
 (define-key evil-normal-state-map "T" (make-sparse-keymap))
 
 ;; rather hten alternate meta key, use it for visual mode
-(define-key evil-normal-state-map "\C-\\" 'evil-visual-toggle-block)
+(define-key evil-motion-state-map "\C-\\" 'evil-visual-block)
 
 ;; I like C-z to undo, screw switching to emacs mode
 ;; (define-key viper-vi-intercept-map "\C-z" nil)
@@ -743,34 +784,36 @@ If ALL-FRAMES is anything else, count only the selected frame."
             (hl-line-mode 1)))
 
 ;; force these modes to start in viper insert mode
-;; (dolist (mode '(erc-mode eshell-mode inferior-python-mode))
-;;   (remove-from-list 'evil-emacs-state-modes mode)
-;;   (add-to-list 'evil-insert-state-modes mode))
+(dolist (mode '(erc-mode eshell-mode inferior-python-mode))
+  (remove-from-list 'evil-emacs-state-modes mode)
+  (add-to-list 'evil-insert-state-modes mode))
 
 ;; force going into viper mode
-;; (dolist (mode '(Info-mode help-mode Man-mode 
-;;                           grep-mode  compilation-mode
-;;                           org-agenda-mode
-;;                           Custom-mode
-;;                           speedbar-mode
-;;                           occur-mode
-;;                           fundamental-mode
-;;                           mime-view-mode))
-;;   (remove-from-list 'evil-emacs-state-modes mode)
-;;   (add-to-list 'evil-normal-state-modes mode))
+(dolist (mode '(Info-mode help-mode Man-mode 
+                          grep-mode  compilation-mode
+                          org-agenda-mode
+                          Custom-mode
+                          speedbar-mode
+                          occur-mode
+                          fundamental-mode
+                          mime-view-mode))
+  (remove-from-list 'evil-emacs-state-modes mode)
+  (add-to-list 'evil-normal-state-modes mode))
 
 ;; prevent from going viper mode
-;; (dolist (mode '(gdb-inferior-io-mode gud-mode))
-;;   (remove-from-list 'evil-normal-state-modes mode)
-;;   (add-to-list 'evil-emacs-state-modes mode))
+(dolist (mode '(gdb-inferior-io-mode gud-mode))
+  (remove-from-list 'evil-normal-state-modes mode)
+  (add-to-list 'evil-emacs-state-modes mode))
 
-(defun all-keysequences-in-keymap (keymap &optional so-far)
-  (if (null keymap) so-far
-    (loop for c being the key-seqs of keymap
-          using (key-bindings b)
-          unless (assoc c so-far)
-          do (push (cons (copy-sequence c) b) so-far))
-    (all-keysequences-in-keymap (keymap-parent keymap) so-far)))
+(defun all-keysequences-in-keymap (keymap &optional base so-far)
+  (let ((base (or base (copy-sequence [0]))))
+    
+    (map-keymap (lambda (a b)
+                  (aset base (1- (length base)) a)
+                  (push (cons (copy-sequence base) b) so-far))
+                keymap)
+  so-far))
+
 
 (all-keysequences-in-keymap help-mode-map)
 (all-keysequences-in-keymap view-mode-map)
@@ -818,8 +861,10 @@ Example usage would be '(help-mode view-mode).
 
 "
   (or exception (setq exception evil-give-back-keys-exception))
-  (let ((vi-keys (all-keysequences-in-keymap
-                  evil-normal-state-map))
+  (let (;; (vi-keys (remove-duplicates
+        ;;           (append 
+        ;;            (all-keysequences-in-keymap evil-motion-state-map)
+        ;;            (all-keysequences-in-keymap evil-normal-state-map))))
         modes bind-mode)
     (if (listp mode)
         (setq modes mode bind-mode (car mode))
@@ -828,15 +873,26 @@ Example usage would be '(help-mode view-mode).
       (let ((map (if (keymapp m) m
                    (let ((mode-map-symb (intern (format "%s-map" m))))
                      (when (boundp mode-map-symb)
-                       (symbol-value mode-map-symb))))))
-       
+                       (symbol-value mode-map-symb)))))
+            (bind-map (if (keymapp bind-mode) bind-mode
+                        (let ((mode-map-symb (intern (format "%s-map" bind-mode))))
+                          (when (boundp mode-map-symb)
+                            (symbol-value mode-map-symb))))))
         (when map
           (loop for (c . b) in (all-keysequences-in-keymap map)
                 ;; so that q gets bound because its not in vi keys
+                if (and (vectorp c)
+                        (not (eq (elt c 0) 'remap))
+                        (commandp b))
                 do (if (and ;; (assoc c vi-keys)
                         (not (member c exception)))
-                       (evil-define-key 'normal map c b)
-                     (evil-define-key 'normal map c nil))))))))
+                       (progn 
+                         (evil-define-key 'normal bind-map c b)
+                         (evil-define-key 'motion bind-map c b))
+                     (progn 
+                       ;; (log-expr c)
+                       (evil-define-key 'normal bind-map c nil) 
+                       (evil-define-key 'motion bind-map c nil)))))))))
 
 (evil-give-back-keys-in-mode '(help-mode view-mode)
                               `([?w] [?y] [?g] [?s] [?z] ,@evil-give-back-keys-exception))
@@ -846,7 +902,6 @@ Example usage would be '(help-mode view-mode).
 (evil-give-back-keys-in-mode '(grep-mode) nil)
 (evil-give-back-keys-in-mode '(compilation-mode) nil)
 (evil-give-back-keys-in-mode '(occur-mode))
-
 
 (defun my-reconfigure-speedbar-hook ()
   (ignore-errors
@@ -1141,8 +1196,7 @@ Example usage would be '(help-mode view-mode).
 
 (require-if-available 'my-lisp-mode-setup)
 
-(ignore-errors
-  (require-if-available 'my-slime-setup))
+(require-if-available 'my-slime-setup)
 
 (require-if-available 'my-irc-setup)
 

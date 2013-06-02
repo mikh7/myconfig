@@ -15,6 +15,11 @@
   (defun org-mode-p ()
     (eq major-mode 'org-mode)))
 
+
+(dolist (mode '(org-mode org-agenda-mode))
+  (remove-from-list 'evil-emacs-state-modes mode)
+  (add-to-list 'evil-normal-state-modes mode))
+
 (add-to-list 'auto-mode-alist (cons "\\.org$" 'org-mode))
 (add-to-list 'auto-mode-alist (cons "\\.org_archive$" 'org-mode))
 
@@ -806,12 +811,11 @@ one"
 
 
 (defun my-org-maybe-go-insert ()
-  ;; (when (and viper-mode (org-mode-p)
-  ;;            (or (string-match "^\\*Org Note" (buffer-name)) 
-  ;;                (string-match "^\\*Capture" (buffer-name))
-  ;;                (string-match "^CAPTURE" (buffer-name))))
-  ;;   (evil-insert-state 1))
-  )
+  (when (and evil-mode (org-mode-p)
+             (or (string-match "^\\*Org Note" (buffer-name)) 
+                 (string-match "^\\*Capture" (buffer-name))
+                 (string-match "^CAPTURE" (buffer-name))))
+    (evil-insert-state)))
 
 (defun mgm-after-org-mode ()
   (my-org-maybe-go-insert))
