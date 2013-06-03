@@ -14,6 +14,11 @@
 (define-key dired-mode-map "z" nil)
 (define-key dired-mode-map "Z" nil)
 (define-key dired-mode-map "\M-z" 'diredp-compress-this-file)
+(define-key dired-mode-map (kbd "C-h RET")        nil)
+(define-key dired-mode-map (kbd "C-h C-<return>") nil)
+(define-key dired-mode-map "\C-h" nil)
+(define-key dired-mode-map (kbd "<f1> RET")        'diredp-describe-file)
+(define-key dired-mode-map (kbd "<f1> C-<return>") 'diredp-describe-file)
 
 (defvar mm/dired-no-omit nil)
 
@@ -27,9 +32,14 @@
 (define-key dired-mode-map ":" nil)
 (define-key dired-mode-map "s" nil)
 (define-key dired-mode-map "\M-g" nil)
+(define-key dired-mode-map ";" nil)
 (define-key dired-mode-map [override-state] nil)
 
-(evil-give-back-keys-in-mode 'dired-mode)
+(evil-give-back-keys-in-mode 'dired-mode
+                             (union evil-give-back-keys-exception
+                                    '([?\;])
+                                    :test #'equal))
+
 
 
 (evil-define-key 'normal dired-mode-map ";G" 'diredp-do-grep)
@@ -154,6 +164,7 @@ if several exist, choose the buffer with outermost parent"
 (evil-define-key 'normal dired-mode-map ";o" 'diredp-omit-marked)
 (evil-define-key 'normal dired-mode-map ";O" 'diredp-omit-unmarked)
 (evil-define-key 'normal dired-mode-map "I" 'dired-kill-subdir)
+(evil-define-key 'normal dired-mode-map ";v" egg-file-cmd-map)
 
 (defun mm/dired-start-grep (&optional arg)
   "Start grep with default dir being current subdir"

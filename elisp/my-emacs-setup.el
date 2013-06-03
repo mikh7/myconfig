@@ -620,15 +620,14 @@ If ALL-FRAMES is anything else, count only the selected frame."
 
 (evil-mode 1)
 
-(require 'dired)
+;; fix quit
 
-(when (require-if-available 'dired+)
-  (define-key dired-mode-map (kbd "C-h RET")        nil)
-  (define-key dired-mode-map (kbd "C-h C-<return>") nil)
-  (define-key dired-mode-map "\C-h" nil)
-
-  (define-key dired-mode-map (kbd "<f1> RET")        'diredp-describe-file)
-  (define-key dired-mode-map (kbd "<f1> C-<return>") 'diredp-describe-file))
+(defadvice evil-quit (around my-ex-quit-replacement activate)
+  (let ((force nil)
+        (kill-buffer-query-functions 
+         (remove 'server-kill-buffer-query-function kill-buffer-query-functions)))
+    (when bang (set-buffer-modified-p nil))
+    (kill-buffer (current-buffer))))
 
 (defun fix-emulation-mode-map-alists-for-cua ()
   (let ((tmp (memq 'cua--keymap-alist emulation-mode-map-alists))) 
@@ -860,7 +859,7 @@ Example usage would be '(help-mode view-mode).
           (loop for (c . b) in (all-keysequences-in-keymap map)
                 ;; so that q gets bound because its not in vi keys
                 if (and (vectorp c)
-                        (not (eq (elt c 0) 'remap))
+                        (characterp (elt c 0))
                         (or (commandp b) (symbolp b)
                             (keymapp b)))
                 do (if (and ;; (assoc c vi-keys)

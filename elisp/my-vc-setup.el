@@ -71,6 +71,7 @@ for the diff switches"
 
 ;; Egg mode setup
 (evil-define-key 'normal egg-minor-mode-map ";v" egg-file-cmd-map)
+(evil-define-key 'motion egg-minor-mode-map ";v" egg-file-cmd-map)
 (define-key egg-hide-show-map (kbd "TAB") 'egg-section-cmd-toggle-hide-show)
 
 (dolist (mode '(egg-commit-buffer-mode
