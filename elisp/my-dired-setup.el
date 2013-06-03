@@ -26,11 +26,15 @@
 ;; get rid of the epa decrypt shit
 (define-key dired-mode-map ":" nil)
 (define-key dired-mode-map "s" nil)
+(define-key dired-mode-map "\M-g" nil)
+(define-key dired-mode-map [override-state] nil)
 
-;; (evil-give-back-keys-in-mode 'dired-mode)
+(evil-give-back-keys-in-mode 'dired-mode)
+
 
 (evil-define-key 'normal dired-mode-map ";G" 'diredp-do-grep)
 (evil-define-key 'normal dired-mode-map ";l" 'dired-do-redisplay)
+(evil-define-key 'normal dired-mode-map "")
 ;; (evil-define-key 'motion dired-mode-map (kbd "RET") 'dired-find-file)
 
 (defvar dired-sort-map (make-sparse-keymap))

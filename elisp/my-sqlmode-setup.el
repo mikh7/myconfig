@@ -8,7 +8,7 @@
 (evil-define-key 'normal sql-interactive-mode-map 
                     "\C-m" 'viper-comint-enter)
 (evil-define-key 'insert sql-interactive-mode-map 
-                    "\C-m" 'evil-execute-in-emacs-state)
+                    "\C-m" 'my-exec-key-in-emacs)
 (evil-define-key 'normal sql-interactive-mode-map "j" 'viper-comint-j)
 (evil-define-key 'normal sql-interactive-mode-map "k" 'viper-comint-k)
 (evil-define-key 'normal sql-interactive-mode-map 

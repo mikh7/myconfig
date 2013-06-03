@@ -103,7 +103,7 @@ emacs.eimport = eimport
 (evil-define-key 'normal inferior-python-mode-map 
                     "\C-m" 'viper-comint-enter)
 (evil-define-key 'insert inferior-python-mode-map 
-                    "\C-m" 'evil-execute-in-emacs-state)
+                    "\C-m" 'my-exec-key-in-emacs)
 (evil-define-key 'normal inferior-python-mode-map "j" 'viper-comint-j)
 (evil-define-key 'normal inferior-python-mode-map "k" 'viper-comint-k)
 (evil-define-key 'normal inferior-python-mode-map 

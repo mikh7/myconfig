@@ -735,7 +735,7 @@ one"
 (evil-define-key 'insert org-mode-map  (kbd "<S-return>") 'mm/org-shift-return)
 
 (evil-define-key 'normal org-mode-map "\C-m" 'org-cycle)
-(evil-define-key 'insert org-mode-map "\C-m" 'evil-execute-in-emacs-state)
+(evil-define-key 'insert org-mode-map "\C-m" 'my-exec-key-in-emacs)
 
 
 (defun mm/org-insert-mode-tab (&optional arg)

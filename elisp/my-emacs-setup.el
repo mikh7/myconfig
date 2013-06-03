@@ -539,22 +539,13 @@ If ALL-FRAMES is anything else, count only the selected frame."
 
 (require 'evil)
 
-(setq evil-normal-state-cursor  "black" 
-      evil-insert-state-cursor  '((bar . 3) "Magenta")
-      evil-motion-state-cursor  '("black")
-      evil-replace-state-cursor '((hbar . 3) "black")
-      evil-emacs-state-cursor '((bar . 3) "black"))
-
-(defun evil-execute-com-in-emacs-state (&optional com)
-  "Execute the COM in Emacs state."
-  (unwind-protect
-      (let ((buffer (current-buffer))) 
-        (evil-emacs-state) 
-        (setq this-command com) 
-        (call-interactively com))
-    (when (buffer-live-p buffer)
-      (with-current-buffer buffer
-        (evil-change-to-previous-state)))))
+(setq
+ evil-normal-state-cursor '("black") 
+ evil-motion-state-cursor '("black")
+ evil-visual-state-cursor '("darkred")
+ evil-insert-state-cursor '((bar . 2) "black")
+ evil-replace-state-cursor '((hbar . 3) "black")
+ evil-emacs-state-cursor '((bar . 2) "Magenta"))
 
 (defun my-exec-key-in-emacs (&optional prefix)
   "Execute last command key in emacs state"
@@ -834,7 +825,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
 (defun evil-give-back-keys-in-mode (mode &optional exception)
   "Binds all the keys that are defined to something other then
 self-insert in the major mode mode to
-evil-execute-in-emacs-state Exception is a list of exceptions which
+`my-exec-key-in-emacs' Exception is a list of exceptions which
 defaults to jklh C-f C-b /?GnN
 
 If mode is a list, then the 1st element is a major mode and the
@@ -870,7 +861,8 @@ Example usage would be '(help-mode view-mode).
                 ;; so that q gets bound because its not in vi keys
                 if (and (vectorp c)
                         (not (eq (elt c 0) 'remap))
-                        (or (commandp b) (symbolp b)))
+                        (or (commandp b) (symbolp b)
+                            (keymapp b)))
                 do (if (and ;; (assoc c vi-keys)
                         (not (member c exception)))
                        (progn 
@@ -898,12 +890,12 @@ Example usage would be '(help-mode view-mode).
 (add-hook 'speedbar-reconfigure-keymaps-hook 'my-reconfigure-speedbar-hook)
 
 ;; I like my backspace just the way it is
-;; (define-key evil-insert-state-map [backspace] 'evil-execute-in-emacs-state)
-;; (define-key evil-insert-state-map (kbd "DEL") 'evil-execute-in-emacs-state)
+(define-key evil-insert-state-map [backspace] 'my-exec-key-in-emacs)
+(define-key evil-insert-state-map (kbd "DEL") 'my-exec-key-in-emacs)
 
 ;; simularly for del key
-;; (define-key evil-insert-state-map (kbd "<delete>") 'evil-execute-in-emacs-state)
-;; (define-key evil-insert-state-map (kbd "<deletechar>") 'evil-execute-in-emacs-state)
+(define-key evil-insert-state-map (kbd "<delete>") 'my-exec-key-in-emacs)
+(define-key evil-insert-state-map (kbd "<deletechar>") 'my-exec-key-in-emacs)
 
 ;; I hate it when I switch to some buffer and its
 ;; accidently left in the insert mode. In vim
@@ -1135,8 +1127,7 @@ Example usage would be '(help-mode view-mode).
 
   ;; keys
   (evil-define-key 'normal eshell-mode-map "\C-m" 'viper-comint-enter)
-  (evil-define-key 'normal eshell-mode-map "\C-m" 
-                      'evil-execute-in-emacs-state)
+  (evil-define-key 'normal eshell-mode-map "\C-m" 'my-exec-key-in-emacs)
   (evil-define-key 'normal eshell-mode-map "j" 'viper-eshell-j)
   (evil-define-key 'normal eshell-mode-map "k" 'viper-eshell-k)
   (evil-define-key 'normal eshell-mode-map "/" 'viper-eshell-start-search)

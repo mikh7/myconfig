@@ -423,11 +423,11 @@
 
 (evil-define-key 'normal slime-repl-mode-map "j" 'slime-comint-j)
 (evil-define-key 'normal slime-repl-mode-map "k" 'slime-comint-k)
-(evil-define-key 'normal slime-repl-mode-map "\C-m" 'evil-execute-in-emacs-state)
+(evil-define-key 'normal slime-repl-mode-map "\C-m" 'my-exec-key-in-emacs)
 (evil-define-key 'normal slime-repl-mode-map "/" 'slime-repl-previous-matching-input)
 (evil-define-key 'normal slime-repl-mode-map "n" 'slime-comint-n)
 (evil-define-key 'normal slime-repl-mode-map "N" 'slime-comint-N)
-(evil-define-key 'insert slime-repl-mode-map (kbd "DEL") 'evil-execute-in-emacs-state)
+(evil-define-key 'insert slime-repl-mode-map (kbd "DEL") 'my-exec-key-in-emacs)
 (evil-define-key 'normal slime-repl-mode-map "\C-m" 'viper-comint-enter)
 (evil-define-key 'normal slime-repl-mode-map (kbd "<return>") 'viper-comint-enter)
 (evil-define-key 'normal slime-repl-mode-map (kbd "RET") 'viper-comint-enter)

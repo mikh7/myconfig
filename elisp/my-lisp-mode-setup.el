@@ -661,8 +661,6 @@ Will setup match data as follows:
   ;; (setq viper-syntax-preference 'emacs)
   (set (make-local-variable 'add-log-current-defun-function) 'mm/lisp-current-defun))
 
-;; (vimpulse-define-key 'lisp-mode  'insert-state (kbd "DEL") 'evil-execute-in-emacs-state)
-
 (defun redshank--end-of-sexp-column ()
   "Move point to end of current form, neglecting trailing whitespace."
   (forward-sexp)
