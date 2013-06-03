@@ -13,6 +13,14 @@
   (let ((comint-input-ring-separator "\n"))
     (setq ad-return-value ad-do-it)))
 
+(defadvice comint-read-input-ring (around fix-history activate)
+  (let (tmp) 
+    (when (and (eq major-mode 'shell-mode)
+               (equal (getenv "HISTFILE")
+                      comint-input-ring-file-name)
+               (setq tmp (getenv "HISTFILE_FOR_EMACS")))
+      (setq comint-input-ring-file-name tmp))))
+
 ;; viper comint mode history browsing via jk keys
 
 (defun we-are-at-last-line-p ()
@@ -32,7 +40,7 @@
       (progn
 	(call-interactively 'comint-previous-input)
 	(beginning-of-line))
-    (call-interactively 'viper-previous-line)))
+    (call-interactively 'evil-previous-line)))
 
 (defun viper-comint-j (arg)
   "Go to previous line if not on the last line of the
@@ -42,13 +50,13 @@
       (progn
 	(call-interactively 'comint-next-input)
 	(beginning-of-line))
-    (call-interactively 'viper-next-line)))
+    (call-interactively 'evil-next-line)))
 
 (defun viper-comint-enter (arg)
   "Enter key in comint mode"
   (interactive "P")
   (evil-insert-state 1)
-  (call-interactively 'evil-execute-in-emacs-state))
+  (call-interactively 'my-exec-key-in-emacs))
 
 ;; Esc / search in comint mode
 (defvar viper-comint-search-idx 0)

@@ -398,8 +398,9 @@ setopt IGNORE_EOF
 #
 # History configuration
 #
+unset HISTFILE
 HISTFILE=~/.histfile
-export HISTFILE                 # so that emacs can read it
+export HISTFILE_FOR_EMACS=.histfile
 SAVEHIST=10000
 HISTSIZE=16384                  # give some room for dups
 
