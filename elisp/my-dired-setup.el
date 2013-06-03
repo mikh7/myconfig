@@ -34,7 +34,6 @@
 
 (evil-define-key 'normal dired-mode-map ";G" 'diredp-do-grep)
 (evil-define-key 'normal dired-mode-map ";l" 'dired-do-redisplay)
-(evil-define-key 'normal dired-mode-map "")
 ;; (evil-define-key 'motion dired-mode-map (kbd "RET") 'dired-find-file)
 
 (defvar dired-sort-map (make-sparse-keymap))
