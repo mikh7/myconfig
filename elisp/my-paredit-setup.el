@@ -2,6 +2,18 @@
 (ignore-errors (require-if-available 'paredit-magic))
 (ignore-errors (require-if-available 'evil))
 
+(setq comment-fill-column 120)
+
+(defvar paredit-magic-word-skips-separator t
+  "When T, word movement skip initial symbol constituents.
+
+For example with this variable T, doing 2dw on a one-two-three
+will leave -three and without it it will leave two-three.
+
+Default is set to T, because the task of deleting or changing two
+or more sub-words in a hyphenated symbol is more common then
+wanting to delete symbol and a hyphen")
+
 ;; fix slurping not to include top level
 (defun my-paredit-forward-slurp-sexp (&optional arg)
   "Like paredit-forward-slurp-sexp but stop and beep if about
@@ -242,201 +254,27 @@ a line with closing paren by itself"
 (defun paredit-blink-paren-match (arg)
   (my-blink-matching-open))
 
-(evil-define-union-move paredit-magic-move-word (val)
-  (let ((limit (point))
-        (opoint (point)))
-    (ignore-errors (setq limit (scan-sexps (point) val)))
-    (evil-move-word val)
-    (cond
-     ((and (> val 0)
-           (> (point) limit))
-      (goto-char limit))
-     ((and (< val 0)
-           (< (point) limit))
-      (goto-char limit)))
-    (if (= (point) opoint) 0 1)))
-
-(evil-define-motion paredit-magic-forward-word-begin (count &optional bigword)
-  "Move the cursor to the beginning of the COUNT-th next word.
-If BIGWORD is non-nil, move by WORDS."
-  :type exclusive
-  (or count (setq count 1))
-  (let* ((beg (or (ignore-errors (scan-sexps (point) count)) (point)))
-         (end (or (ignore-errors (scan-sexps (point) (- count))) (point)))
-         (move
-          ;; (if bigword #'paredit-magic-move-WORD #'paredit-magic-move-word)
-          (if bigword #'evil-move-WORD #'evil-move-word))
-         (orig (point)))
-    (save-restriction 
-      (narrow-to-region beg end)
-      (prog1 (if (and evil-want-change-word-to-end
-                      (not (looking-at "[[:space:]]"))
-                      (eq evil-this-operator #'evil-change))
-                 (evil-move-end count move)
-               (evil-move-beginning count move))
-        ;; if we reached the beginning of a word on a new line in
-        ;; Operator-Pending state, go back to the end of the previous
-        ;; line
-        (when (and (evil-operator-state-p)
-                   (> (line-beginning-position) orig)
-                   (looking-back "^[[:space:]]*" (line-beginning-position)))
-          ;; move cursor back as long as the line contains only
-          ;; whitespaces and is non-empty
-          (evil-move-end-of-line 0)
-          ;; skip non-empty lines containing only spaces
-          (while (and (looking-back "^[[:space:]]+$" (line-beginning-position))
-                      (not (<= (line-beginning-position) orig)))
-            (evil-move-end-of-line 0))
-          ;; but if the previous line is empty, delete this line
-          (when (bolp) (forward-char)))))))
-
-(evil-define-motion paredit-magic-forward-WORD-begin (count)
-  "Move the cursor to the beginning of the COUNT-th next WORD."
-  :type exclusive
-  (paredit-magic-forward-word-begin count t))
-
-(evil-define-key 'motion paredit-magic-mode-map "w" 'paredit-magic-forward-word-begin)
-(evil-define-key 'motion paredit-magic-mode-map "W" 'paredit-magic-forward-WORD-begin)
-
-
-;; (defun paredit-magic-end-of-Word-kernel (val)
-;;   (while (> val 0)
-;;     (while (looking-at "[()]")
-;;       (forward-char)
-;;       (viper-move-marker-locally 'viper-com-point (point)))
-;;     (when (viper-looking-at-separator)
-;;       (viper-skip-all-separators-forward))
-;;     (cond
-;;      ((viper-looking-at-alpha)
-;;       (viper-skip-alpha-forward "_"))
-;;      ((not (viper-looking-at-alphasep))
-;;       (viper-skip-nonalphasep-forward)))
-;;     (let ((viper-SEP-char-class " -()"))
-;;       (viper-skip-nonseparators 'forward))
-;;     (setq val (1- val))))
-
-;; (defun viper-forward-word (arg)
-;;   "Forward word."
-;;   (interactive "P")
-;;   (viper-leave-region-active)
-;;   (let* ((do-paredit-magic
-;;           (and paredit-mode paredit-magic-mode))
-;;          (val (viper-p-val arg))
-;;          (com (viper-getcom arg)))
-;;     (if com (viper-move-marker-locally 'viper-com-point (point)))
-;;     (if do-paredit-magic (paredit-magic-forward-word-kernel val)
-;;       (viper-forward-word-kernel val))
-;;     (if com
-;; 	(progn
-;; 	  (cond ((viper-char-equal com ?c)
-;; 		 (viper-separator-skipback-special 'twice viper-com-point))
-;; 		;; Yank words including the whitespace, but not newline
-;; 		((viper-char-equal com ?y)
-;; 		 (viper-separator-skipback-special nil viper-com-point))
-;; 		((viper-dotable-command-p com)
-;; 		 (viper-separator-skipback-special nil viper-com-point)))
-;; 	  (viper-execute-com 'viper-forward-word val com)))))
-
-;; (defun viper-forward-Word (arg)
-;;   "Forward word delimited by white characters."
-;;   (interactive "P")
-;;   (viper-leave-region-active)
-;;   (let* ((do-paredit-magic
-;;           (and paredit-mode paredit-magic-mode))
-;;          (val (viper-p-val arg))
-;;          (com (viper-getcom arg)))
-;;     (if com (viper-move-marker-locally 'viper-com-point (point)))
-;;     (if do-paredit-magic
-;;         (paredit-magic-forward-Word-kernel val)
-;;       (viper-loop val
-;;         (viper-skip-nonseparators 'forward)
-;;         (viper-skip-separators t)))
-;;     (if com (progn
-;; 	      (cond ((viper-char-equal com ?c)
-;;                      (viper-separator-skipback-special 'twice viper-com-point))
-;; 		    ;; Yank words including the whitespace, but not newline
-;; 		    ((viper-char-equal com ?y)
-;; 		     (viper-separator-skipback-special nil viper-com-point))
-;; 		    ((viper-dotable-command-p com)
-;; 		     (viper-separator-skipback-special nil viper-com-point)))
-;; 	      (viper-execute-com 'viper-forward-Word val com)))))
-
-;; (defadvice vimpulse-end-of-word (around paredit-magic activate)
-;;   "Descend into SEXPS first"
-;;   (if (or (not paredit-mode)
-;;           (not paredit-magic-mode))
-;;       (setq ad-return-value ad-do-it)
-;;     ;; copy of code from vimpulse-viper-function-redefinitions.el
-;;     (viper-leave-region-active)
-;;     (let ((val (viper-p-val arg))
-;;           (com (viper-getcom arg)))
-;;       (paredit-magic-end-of-word-kernel val)
-;;       (if com
-;;           (viper-execute-com 'viper-end-of-word val com)
-;;         (viper-backward-char-carefully)))))
-
-;; (defadvice vimpulse-end-of-Word (around paredit-magic activate)
-;;   "Descend into SEXPS first"
-;;   (if (or (not paredit-mode)
-;;           (not paredit-magic-mode))
-;;       (setq ad-return-value ad-do-it)
-;;     ;; copy of code from vimpulse-viper-function-redefinitions.el
-;;     (viper-leave-region-active)
-;;     (let ((val (viper-p-val arg))
-;;           (com (viper-getcom arg)))
-;;       (paredit-magic-end-of-Word-kernel val)
-;;       (if com
-;;           (viper-execute-com 'viper-end-of-word val com)
-;;         (viper-backward-char-carefully)))))
-
-;; (defadvice vimpulse-delete (around my-paredit-dd activate)
-;;   ;; not in paredit or paredit-magic mode
-;;   (if (or (not paredit-magic-mode)
-;;           (not paredit-mode))
-;;       (setq ad-return-value ad-do-it) 
-;;     (let ((state (paredit-current-parse-state)))
-;;       (cond
-;;        ;; inside string or comment
-;;        ((or (paredit-in-string-p state)
-;;             (paredit-in-comment-p state)
-;;             (save-excursion
-;;               (back-to-indentation)
-;;               (looking-at ";")))
-;;         (setq ad-return-value ad-do-it))
-;;        ;; normal dd
-;;        ((not (memq vimpulse-this-motion-type '(line)))
-;;         (setq ad-return-value ad-do-it))
-;;        ;; handle deleting beginning of multi-line string
-;;        ((save-excursion
-;;           (back-to-indentation)
-;;           (when (looking-at "\"")
-;;             (let ((end-of-string (save-excursion
-;;                                    (forward-sexp)
-;;                                    (point))))
-;;               ;; if string is withing the delete region,
-;;               ;; let structural delete handle it as SEXP
-;;               (and (> end-of-string (line-end-position))
-;;                    (>= end-of-string end)))))
-;;         (back-to-indentation)
-;;         (forward-char)
-;;         (setq beg (point))
-;;         (setq ad-return-value ad-do-it))
-;;        ;; structural delete
-;;        (t (new-my-paredit-kill-line beg end))))))
-
 (defvar my-paredit-kill-line-kill nil)
 (defvar my-paredit-kill-line-kill-after nil)
 
-(defun my-paredit-buffer-substring (beg end)
-  "Return buffer substring, but skip whitespace in the beginning"
-  (save-excursion
-    (goto-char beg)
-    (while (and (< (point) end)
-                (memq (char-after) '(32 9)))
-      (forward-char))
-    (buffer-substring (point) end)))
+(define-key  paredit-magic-mode-map (kbd "M-RET") 'comment-indent-new-line)
 
-(defun new-my-paredit-kill-line (vbeg vend &optional arg)
+(defun paredit-magic-yank-characters (beg end &optional register yank-handler)
+  "Saves the characters defined by the region BEG and END in the kill-ring."
+  (let ((text (filter-buffer-substring beg end)))
+    (when yank-handler
+      (setq text (propertize text 'yank-handler (list yank-handler))))
+    (when register
+      (evil-set-register register text))
+    (unless (eq register ?_)
+      (kill-new text))))
+
+;; TODO Split into smaller functions
+;;
+;; For example, concatenating the text to a kill, should not create
+;; the ")(" or ")la" situations, and then should indent the kill in
+;; the temporary buffer
+(defun new-my-paredit-kill-line (vbeg vend &optional yank-only type register yank-handler)
   "Kill text from VBEG to VEND, while preserving SEXP structure balance using
 a lot of heuristics"
   ;; basically algorithm is
@@ -451,8 +289,10 @@ a lot of heuristics"
         this-sexp-end-greedy
         next-sexp-start
         skip-start-point
+        end-on-current-line-p
         (kill "")
-        (kill-after ""))
+        (kill-after "")
+        spliced-p)
 
     (goto-char vend)
     (setq vend (point-marker))
@@ -493,14 +333,17 @@ a lot of heuristics"
                     (save-excursion
                       (end-of-line)
                       (point-marker))))))
+      (setq end-on-current-line-p (>= (line-end-position)
+                                      vend))
       (cond 
        ;; Delete comments or whitespace before the SEXP
        ((and this-sexp-start (>= this-sexp-start vend)
              (< (point) vend))
-        (setq kill (concat kill (my-paredit-buffer-substring (point) vend)))
-        (delete-region (point) vend)
-        (ignore-errors
-          (indent-sexp)))
+        (setq kill (concat kill (filter-buffer-substring (point) vend)))
+        (if yank-only (goto-char vend)
+          (delete-region (point) vend) 
+          (ignore-errors
+            (indent-sexp))))
        ;; all done
        ((or (>= (point) vend)
             (and this-sexp-start (>= this-sexp-start vend)))
@@ -509,18 +352,23 @@ a lot of heuristics"
        ;; entire SEXP at point fits within the delete region,
        ;; and starts ((. In this case delete only the inner one))
        ((and this-sexp-end (< this-sexp-end vend)
+             ;; this regexp  matches prefixes, and double ((
              (looking-at "\\(['`#.+-]?['`#.+-]?(\\)("))
         (goto-char (match-end 1))
         (let ((opoint (point)))
           (forward-sexp)
-          (setq kill (concat kill (my-paredit-buffer-substring opoint (point))))
-          (delete-region opoint (point))))
+          (setq kill (concat kill (filter-buffer-substring opoint (point))))
+          (unless yank-only 
+            (delete-region opoint (point)))))
        ;; entire SEXP at point fits within the delete region
        ;; and this sexp is the last thing on current line
-       ((and this-sexp-end (< this-sexp-end vend)
+       ((and this-sexp-end (<= this-sexp-end vend)
              (save-excursion
                (goto-char this-sexp-end)
-               (looking-at "\\([ \t]*)?\\)*\\(;[^\n]*\\)?\n")))
+               ;; this regexp finds if we are looking an zero or more
+               ;; closing parenthesis until end of line (with optional
+               ;; closing comment) or end of buffer
+               (looking-at "\\([ \t]*)?\\)*\\(;[^\n]*\\)?\\(?:\n\\|\\'\\)")))
         ;; we could have skipped a few sexps (because we were not sure
         ;; if we'll have to descend into sub-list or not, so we could
         ;; not delete immediately). Now that we found we did not have
@@ -529,19 +377,35 @@ a lot of heuristics"
         ;;
         ;; ie (a ^b c d ^^(blah crap)...) point is ^^ and ^ is where we
         ;; may have started from, delete from there..
-        (let ((start (or skip-start-point (point))))
-          (setq kill (concat kill (my-paredit-buffer-substring start this-sexp-end)))
-          (unless skip-start-point)
-            (setq kill (concat kill "\n"))
-          (delete-region start this-sexp-end)
-          (goto-char start)
-          (when (looking-at "\\([ \t]*\n\\)[ \t]*")
-            ;; (setq kill (concat kill (my-paredit-buffer-substring (match-beginning 1) 
-            ;;                                                      (match-end 1))))
-            (delete-region (match-beginning 0) (match-end 0))
-            (indent-according-to-mode))
-          (ignore-errors
-            (indent-sexp))))
+        (let ((start (or skip-start-point
+                         (cond ((and (eq type 'line)
+                                     (looking-back "^[ \t]*"))
+                                (line-beginning-position))
+                               (t (point)))))
+              (end this-sexp-end))
+          ;; TODO include comment here too, if vend is after end of line
+          (when (or (eq type 'line)
+                    (>= vend (line-end-position)))
+            (setq end (line-beginning-position 2)))
+          (setq kill (concat kill (filter-buffer-substring start end)))
+          (unless (or skip-start-point
+                      (and (plusp (length kill))
+                           (= (aref kill (1- (length kill))) ?\n))) 
+            (setq kill (concat kill "\n")))
+          (if yank-only (goto-char this-sexp-end)
+            (delete-region start end) 
+            (goto-char start) 
+            ;; delete any extra whitespace too
+            (when (looking-at "\\([ \t]*\\)")
+              ;; (setq kill (concat kill (filter-buffer-substring (match-beginning 1) 
+              ;;                                                      (match-end 1))))
+              (let ((beg (match-beginning 0))
+                    (end (if (eq type 'line) (match-end 0)
+                           (min (match-end 0) vend)))) 
+                (when (> end beg) (delete-region beg end))) 
+              (indent-according-to-mode)) 
+            (ignore-errors
+              (indent-sexp)))))
        ;; this sexp fits withing the region but was not the last thing on current
        ;; line, in this case skip forward, remembering where we started..
        ;; if we finally found sexp that is the last thing on its line, without
@@ -551,7 +415,7 @@ a lot of heuristics"
        ;; If we had to descend into lists, the point of descend into the list will
        ;; be the new start point
        ;;
-       ;; So pressing dd on (a b c d (e) f (blah ) will delete eventually delete from
+       ;; So pressing dd on (a b c d (e) f (blah ) will eventually delete from
        ;; b to (blah). But pressing dd on
        ;;
        ;; (a b c d (e) f (blah foo
@@ -561,9 +425,32 @@ a lot of heuristics"
        ;; 
        ((and this-sexp-end (< this-sexp-end vend))
         (unless skip-start-point
-          (setq skip-start-point this-sexp-start))
+          (setq skip-start-point (cond ((and (eq type 'line)
+                                             (looking-back "^[ \t]*"))
+                                        (line-beginning-position))
+                                       (t this-sexp-start))))
         (forward-sexp)
         (paredit-point-at-sexp-start))
+       ;; If current sexp ends after end, but the SEXP is a
+       ;; a symbol, we can delete it without destroying balance
+       ((and this-sexp-end (>= this-sexp-end vend)
+             (looking-at "\\s'*\\s\\?\\_<"))
+        (unless skip-start-point
+          (setq skip-start-point (max
+                                  (cond ((and (eq type 'line)
+                                              (looking-back "^[ \t]*"))
+                                         (line-beginning-position))
+                                        (t this-sexp-start))
+                                  vbeg)))
+        (goto-char vend))
+       ;; Delete partial when on the same line
+       ((and skip-start-point
+             end-on-current-line-p
+             (> (point) skip-start-point))
+        (setq kill (concat kill (filter-buffer-substring skip-start-point (point))))
+        (unless yank-only 
+          (delete-region skip-start-point (point))))
+       ;; None of these situations, we have to descend into sublist
        (t (let ((ok nil))
             ;; if we have to descend into the list, don't delete
             ;; anything before that
@@ -571,45 +458,358 @@ a lot of heuristics"
             (ignore-errors
               (down-list)
               (setq ok t)
+              ;; if after descending into a list, we are not looking
+              ;; at another sublist
               (when (not (looking-at "[`',]?("))
-                (forward-sexp)
-                (if (not (looking-at "[ \t]*\\(([ \t]*)\\)?[ \t]*\n"))
-                    (paredit-point-at-sexp-start)
-                  (paredit-splice-sexp-killing-backward))))
+                ;; Below determines if in situation of (^blah (more crap )...
+                ;; we delete "blah" too, or start from (more crap). We only
+                ;; start from more crap, if our end, is on different line
+                (when (not end-on-current-line-p) 
+                  (forward-sexp) 
+                  (if (not (looking-at "[ \t]*\\(([ \t]*)\\)?[ \t]*\n"))
+                      (paredit-point-at-sexp-start)
+                    ;; Copied from paredit paredit-splice-sexp-killing-backwards
+                    ;; Move backward until we hit the open paren ; then
+                    ;; kill that selected region.
+                    ;; (paredit-splice-sexp-killing-backward)
+                    (save-excursion 
+                      (let* ((end (paredit-point-at-sexp-start))
+                             (text (progn 
+                                     (paredit-ignore-sexp-errors
+                                       (while (not (bobp))
+                                         (backward-sexp)))
+                                     (filter-buffer-substring (point) end))))
+                        (setq kill (concat kill text))
+                        (setq spliced-p t)
+                        (unless yank-only 
+                          (delete-region (point) end)
+                          (backward-up-list)        ; Go up to the beginning...
+                          (save-excursion
+                            (forward-sexp)            ; Go forward an expression, to
+                            (backward-delete-char 1)) ; delete the end delimiter.
+                          (delete-char 1)             ; ...to delete the open char.
+                          (paredit-ignore-sexp-errors
+                            (backward-up-list)      ; Reindent, now that the
+                            (indent-sexp))))        ; structure has changed. 
+                      )))))
             (if (not ok) (setq done t))))))
-    (if (eq last-command 'my-dd-command)
-        (kill-new kill t)
+    ;; If end of region is on current line, and we descended into list, start deleting
+    (when (and skip-start-point
+               end-on-current-line-p
+               (> (point) skip-start-point))
+      (setq kill (concat kill (filter-buffer-substring skip-start-point (point))))
+      (unless yank-only 
+        (delete-region skip-start-point (point))))
+    (when (> (point) vend)
+      (goto-char vend))
+    (when spliced-p
+      (setq kill (concat "(" kill ")")))
+    (when yank-handler
+      (setq kill (propertize kill 'yank-handler (list yank-handler))))
+    (when register
+      (evil-set-register register kill))
+    (unless (eq register ?_)
       (kill-new kill))
     (setq my-paredit-kill-line-kill kill)
     (indent-according-to-mode)
     (setq this-command 'my-dd-command)))
 
-;; (defun my-paredit-viper-open-line ()
-;;   (interactive)
 
-;;   (end-of-line)
-;;   (while (and
-;;           ;; at closig paren
-;;           (looking-back ")")
-;;           ;; begins before current line
-;;           (< (scan-sexps (point) -1) (point-at-bol)))
-;;     (goto-char (1- (point))))
-;;   (evil-insert-state 1)
-;;   (viper-autoindent))
+;; Magic motions
+(evil-define-union-move paredit-magic-evil-move-word (count)
+  "Move by words."
+  (evil-move-chars
+   (if paredit-magic-word-skips-separator
+       "^ \t\r\n[:word:]-"
+     "^ \t\r\n[:word:]")
+   count)
+  (let ((word-separating-categories evil-cjk-word-separating-categories)
+        (word-combining-categories evil-cjk-word-combining-categories))
+    (evil-forward-word count))
+  (evil-move-empty-lines count))
 
-;; (defadvice viper-open-line (around my-paredit-magic-open-line activate)
-;;   (cond ((and paredit-mode
-;;               paredit-magic-mode)
-;;          (my-paredit-viper-open-line))
-;;         ((and c-buffer-is-cc-mode
-;;               (fboundp 'c-paredit-viper-open-line))
-;;          (setq ad-return-value (or (c-paredit-viper-open-line) ad-do-it)))
-;;         (t (setq ad-return-value ad-do-it))))
+(evil-define-motion paredit-magic-evil-forward-word-begin (count &optional bigword)
+  "Move the cursor to the beginning of the COUNT-th next word.
+If BIGWORD is non-nil, move by WORDS."
+  :type exclusive
+  (let ((move (if bigword #'evil-move-WORD #'paredit-magic-evil-move-word))
+        (orig (point)))
+    (prog1 (if (and evil-want-change-word-to-end
+                    (not (looking-at "[[:space:]]"))
+                    (eq evil-this-operator #'paredit-magic-evil-change))
+               (evil-move-end count move)
+             (evil-move-beginning count move))
+      ;; if we reached the beginning of a word on a new line in
+      ;; Operator-Pending state, go back to the end of the previous
+      ;; line
+      (when (and (evil-operator-state-p)
+                 (> (line-beginning-position) orig)
+                 (looking-back "^[[:space:]]*" (line-beginning-position)))
+        ;; move cursor back as long as the line contains only
+        ;; whitespaces and is non-empty
+        (evil-move-end-of-line 0)
+        ;; skip non-empty lines containing only spaces
+        (while (and (looking-back "^[[:space:]]+$" (line-beginning-position))
+                    (not (<= (line-beginning-position) orig)))
+          (evil-move-end-of-line 0))
+        ;; but if the previous line is empty, delete this line
+        (when (bolp) (forward-char))))))
+
+(evil-define-motion paredit-magic-evil-forward-word-end (count &optional bigword)
+  "Move the cursor to the end of the COUNT-th next word.
+If BIGWORD is non-nil, move by WORDS."
+  :type inclusive
+  (let ((move (if bigword #'evil-move-WORD #'paredit-magic-evil-move-word)))
+    ;; if changing a one-letter word, don't move point to the
+    ;; next word (which would change two words)
+    (if (and (evil-operator-state-p)
+             (looking-at "[[:word:]]"))
+        (prog1 (evil-move-end count move)
+          (unless (bobp) (backward-char)))
+      (evil-move-end count move nil t))))
+
+(evil-define-motion paredit-magic-evil-backward-word-begin (count &optional bigword)
+  "Move the cursor to the beginning of the COUNT-th previous word.
+If BIGWORD is non-nil, move by WORDS."
+  :type exclusive
+  (let ((move (if bigword #'evil-move-WORD #'paredit-magic-evil-move-word)))
+    (evil-move-beginning (- (or count 1)) move)))
+
+(evil-define-motion paredit-magic-evil-backward-word-end (count &optional bigword)
+  "Move the cursor to the end of the COUNT-th previous word.
+If BIGWORD is non-nil, move by WORDS."
+  :type inclusive
+  (let ((move (if bigword #'evil-move-WORD #'paredit-magic-evil-move-word)))
+    (evil-move-end (- (or count 1)) move nil t)))
+
+(evil-define-motion paredit-magic-evil-forward-WORD-begin (count)
+  "Move the cursor to the beginning of the COUNT-th next WORD."
+  :type exclusive
+  (paredit-magic-evil-forward-word-begin count t))
+
+(evil-define-motion paredit-magic-evil-forward-WORD-end (count)
+  "Move the cursor to the end of the COUNT-th next WORD."
+  :type inclusive
+  (paredit-magic-evil-forward-word-end count t))
+
+(evil-define-motion paredit-magic-evil-backward-WORD-begin (count)
+  "Move the cursor to the beginning of the COUNT-th previous WORD."
+  :type exclusive
+  (paredit-magic-evil-backward-word-begin count t))
+
+(evil-define-motion paredit-magic-evil-backward-WORD-end (count)
+  "Move the cursor to the end of the COUNT-th previous WORD."
+  :type inclusive
+  (paredit-magic-evil-backward-word-end count t))
+
+;;; Operator commands
+
+(defun paredit-magic-figure-yank-handler (type yank-handler)
+  (or yank-handler
+      (cond ((eq type 'line) #'paredit-magic-paste-lines-handler)
+            ((eq type 'block) (error "This should not happen"))
+            (t #'paredit-magic-paste-handler))))
+
+(defun paredit-magic-paste-handler (text)
+  (let ((text (apply #'concat (make-list (or evil-paste-count 1) text)))
+        (opoint (point)))
+    (remove-list-of-text-properties
+     0 (length text) yank-excluded-properties text)
+    (insert text)))
+
+(defun paredit-magic-paste-lines-handler (text)
+  "Inserts the current text linewise."
+  (let ((text (apply #'concat (make-list (or evil-paste-count 1) text)))
+        (opoint (point)))
+    (remove-list-of-text-properties
+     0 (length text) yank-excluded-properties text)
+    (cond
+     ((eq this-command #'evil-paste-before)
+      (evil-move-beginning-of-line)
+      (evil-move-mark (point))
+      (insert text)
+      (setq evil-last-paste
+            (list #'evil-paste-before
+                  evil-paste-count
+                  opoint
+                  (mark t)
+                  (point)))
+      (evil-set-marker ?\[ (mark))
+      (evil-set-marker ?\] (1- (point)))
+      (evil-exchange-point-and-mark)
+      (back-to-indentation))
+     ((eq this-command #'evil-paste-after)
+      (evil-move-end-of-line)
+      (evil-move-mark (point))
+      (insert "\n")
+      (indent-according-to-mode)
+      (insert text)
+      (evil-set-marker ?\[ (1+ (mark)))
+      (evil-set-marker ?\] (1- (point)))
+      (delete-char -1)                  ; delete the last newline
+      (setq evil-last-paste
+            (list #'evil-paste-after
+                  evil-paste-count
+                  opoint
+                  (mark t)
+                  (point)))
+      (evil-move-mark (1+ (mark t)))
+      (evil-exchange-point-and-mark)
+      (back-to-indentation))
+     (t
+      (insert text)))))
+
+(evil-yank-handler 'evil-forward-word-begin)
+
+(evil-define-operator paredit-magic-evil-yank (beg end type register yank-handler)
+  "Saves the characters in motion into the kill-ring."
+  :move-point nil
+  :repeat nil
+  (interactive "<R><x><y>")
+  (if (or (and (fboundp 'cua--global-mark-active)
+               (fboundp 'cua-copy-region-to-global-mark)
+               (cua--global-mark-active))
+          (eq type 'block))
+      (evil-yank beg end type register yank-handler)
+    ;; Structural yank
+    (new-my-paredit-kill-line beg end t type register 
+                              (paredit-magic-figure-yank-handler type yank-handler))))
+
+(evil-define-operator paredit-magic-evil-yank-line (beg end type register)
+  "Saves whole lines into the kill-ring."
+  :motion evil-line
+  :move-point nil
+  (interactive "<R><x>")
+  (paredit-magic-evil-yank beg end type register))
+
+(evil-define-operator paredit-magic-evil-delete (beg end type register yank-handler)
+  "Delete text from BEG to END with TYPE.
+Save in REGISTER or in the kill-ring with YANK-HANDLER."
+  (interactive "<R><x><y>")
+  (if (eq type 'block)
+      (evil-delete beg end type register yank-handler delete-func)
+    (new-my-paredit-kill-line beg end nil type register 
+                              (paredit-magic-figure-yank-handler type yank-handler)) 
+    (unless register
+      (let ((text my-paredit-kill-line-kill))
+        (unless (string-match-p "\n" text)
+          ;; set the small delete register
+          (evil-set-register ?- text)))))
+  ;; place cursor on beginning of line
+  ;; (when (and (evil-called-interactively-p)
+  ;;            (eq type 'line))
+  ;;   (evil-first-non-blank))
+  )
+
+(evil-define-operator paredit-magic-evil-delete-line (beg end type register yank-handler)
+  "Delete to end of line."
+  :motion nil
+  :keep-visual t
+  (interactive "<R><x>")
+  (if (eq type 'block)
+      (evil-delete-line beg end type register yank-handler) 
+    ;; act linewise in Visual state
+    (let* ((beg (or beg (point)))
+           (end (or end beg)))
+      (when (evil-visual-state-p)
+        (unless (memq type '(line))
+          (let ((range (evil-expand beg end 'line)))
+            (setq beg (evil-range-beginning range)
+                  end (evil-range-end range)
+                  type (evil-type range))))
+        (evil-exit-visual-state))
+      (cond
+       ((eq type 'line)
+        (paredit-magic-evil-delete beg end type register yank-handler))
+       (t
+        (paredit-magic-evil-delete beg (line-end-position) type register yank-handler))))))
+
+(evil-define-operator paredit-magic-evil-delete-whole-line
+  (beg end type register yank-handler)
+  "Delete whole line."
+  :motion evil-line
+  (interactive "<R><x>")
+  (paredit-magic-evil-delete beg end type register yank-handler))
+
+(evil-define-operator paredit-magic-evil-change
+  (beg end type register yank-handler delete-func)
+  "Change text from BEG to END with TYPE.
+Save in REGISTER or the kill-ring with YANK-HANDLER.
+DELETE-FUNC is a function for deleting text, default `evil-delete'.
+If TYPE is `line', insertion starts on an empty line.
+If TYPE is `block', the inserted text in inserted at each line
+of the block."
+  (interactive "<R><x><y>")
+  (if (eq type 'block)
+      (evil-change beg end type register yank-handler delete-func)
+    (let ((opoint (save-excursion
+                    (goto-char beg)
+                    (line-beginning-position))))
+      (new-my-paredit-kill-line beg end nil type register
+                                (paredit-magic-figure-yank-handler type yank-handler))
+      (cond
+       ((eq type 'line)
+        (if (= opoint (point))
+            (evil-open-above 1)
+          (evil-open-below 1)))
+       (t
+        (evil-insert 1))))))
+
+(evil-define-operator paredit-magic-evil-change-line (beg end type register yank-handler)
+  "Change to end of line."
+  :motion evil-end-of-line
+  (interactive "<R><x><y>")
+  (paredit-magic-evil-change beg end type register yank-handler))
+
+(evil-define-operator paredit-magic-evil-change-whole-line
+  (beg end type register yank-handler)
+  "Change whole line."
+  :motion evil-line
+  (interactive "<R><x>")
+  (paredit-magic-evil-change beg end type register yank-handler))
+
+;; motions
+(evil-define-key 'motion paredit-magic-mode-map "w" 'paredit-magic-evil-forward-word-begin)
+(evil-define-key 'motion paredit-magic-mode-map "W" 'paredit-magic-evil-forward-WORD-begin)
+(evil-define-key 'motion paredit-magic-mode-map "b" 'paredit-magic-evil-backward-word-begin)
+(evil-define-key 'motion paredit-magic-mode-map "B" 'paredit-magic-evil-backward-WORD-begin)
+(evil-define-key 'motion paredit-magic-mode-map "e" 'paredit-magic-evil-forward-word-end)
+(evil-define-key 'motion paredit-magic-mode-map "E" 'paredit-magic-evil-forward-WORD-end)
+
+(evil-define-key 'normal paredit-magic-mode-map "y" 'paredit-magic-evil-yank)
+(evil-define-key 'normal paredit-magic-mode-map "Y" 'paredit-magic-evil-yank-line)
+(evil-define-key 'normal paredit-magic-mode-map "d" 'paredit-magic-evil-delete)
+(evil-define-key 'normal paredit-magic-mode-map "D" 'paredit-magic-evil-delete-line)
+;; (evil-define-key evil-ex-completion-map "\C-u" 'paredit-magic-evil-delete-whole-line)
+(evil-define-key 'normal paredit-magic-mode-map "c" 'paredit-magic-evil-change)
+(evil-define-key 'normal paredit-magic-mode-map "C" 'paredit-magic-evil-change-line)
+(evil-define-key 'normal paredit-magic-mode-map "S" 'paredit-magic-evil-change-whole-line)
+
+
+
+;; (evil-define-key 'normal paredit-magic-mode-map "C" 'paredit-evil-change-line)
+
+(defun paredit-magic-evil-open-below (&optional arg)
+  "Insert a new line in the S-EXP that starts on the current line"
+  (interactive)
+  (end-of-line)
+  (while (and
+          ;; at closig paren
+          (looking-back ")")
+          ;; begins before current line
+          (< (scan-sexps (point) -1) (point-at-bol)))
+    (goto-char (1- (point))))
+  (evil-insert-state)
+  (newline-and-indent))
+
+(evil-define-key 'normal paredit-magic-mode-map "o" 'paredit-magic-evil-open-below)
 
 (defadvice backward-down-list (around keep-line-if-just-entered activate)
   (if (and paredit-mode 
            paredit-magic-mode
-           (member last-command '(viper-open-line viper-Open-line))
+           (member last-command '(paredit-magic-evil-open-below
+                                  paredit-magic-evil-open-above
+                                  evil-open-below evil-open-above))
            (looking-back "\n[[:space:]]*"))
       (progn
         (delete-region (match-beginning 0) (match-end 0))
@@ -623,13 +823,13 @@ a lot of heuristics"
   '(paredit-forward paredit-backward up-list down-list 
                     backward-up-list backward-down-list))
 
-;; (defadvice viper-next-line-at-bol (around my-magic-enter
-;;                                           activate)
+;; not sure wtf I had this for
+;; (defadvice evil-ret (around my-magic-enter activate)
 ;;   (if (or (not paredit-magic-mode)
 ;;           (not (member last-command my-magic-enter-auto-insert)))
 ;;       (setq ad-return-value ad-do-it)
-;;     (evil-insert-state 1)
-;;     (viper-autoindent)))
+;;     (evil-insert-state)
+;;     (indent-according-to-mode)))
 
 (defun my-paredit-duplicate-sexp (&optional arg)
   "Duplicate the SEXP that starts on the current line"
@@ -649,7 +849,7 @@ a lot of heuristics"
     (back-to-indentation)
     (goto-char (+ (point) (- pt start)))))
 
-(evil-define-key 'motion paredit-mode-map "\C-d" 'my-paredit-duplicate-sexp)
+(evil-define-key 'motion paredit-mode-map "\C-d" nil)
 (evil-define-key 'normal paredit-mode-map "\C-d" 'my-paredit-duplicate-sexp)
 (evil-define-key 'insert paredit-mode-map "\C-d" 'my-paredit-duplicate-sexp)
 
