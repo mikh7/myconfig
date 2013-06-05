@@ -81,6 +81,7 @@
  '(erc-verbose-dcc nil)
  '(erc-whowas-on-nosuchnick t)
  '(even-window-heights nil)
+ '(evil-overriding-maps (quote ((Buffer-menu-mode-map) (color-theme-mode-map) (comint-mode-map) (compilation-mode-map) (dictionary-mode-map) (ert-results-mode-map . motion) (speedbar-key-map) (speedbar-file-key-map) (speedbar-buffers-key-map))))
  '(garbage-collection-messages nil)
  '(icicle-region-background "gray82")
  '(icicle-reminder-prompt-flag 0)
