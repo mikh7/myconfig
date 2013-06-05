@@ -384,8 +384,9 @@ a lot of heuristics"
                                (t (point)))))
               (end this-sexp-end))
           ;; TODO include comment here too, if vend is after end of line
-          (when (or (eq type 'line)
-                    (>= vend (line-end-position)))
+          (when (and (eq type 'line)
+                     (>= vend (line-end-position))
+                     (>= this-sexp-end-greedy (line-end-position)))
             (setq end (line-beginning-position 2)))
           (setq kill (concat kill (filter-buffer-substring start end)))
           (unless (or skip-start-point
