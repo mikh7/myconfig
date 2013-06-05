@@ -592,6 +592,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
   (setq undo-tree-mode-lighter nil))
 
 (global-set-key (kbd "C-/") nil)
+(evil-define-key 'motion undo-tree-visualizer-map "q" 'undo-tree-visualizer-quit)
 
 (define-key evil-normal-state-map ";" (make-sparse-keymap))
 (define-key evil-normal-state-map "z" (make-sparse-keymap))
