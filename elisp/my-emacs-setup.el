@@ -915,6 +915,9 @@ Example usage would be '(help-mode view-mode).
       (with-current-buffer buffer
         (when (and (evil-insert-state-p) 
                    (not (member major-mode evil-insert-state-modes)))
+          (setq evil-repeat-info nil
+                evil-insert-vcount nil
+                evil-insert-vcount nil)
           (evil-normal-state))))))
 
 (defun my-window-configuration-change-hook ()
