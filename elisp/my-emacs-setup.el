@@ -795,7 +795,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
                   (aset base (1- (length base)) a)
                   (push (cons (copy-sequence base) b) so-far))
                 keymap)
-  so-far))
+    (nreverse so-far)))
 
 
 (all-keysequences-in-keymap help-mode-map)
@@ -879,10 +879,10 @@ Example usage would be '(help-mode view-mode).
                        (evil-define-key 'normal bind-map c nil) 
                        (evil-define-key 'motion bind-map c nil)))))))))
 
-(evil-give-back-keys-in-mode '(help-mode view-mode)
-                              `([?w] [?y] [?g] [?s] [?z] ,@evil-give-back-keys-exception))
+(evil-give-back-keys-in-mode '(help-mode view-mode help-mode)
+                              `([?w] [?y] [?g] [?s] [?z] [?%] ,@evil-give-back-keys-exception))
 (evil-give-back-keys-in-mode '(Info-mode)
-                              `([?w] [?z] ,@evil-give-back-keys-exception))
+                              `([?w] [?z] [?%] ,@evil-give-back-keys-exception))
 (evil-give-back-keys-in-mode '(Man-mode) nil)
 (evil-give-back-keys-in-mode '(grep-mode) nil)
 (evil-give-back-keys-in-mode '(compilation-mode) nil)
