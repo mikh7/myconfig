@@ -386,6 +386,7 @@ a lot of heuristics"
           ;; TODO include comment here too, if vend is after end of line
           (when (and (eq type 'line)
                      (>= vend (line-end-position))
+                     (<= this-sexp-end (line-end-position))
                      (>= this-sexp-end-greedy (line-end-position)))
             (setq end (line-beginning-position 2)))
           (setq kill (concat kill (filter-buffer-substring start end)))
@@ -641,6 +642,9 @@ If BIGWORD is non-nil, move by WORDS."
     ;; remove too many trailing \n
     (when (string-match "\\`\\(.*[^\n \t]\\(?:[ \t]*\n\\)\\)\\(?:[\t ]*\n\\)+[ \t]*\\'" text)
       (setq text (match-string 1 text)))
+    ;; remove spaces after last \n if there
+    (when (string-match "\n\\([ \t]+\\)\\'" text)
+      (setq text (substring text 0 (match-beginning 1))))
     ;; ensure we end with newline
     (when (and (plusp (length text))
                (not (= ?\n (aref text (1- (length text))))))
