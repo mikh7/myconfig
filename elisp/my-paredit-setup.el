@@ -274,7 +274,7 @@ a line with closing paren by itself"
 ;; For example, concatenating the text to a kill, should not create
 ;; the ")(" or ")la" situations, and then should indent the kill in
 ;; the temporary buffer
-(defun new-my-paredit-kill-line (vbeg vend &optional yank-only type register yank-handler)
+(defun new-my-paredit-kill-line-1 (vbeg vend &optional yank-only type register yank-handler)
   "Kill text from VBEG to VEND, while preserving SEXP structure balance using
 a lot of heuristics"
   ;; basically algorithm is
@@ -515,6 +515,11 @@ a lot of heuristics"
     (indent-according-to-mode)
     (setq this-command 'my-dd-command)))
 
+(defun new-my-paredit-kill-line (vbeg vend &optional yank-only type register yank-handler)
+  (if yank-only
+      (save-excursion
+        (new-my-paredit-kill-line-1 vbeg vend yank-only type register yank-handler))
+    (new-my-paredit-kill-line-1 vbeg vend yank-only type register yank-handler)))
 
 ;; Magic motions
 (evil-define-union-move paredit-magic-evil-move-word (count)
@@ -621,11 +626,28 @@ If BIGWORD is non-nil, move by WORDS."
 (defun paredit-magic-paste-lines-handler (text)
   "Inserts the current text linewise."
   (let ((text (apply #'concat (make-list (or evil-paste-count 1) text)))
-        (opoint (point)))
+        (opoint (point))
+        (paste-method (cond ((or (eq this-command #'evil-paste-before)
+                                 (eq this-command #'paredit-magic-evil-paste-before))
+                             'before)
+                            ((or (eq this-command #'evil-paste-after)
+                                 (eq this-command #'paredit-magic-evil-paste-after))
+                             'after))))
     (remove-list-of-text-properties
      0 (length text) yank-excluded-properties text)
+    ;; remove leading \n
+    (when (string-match "\\`\\([ \t]*\n\\)+\\([^\n \t].*\\)" text)
+      (setq text (match-string 1 text)))
+    ;; remove too many trailing \n
+    (when (string-match "\\`\\(.*[^\n \t]\\(?:[ \t]*\n\\)\\)\\(?:[\t ]*\n\\)+[ \t]*\\'" text)
+      (setq text (match-string 1 text)))
+    ;; ensure we end with newline
+    (when (and (plusp (length text))
+               (not (= ?\n (aref text (1- (length text))))))
+      (setq text (concat text "\n")))
+    (log-expr paste-method)
     (cond
-     ((eq this-command #'evil-paste-before)
+     ((eq paste-method 'before)
       (evil-move-beginning-of-line)
       (evil-move-mark (point))
       (insert text)
@@ -638,12 +660,18 @@ If BIGWORD is non-nil, move by WORDS."
       (evil-set-marker ?\[ (mark))
       (evil-set-marker ?\] (1- (point)))
       (evil-exchange-point-and-mark)
+      (save-excursion 
+        (let (done)
+          (ignore-errors
+            (backward-up-list)
+            (setq done t)
+            (indent-sexp))
+          (unless done
+            (indent-region (point) (mark)))))
       (back-to-indentation))
-     ((eq this-command #'evil-paste-after)
-      (evil-move-end-of-line)
-      (evil-move-mark (point))
-      (insert "\n")
-      (indent-according-to-mode)
+     ((eq paste-method 'after)
+      (paredit-magic-newline-below)
+      (evil-move-mark (line-end-position 0))
       (insert text)
       (evil-set-marker ?\[ (1+ (mark)))
       (evil-set-marker ?\] (1- (point)))
@@ -654,8 +682,18 @@ If BIGWORD is non-nil, move by WORDS."
                   opoint
                   (mark t)
                   (point)))
+      (ignore-errors 
+        (indent-region (mark t) (point)))
       (evil-move-mark (1+ (mark t)))
       (evil-exchange-point-and-mark)
+      ;; (save-excursion 
+      ;;   (let (done)
+      ;;     (ignore-errors
+      ;;       (backward-up-list)
+      ;;       (setq done t)
+      ;;       (indent-sexp))
+      ;;     (unless done
+      ;;       (indent-region (point) (mark)))))
       (back-to-indentation))
      (t
       (insert text)))))
@@ -790,18 +828,29 @@ of the block."
 
 ;; (evil-define-key 'normal paredit-magic-mode-map "C" 'paredit-evil-change-line)
 
-(defun paredit-magic-evil-open-below (&optional arg)
-  "Insert a new line in the S-EXP that starts on the current line"
+
+(defun paredit-magic-newline-below ()
+  "Create a newline below, that is opened in a DWIM manner, for example if
+point is on a line that ends multiline S-EXP (ie some kind of body form),
+add a new line inside of that body form"
   (interactive)
-  (end-of-line)
+  (end-of-line) 
   (while (and
           ;; at closig paren
           (looking-back ")")
           ;; begins before current line
           (< (scan-sexps (point) -1) (point-at-bol)))
     (goto-char (1- (point))))
-  (evil-insert-state)
   (newline-and-indent))
+
+(defun paredit-magic-evil-open-below (count)
+  "Insert a new line in the S-EXP that starts on the current line"
+  (interactive "p")
+  (paredit-magic-newline-below)
+  (setq evil-insert-count count
+        evil-insert-lines t
+        evil-insert-vcount nil)
+  (evil-insert-state 1))
 
 (evil-define-key 'normal paredit-magic-mode-map "o" 'paredit-magic-evil-open-below)
 
