@@ -539,6 +539,15 @@ If ALL-FRAMES is anything else, count only the selected frame."
 
 (require 'evil)
 
+(defvar evil-zopen-map (make-sparse-keymap)
+  "Keymap for zo command in Evil mode")
+(defvar evil-S-visual-map (make-sparse-keymap)
+  "Keymap for S command in Evil visual mode")
+(defvar evil-s-map (make-sparse-keymap)
+  "Keymap for s dispatch command in Evil mode")
+(defvar evil-toggle-map (make-sparse-keymap)
+  "Keymap for toggling various things command in Evil mode")
+
 (setq
  evil-normal-state-cursor '("black") 
  evil-motion-state-cursor '("black")
@@ -662,10 +671,10 @@ If ALL-FRAMES is anything else, count only the selected frame."
                               (make-frame '((name . "emacs-small-agenda")))))
 
 (define-key (current-global-map) (kbd "C-/") (make-sparse-keymap))
-(define-key evil-normal-state-map "s" (make-sparse-keymap))
-(define-key evil-normal-state-map "S" (make-sparse-keymap))
+(define-key evil-normal-state-map "s" evil-s-map)
+(define-key evil-motion-state-map "s" evil-s-map)
 ;; T is move until char backward, which I don't use anyway
-(define-key evil-normal-state-map "T" (make-sparse-keymap))
+(define-key evil-s-map "t" evil-toggle-map)
 
 ;; rather hten alternate meta key, use it for visual mode
 (define-key evil-motion-state-map "\C-\\" 'evil-visual-block)
@@ -678,30 +687,28 @@ If ALL-FRAMES is anything else, count only the selected frame."
 ;; I never use gg
 ;; (define-key evil-normal-state-map "gg" 'jump-to-register)
 ;; also sg (for start grep)
-(define-key evil-normal-state-map "sg" 'grep)
-(define-key evil-normal-state-map "sp" 'describe-text-properties)
+(define-key evil-s-map "g" 'grep)
+(define-key evil-s-map "p" 'describe-text-properties)
 (define-key (current-global-map) (kbd "C-/ C-p") 'describe-text-properties)
 
-(define-key evil-normal-state-map "Sp" 'newpaste)
+(define-key evil-S-visual-map "p" 'newpaste)
 (define-key evil-motion-state-map ";b" 'switch-to-buffer)
 
 ;; I like my C-w to do same thing in insert mode
 (define-key evil-insert-state-map "\C-w" evil-window-map)
-;; (define-key global-map "\C-w" evil-window-map)
-;; (when (require-if-available 'hexl)
-;;   (define-key hexl-mode-map "\C-w" vimpulse-window-map))
+(global-set-key "\C-w" evil-window-map)
+(when (require-if-available 'hexl)
+  (define-key hexl-mode-map "\C-w" evil-window-map))
+(define-key evil-window-map "T" 'transpose-windows)
 ;; C-r belongs to reverse search
-;; (define-key evil-insert-state-map "\C-r" nil)
+(define-key evil-insert-state-map "\C-r" nil)
 
-;; fix cua-mode C-c and C-x keys in insert state
-;; (define-key evil-insert-state-map "\C-c" nil)
-;; (define-key evil-insert-state-map "\C-x" nil)
 
-;; Visual mode
-;; (define-key evil-visual-state-map "u" 'undo-tree-undo)
-;; Delete these
-;; (define-key evil-visual-state-map "s" nil)
-;; (define-key evil-visual-state-map "S" nil)
+;; visual mode
+(define-key evil-visual-state-map "u" 'undo-tree-undo)
+;; delete these
+(define-key evil-visual-state-map "s" nil)
+(define-key evil-visual-state-map "S" evil-S-visual-map)
 
 (defun transpose-windows (arg)
   "Transpose the buffers shown in two windows."
@@ -759,12 +766,12 @@ If ALL-FRAMES is anything else, count only the selected frame."
           (lambda ()
             (hl-line-mode 1)))
 
-;; force these modes to start in viper insert mode
+;; force these modes to start in Evil insert mode
 (dolist (mode '(erc-mode eshell-mode inferior-python-mode))
   (remove-from-list 'evil-emacs-state-modes mode)
   (add-to-list 'evil-insert-state-modes mode))
 
-;; force going into viper mode
+;; Force going into Evil mode
 (dolist (mode '(Info-mode help-mode Man-mode 
                           grep-mode  compilation-mode
                           org-agenda-mode
@@ -776,10 +783,10 @@ If ALL-FRAMES is anything else, count only the selected frame."
   (remove-from-list 'evil-emacs-state-modes mode)
   (add-to-list 'evil-normal-state-modes mode))
 
-;; prevent from going viper mode
-(dolist (mode '(gdb-inferior-io-mode gud-mode))
-  (remove-from-list 'evil-normal-state-modes mode)
-  (add-to-list 'evil-emacs-state-modes mode))
+;; Prevent from going Evil mode TODO re-check this
+;; (dolist (mode '(gdb-inferior-io-mode gud-mode))
+;;   (remove-from-list 'evil-normal-state-modes mode)
+;;   (add-to-list 'evil-emacs-state-modes mode))
 
 (defun all-keysequences-in-keymap (keymap &optional base so-far)
   (let ((base (or base (copy-sequence [0]))))
@@ -943,13 +950,13 @@ Example usage would be '(help-mode view-mode).
 ;; 
 (require 'refill)
 
-(define-key evil-normal-state-map "TT" 'toggle-truncate-lines)
-(define-key evil-normal-state-map "TD" 'toggle-debug-on-error)
-(define-key evil-normal-state-map "TH" 'hl-line-mode)
-(define-key evil-normal-state-map "TG" 'toggle-gud-popups)
-(define-key evil-normal-state-map "TR" 'refill-mode)
-(define-key evil-normal-state-map "TC" 'toggle-case-fold-search)
-(define-key evil-normal-state-map "TP" 'show-point-mode)
+(define-key evil-toggle-map "t" 'toggle-truncate-lines)
+(define-key evil-toggle-map "d" 'toggle-debug-on-error)
+(define-key evil-toggle-map "h" 'hl-line-mode)
+(define-key evil-toggle-map "g" 'toggle-gud-popups)
+(define-key evil-toggle-map "r" 'refill-mode)
+(define-key evil-toggle-map "c" 'toggle-case-fold-search)
+(define-key evil-toggle-map "p" 'show-point-mode)
 
 (define-key evil-normal-state-map ";m" 'imenu)
 ;; make sure C-v pastes in insert mode
@@ -974,9 +981,6 @@ Example usage would be '(help-mode view-mode).
     (let ((default-directory "~/myconfig/elisp/"))
       (if icicle-mode (call-interactively 'icicle-file)
         (call-interactively 'find-file))))
-
-(defvar evil-zopen-map (make-sparse-keymap)
-  "Keymap for zo command in viper mode")
 
 (define-key evil-normal-state-map "gh" 'mm/find-file-home)
 (define-key evil-normal-state-map "zl" nil)
