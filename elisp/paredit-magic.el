@@ -89,7 +89,7 @@ ie Enter")
 
 (setq paredit-magic-close-paren nil)
 
-;; (defadvice viper-put-back (after paredit-magic-auto-indent activate)
+;; (defadvice evil-paste-after (after paredit-magic-auto-indent activate)
 ;;   (when (and paredit-magic-mode
 ;;              (not (paredit-in-string-p))
 ;;              (not (paredit-in-comment-p)))
@@ -99,7 +99,7 @@ ie Enter")
 ;;         (ignore-errors (backward-up-list))
 ;;         (indent-sexp)))))
 
-;; (defadvice viper-put-back (around paredit-magic-structural-paste activate)
+;; (defadvice evil-put-back (around paredit-magic-structural-paste activate)
 ;;   (if (not paredit-magic-mode) (setq ad-return-value ad-do-it)
 ;;     (let ((val (viper-p-val arg))
 ;;           (text (if viper-use-register
@@ -158,15 +158,15 @@ ie Enter")
 ;;           (back-to-indentation)))
 ;;     (viper-deactivate-mark)))
 
-;; (defadvice viper-autoindent (after paredit-magic-auto-indent activate)
-;;   (when (and paredit-magic-mode)
-;;     (cond ((paredit-in-string-p)
-;;            (indent-relative-maybe))
-;;           ((not (paredit-in-comment-p))
-;;            (ignore-errors
-;;              (save-excursion
-;;                (backward-up-list)
-;;                (indent-sexp)))))))
+(defadvice newline-and-indent (after paredit-magic-auto-indent activate)
+  (when (and paredit-magic-mode)
+    (cond ((paredit-in-string-p)
+           (indent-relative-maybe))
+          ((not (paredit-in-comment-p))
+           (ignore-errors
+             (save-excursion
+               (backward-up-list)
+               (indent-sexp)))))))
 
 ;; (defadvice viper-Put-back (after paredit-magic-auto-indent activate)
 ;;   (when (and paredit-magic-mode
@@ -216,7 +216,7 @@ to save result in the kill ring"
         ((not (eq (char-syntax (char-after)) ?\)))
          (delete-char 1 t))))
 
-;; (defadvice viper-delete-char (around paredit-magic-forward-delete activate)
+;; (defadvice evil-delete-char ()
 ;;   (if (not paredit-magic-mode) (setq ad-return-value ad-do-it)
 ;;     ;; basically replacement of viper-delete-char that
 ;;     ;; preserves parentesis
@@ -244,7 +244,7 @@ to save result in the kill ring"
 ;;             (setq viper-use-register nil)))
 
 ;;       (viper-loop val
-;;         (paredit-magic-forward-delete))
+;;                   (paredit-magic-forward-delete))
 ;;       (if viper-ex-style-motion
 ;;           (if (and (eolp) (not (bolp))) (backward-char 1))))))
 
@@ -258,30 +258,37 @@ to save result in the kill ring"
                   (paredit-in-comment-p state))
         (setq mytext text)
         (let ((text-has-newline-p (string-match "\n" text))
-              (text-ends-with-sexp-p (string-match ")[[:space:]]*$" text))
+              (text-ends-with-paren-p (string-match ")[[:space:]]*$" text))
               (text-ends-with-newline-p (string-match "\n$" text))
               (text-starts-with-newline-p (string-match "^[[:space:]]*\n" text))
-              (text-starts-with-sexp-p (string-match "^[[:space:]\n]*(" text))
+              (text-starts-with-paren-p (string-match "^[[:space:]\n]*(" text))
               (point-at-sexp-start-p (looking-at "[[:space:]]*'?("))
               (point-at-sexp-end-p (looking-back ")[[:space:]]*")))
-          (cond ((and text-has-newline-p text-ends-with-sexp-p
-                      (not text-ends-with-newline-p)
-                      point-at-sexp-start-p)
-                 (save-excursion
-                   (dotimes (i (if (eql (first state) 0) 2 1))
-                     (insert ?\n)
-                     (indent-according-to-mode))))
-                ((and text-has-newline-p text-ends-with-sexp-p
-                      point-at-sexp-start-p
-                      (eql (first state) 0))
-                 (save-excursion
-                   (insert ?\n)
-                   (indent-according-to-mode)))
-                ((and point-at-sexp-end-p
-                      (not text-starts-with-newline-p)
-                      text-starts-with-sexp-p)
-                 (insert ?\n)
-                 (indent-according-to-mode))))))))
+          (cond
+           ;; If we pasting before ( and text does not end with
+           ;; newline, insert one
+           ((and text-has-newline-p     
+                 text-ends-with-paren-p 
+                 (not text-ends-with-newline-p)
+                 point-at-sexp-start-p)
+            (save-excursion
+              (dotimes (i (if (eql (first state) 0) 2 1))
+                (insert ?\n)
+                (indent-according-to-mode))))
+           ;; Same as above, and text has newline, but we are pasting
+           ;; at top level, add extra newline, so pasting
+           ((and text-has-newline-p
+                 text-ends-with-paren-p
+                 point-at-sexp-start-p
+                 (eql (first state) 0))
+            (save-excursion
+              (insert ?\n)
+              (indent-according-to-mode)))
+           ((and point-at-sexp-end-p
+                 (not text-starts-with-newline-p)
+                 text-starts-with-paren-p)
+            (insert ?\n)
+            (indent-according-to-mode))))))))
 
 ;; this requires changing viper-yank to defun from defsubst
 ;; (defadvice viper-yank (around paredit-magic-fix-sexps activate)
@@ -301,14 +308,14 @@ to save result in the kill ring"
         (backward-up-list)
         (indent-sexp)))))
 
-;; (defadvice vimpulse-join (after paredit-magic-auto-indent activate)
-;;   (when (and paredit-magic-mode
-;;              (not (paredit-in-string-p))
-;;              (not (paredit-in-comment-p)))
-;;     (ignore-errors
-;;       (save-excursion
-;;         (backward-up-list)
-;;         (indent-sexp)))))
+(defadvice evil-join (after paredit-magic-auto-indent activate)
+  (when (and paredit-magic-mode
+             (not (paredit-in-string-p))
+             (not (paredit-in-comment-p)))
+    (ignore-errors
+      (save-excursion
+        (backward-up-list)
+        (indent-sexp)))))
 
 (defvar paredit-magic-get-path-maxdepth 5)
 
@@ -696,7 +703,7 @@ point on the next line after EXP"
           log-indented restart-case
           save-restriction save-restriction-if-possible 
           save-selected-frame save-selected-window save-window-excursion)
-  "Forms the body of which starting form the first sub-form are implicit progn")
+  "List of PROGN-like forms. Used to auto-newline after closing sub-forms")
 
 (defconst paredit-magic-body1-forms
   '(let let* bind labels flet when awhen when-let unless while defun defadvice 
@@ -708,11 +715,11 @@ point on the next line after EXP"
         with-typed-slots
         eval-when
         do do*)
-  "Forms the body of which starting from the 2nd sub-form are implicit progn")
+  "List of LET like forms, where body starts at the third sub-form")
 
 (defconst paredit-magic-body2-forms
   '(with-slots with-accessors multiple-value-bind destructuring-bind)
-  "Forms the body of which starting from the 3nd sub-form are implicit progn")
+  "List of MULTIPLE-VALUE-BIND like forms, where body starts with the 3rd sub-form")
 
 (def-situation 'paredit-magic-close-paren
   :path `((:function (lambda (function)
@@ -734,25 +741,30 @@ point on the next line after EXP"
                              (not (memq function paredit-magic-body2-forms)))))
                      :position (> 0))
           ())
-  :documentation "Close parentesis in (progn-equivalent (foo |))
-  automatically do new line"
+  :documentation "Close parentesis in (prog1-equivalent x (foo |))
+automatically do new line"
   :action `(progn (paredit-magic-close-paren-and-newline)))
 
+;; better description
+;; :path (@paredit-magic-body2-forms x @[*])
 (def-situation 'paredit-magic-close-paren
   :path `((:function (lambda (function)
                        (memq function paredit-magic-body2-forms))
                      :position (> 1))
           ())
-  :documentation "Close parentesis in form head1 head2 &body ... |... ))
+  :documentation "Close parentesis in (multiple-value-bind (...|) obj (...|))
 automatically do new line"
   :action `(progn (paredit-magic-close-paren-and-newline)))
 
 (def-situation 'paredit-magic-close-paren
   :path `((:function def :position (> 1))
           ())
-  :documentation "Close parentesis in (progn-equivalent (foo |))
+  :documentation "Close parentesis in (def ... (...|))
 automatically do new line"
   :action `(progn (paredit-magic-close-paren-and-newline)))
+
+;; better description
+;; :path (labels|flet ((x *)))
 
 (def-situation 'paredit-magic-close-paren
   :path '((:function (labels flet)
@@ -764,6 +776,8 @@ automatically do new line"
   :documentation "Close parentisis and newline (labels|flet ((foo (|) .. .. (bar ..|))))"
   :action `(progn (paredit-magic-close-paren-and-newline)))
 
+;; better description
+;; :path (labels|flet (*))
 (def-situation 'paredit-magic-close-paren
   :path '((:function (labels flet)
                      :position 1)
