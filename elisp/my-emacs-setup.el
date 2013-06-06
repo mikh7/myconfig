@@ -649,11 +649,9 @@ If ALL-FRAMES is anything else, count only the selected frame."
 (global-set-key "\C-q" 'Control-X-prefix)
 
 ;; get rid of C-x map
-(define-key evil-normal-state-map "X" 'viper-delete-backward-char)
 
 (define-key ctl-x-map "e" 'eval-last-sexp)
 (define-key ctl-x-map "f" 'find-file)
-;; ;zqQ, keymaps are defined in ~/.viper
 
 (dolist (key '("\C-f" "\C-e" "\C-s" "\C-c" "s" "k" "5" "4"))
   (define-key my-ctl-x-map key (lookup-key ctl-x-map key)))
