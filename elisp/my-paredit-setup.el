@@ -435,7 +435,7 @@ a lot of heuristics"
        ;; If current sexp ends after end, but the SEXP is a
        ;; a symbol, we can delete it without destroying balance
        ((and this-sexp-end (>= this-sexp-end vend)
-             (looking-at "\\s'*\\s\\?\\_<"))
+             (looking-at "\\s'*\\s\\?\\(?:\\s_\\|\\sw\\)"))
         (unless skip-start-point
           (setq skip-start-point (max
                                   (cond ((and (eq type 'line)
