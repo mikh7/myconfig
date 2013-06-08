@@ -554,7 +554,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
  evil-visual-state-cursor '("darkred")
  evil-insert-state-cursor '((bar . 2) "black")
  evil-replace-state-cursor '((hbar . 3) "black")
- evil-emacs-state-cursor '((bar . 2) "Magenta"))
+ evil-emacs-state-cursor '"Magenta")
 
 (defun my-exec-key-in-emacs (&optional prefix)
   "Execute last command key in emacs state"
