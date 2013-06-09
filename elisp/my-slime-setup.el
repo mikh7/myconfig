@@ -374,8 +374,9 @@
                                 slime-thread-control-mode))
   (remove-from-list 'evil-emacs-state-modes mode)
   (remove-from-list 'evil-insert-state-modes mode)
-  (add-to-list 'evil-normal-state-modes mode)
-  (evil-give-back-keys-in-mode mode))
+  (remove-from-list 'evil-normal-state-modes mode)
+  (add-to-list 'evil-motion-state-modes mode)
+  (evil-give-back-keys-in-mode (list mode 'slime-popup-buffer-mode)))
 
 (evil-define-key 'normal slime-thread-control-mode-map "\C-k" 'slime-thread-kill)
 (evil-define-key 'normal slime-connection-list-mode-map "D" 'slime-disconnect)
@@ -433,6 +434,16 @@
 (evil-define-key 'normal slime-repl-mode-map (kbd "RET") 'viper-comint-enter)
 (evil-define-key 'insert slime-repl-mode-map (kbd "RET") 'slime-repl-return)
 
+
+;; make C-x C-e behave same as Evil
+
+(defadvice slime-last-expression (around evil activate)
+  "In normal-state, last sexp ends at point."
+  (if (evil-normal-state-p)
+      (save-excursion
+        (unless (or (eobp) (eolp)) (forward-char))
+        ad-do-it)
+    ad-do-it))
 
 (defun mm/setup-slime-vi-stuff ()
   ;; (set (make-local-variable 'viper-ex-style-motion) nil)
