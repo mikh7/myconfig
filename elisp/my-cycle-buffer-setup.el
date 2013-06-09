@@ -20,7 +20,8 @@
     (setq ad-return-value ad-do-it)
     (when buffer
       (with-current-buffer buffer
-        (unless (string-match "^\\*Ediff Control Panel" (buffer-name)) 
+        (unless (or (string-match "^\\*Ediff Control Panel" (buffer-name))
+                    (eq (cycle-buffer-is-forced) 'yes)) 
           (setq my-buffer-last-frame 'buried))))))
 
 (defun my-track-buffer-frame (&optional buffer)
@@ -103,6 +104,7 @@ or were displayed on a frame that is not live"
 
 (make-variable-buffer-local 'cycle-buffer-force-frame)
 (setq cycle-buffer-force-frame nil)
+(put 'cycle-buffer-force-frame 'permanent-local t)
 
 (defun cycle-buffer-toggle-visibility (&optional arg)
   "Toggle the cycle buffer visibility of on this frame."
@@ -141,7 +143,8 @@ forced"
        (not my-buffer-last-frame)       ; never displayed_
        (eq cycle-buffer-orig-frame my-buffer-last-frame) ; last displayed here
        ;; frameless but not buried
-       (and (not (eq my-buffer-last-frame 'buried))
+       (and (or (not (eq my-buffer-last-frame 'buried))
+                (eq (cycle-buffer-is-forced) 'yes))
             (not (frame-live-p my-buffer-last-frame))
             (null (get-buffer-window (current-buffer) t))))
       (not (eq (aref name 0) ?\ )) ; name does not start with space " buffer"
