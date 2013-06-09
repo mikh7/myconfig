@@ -88,7 +88,7 @@ for the diff switches"
     (evil-give-back-keys-in-mode modes)
     (evil-define-key 'normal ode-map ";v" egg-file-cmd-map)))
 
-(dolist (mode '(egg-commit-buffer-mode))
+(dolist (mode '(egg-commit-buffer-mode vc-git-log-edit-mode))
   (remove-from-list 'evil-normal-state-modes mode)
   (add-to-list 'evil-insert-state-modes mode))
 
