@@ -378,8 +378,8 @@
   (add-to-list 'evil-motion-state-modes mode)
   (evil-give-back-keys-in-mode (list mode 'slime-popup-buffer-mode)))
 
-(evil-define-key 'normal slime-thread-control-mode-map "\C-k" 'slime-thread-kill)
-(evil-define-key 'normal slime-connection-list-mode-map "D" 'slime-disconnect)
+(evil-define-key 'motion slime-thread-control-mode-map "\C-k" 'slime-thread-kill)
+(evil-define-key 'motion slime-connection-list-mode-map "D" 'slime-disconnect)
 
 (defun slime-comint-k (arg)
   "Go to previous line if not on the last line of the
