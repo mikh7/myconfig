@@ -993,6 +993,7 @@ Example usage would be '(help-mode view-mode).
 
 (define-key evil-normal-state-map "zo" 'find-file)
 (define-key evil-normal-state-map "Z" evil-zopen-map)
+(define-key evil-motion-state-map "Z" evil-zopen-map)
 
 (define-key evil-zopen-map "o" 'find-file)
 (define-key evil-zopen-map "O" 'find-file-other-window)
