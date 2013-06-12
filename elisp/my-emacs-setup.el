@@ -781,7 +781,9 @@ If ALL-FRAMES is anything else, count only the selected frame."
                           fundamental-mode
                           mime-view-mode))
   (remove-from-list 'evil-emacs-state-modes mode)
-  (add-to-list 'evil-normal-state-modes mode))
+  (remove-from-list 'evil-insert-state-modes mode)
+  (remove-from-list 'evil-normal-state-modes mode)
+  (add-to-list 'evil-motion-state-modes mode))
 
 ;; Prevent from going Evil mode TODO re-check this
 ;; (dolist (mode '(gdb-inferior-io-mode gud-mode))
