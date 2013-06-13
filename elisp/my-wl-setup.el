@@ -98,6 +98,10 @@
 ;; (defadvice mime-display-message (after switch-to-viper activate)
 ;;   (evil-change-state-to-vi))
 
+(remove-from-list 'evil-motion-state-modes 'wl-draft-mode)
+(add-to-list 'evil-insert-state-modes 'wl-draft-mode)
+(add-hook 'wl-draft-mode-hook 'evil-insert-state)
+
 (setq mime-situation-examples-file "~/.mime-example")
 (setq mime-play-delete-file-immediately nil)
 
