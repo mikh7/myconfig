@@ -40,23 +40,25 @@
 (ql:quickload :anaphora)
 (ql:quickload :cl-maxlib)
 (ql:quickload :quickproject)
-(ql:quickload :trivial-shell)
+(ql:quickload :uiop)
+(ql:quickload :cl-ppcre)
+(ql:quickload :usocket)
+(ql:quickload :flexi-streams)
+(ql:quickload :babel)
+(ql:quickload :babel-streams)
+(ql:quickload :ironclad)
+(ql:quickload :trivial-garbage)
+(ql:quickload :trivial-backtrace)
+(ql:quickload :named-readtables)
+(ql:quickload :stefil)
+(ql:quickload :fiveam)
+(ql:quickload :arnesi)
 
 (setf quickproject:*author* "Max Mikhanosha <max@openchat.com>"
       quickproject:*license* "Apache License, Version 2.0")
 
-
 (defun mm/run (command &optional noerrorp)
-  (multiple-value-bind (output error-output exit-code) 
-      (trivial-shell:shell-command command)
-    (unless noerrorp
-      (unless (zerop exit-code)
-        (alexandria:simple-program-error
-         "~@<~<Command ~S returned exit code ~D~:>~%~%~
-         ~<Output: ~:_~S~%~%Error Output: ~:_~S ~:>~:>"
-         (list command exit-code)
-         (list output error-output))))
-    exit-code))
+  (uiop:run-program command :ignore-error-status noerrorp))
 
 (defun mm/after-quickproject-hook (pathname &key
                                             depends-on
