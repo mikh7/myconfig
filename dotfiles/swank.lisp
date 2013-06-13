@@ -1,4 +1,4 @@
-(ql:quickload :log4cl)
+;; (ql:quickload :log4cl)
 (log:info "~~/.swank.lisp loading")
 
 (setq swank:*use-dedicated-output-stream* t)
@@ -42,7 +42,6 @@
                fasl-path))))))
 
 (swank:swank-require :swank-listener-hooks)
-
 (swank:swank-require :swank-arglists)
 
 (in-package :swank)
@@ -126,5 +125,23 @@
                   thereis (probe-file (make-pathname :defaults path
                                                      :type suffix)))))
     (values path type lines)))
+
+(defslimefun mm/save-snapshot (image-file)
+  (let* ((connection *emacs-connection*)
+         (style (connection.communication-style connection)))
+    (flet ((complete (success)
+	     (swank::with-connection (connection)
+	       (swank::background-message
+		"Dumping lisp image ~A ~:[failed!~;succeeded.~]" 
+		image-file success)))
+	   (awaken ()
+             #+sbcl(sb-impl::toplevel-repl nil)
+             (error "After toplevel REPL")))
+      (swank-backend:background-save-image
+       image-file
+       :restart-function #'awaken
+       :completion-function #'complete
+       :communication-style style)
+      (format nil "Started dumping lisp to ~A..." image-file))))
 
 (log:info "~~/.swank.lisp done")
