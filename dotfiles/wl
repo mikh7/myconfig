@@ -23,6 +23,8 @@
         (".*"
          "all.SCORE")))
 
+(setq wl-summary-expunge-below 1000)
+
 ;; FCC the outgoing messages to the parent folder
 
 (add-hook 'wl-mail-setup-hook 'wl-draft-config-exec)
