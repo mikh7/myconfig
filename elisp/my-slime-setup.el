@@ -203,6 +203,56 @@
   (let ((inferior-lisp-program "/home/max/cvs/sbcl2/run-sbcl"))
     (slime args)))
 
+(defun mm/sbcl-core-for-file (file &optional type)
+  "Return the Lisp image core file, for the specified executable"
+  (let ((fname (file-truename file)))
+    (or fname (error "Unable to find truename of %S" file))
+    (let* ((safe (replace-regexp-in-string "[^[:alnum:]]" "_" fname t t))
+           (name (expand-file-name (format "~/.cache/common-lisp/%s.%s" safe (or type "sbcl_core")))))
+      name)))
+
+(defun mm/run-sbcl-slime-with-core-init (&optional port-filename coding-system)
+  (format "%S\n\n"
+          `(progn
+             (funcall (read-from-string "swank:start-server")
+                      ,port-filename))))
+
+(defvar mm/start-with-core-args nil)
+(put 'mm/start-with-core-args 'permanent-local t)
+
+(defun mm/inferior-lisp-start-hook ()
+  "Setup buffer-local values for `mm/start-with-core-args'"
+  (when (and mm/start-with-core-args
+             (not (local-variable-p 'mm/start-with-core-args)))
+    (setq-local mm/start-with-core-args mm/start-with-core-args)))
+
+(add-hook 'slime-inferior-process-start-hook 'mm/inferior-lisp-start-hook)
+
+(defun run-sbcl-with-image (&optional arg inferior)
+  (interactive "P")
+  (or inferior (setq inferior "sbcl"))
+  (let ((executable (executable-find inferior))
+        (slime-net-coding-system 'utf-8-unix))
+    (if (not executable) (error "Executable %S not found" inferior)
+      (let* ((core (mm/sbcl-core-for-file executable))
+             (mm/start-with-core-args (list "--core" core "--noinform"))
+             (init 'mm/run-sbcl-slime-with-core-init))
+        (if (and (file-exists-p core) (not (equal arg '(4))))
+            (slime-start :program executable :program-args mm/start-with-core-args
+                         :init 'mm/run-sbcl-slime-with-core-init)
+          (slime-start :program executable))))))
+
+(defun mm/save-sbcl ()
+  "Save the SBCL dump file, based on the name of the current inferior lisp program"
+  (interactive)
+  (assert (slime-inferior-process) () "No inferior lisp process")
+  (let* ((args (slime-inferior-lisp-args (slime-inferior-process)))
+         (program (plist-get args :program))
+         (core (mm/sbcl-core-for-file (executable-find program))))
+    (slime-eval-with-transcript
+     `(swank:mm/save-snapshot ,core))))
+
+
 (defun run-sbcl (&optional args)
   "Start SLIME with SBCL an inferior lisp"
   (interactive)
@@ -340,11 +390,40 @@
 (defvar mm/slime-restart-directory nil)
 (defvar mm/start-lisp-force-dir nil)
 
+(defun my-plist-delete (plist property)
+  "Delete PROPERTY from PLIST.
+This is in contrast to merely setting it to 0."
+  (let (p)
+    (while plist
+      (if (not (equal property (car plist)))
+	  (setq p (plist-put p (car plist) (nth 1 plist))))
+      (setq plist (cddr plist)))
+    p))
+
 (defadvice slime-restart-inferior-lisp (around preserve-current-dir activate)
   (let ((mm/slime-restart-directory
          (with-current-buffer (slime-output-buffer)
            default-directory)))
-    (setq ad-return-value ad-do-it)))
+    (assert (slime-inferior-process) () "No inferior lisp process")
+    (with-current-buffer (process-buffer (slime-inferior-process))
+      (let* ((args slime-inferior-lisp-args)
+             (program (plist-get args :program))
+             (program-args (plist-get args :program-args))
+             (mm/start-with-core-args mm/start-with-core-args))
+        (if (or (not mm/start-with-core-args)
+                (equal current-prefix-arg '(4))
+                (not (file-exists-p (mm/sbcl-core-for-file program))))
+            (progn 
+              ;; normal startup
+              (setq args (plist-put args :init 'slime-init-command))
+              (setq args (plist-put args :program-args nil))
+              (setq slime-inferior-lisp-args args)
+              (setq ad-return-value ad-do-it))
+          ;; with the core file
+          (setq args (plist-put args :init 'mm/run-sbcl-slime-with-core-init))
+          (setq args (plist-put args :program-args mm/start-with-core-args))
+          (setq slime-inferior-lisp-args args)
+          (setq ad-return-value ad-do-it))))))
 
 (defadvice slime-quit-lisp-internal (around preserve-current-dir activate)
   (if (or (not mm/slime-restart-directory)
