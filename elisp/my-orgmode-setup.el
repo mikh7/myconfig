@@ -673,9 +673,8 @@ one"
               (save-excursion (goto-char itemp)
                               (looking-at "[ \t]*-"))) 
       (mm/insert-parent-headline-cookie 0))
-    ;; (unless (eq viper-current-state 'insert-state)
-    ;;   (evil-insert-state 1))
-    ))
+    (unless (evil-insert-state-p)
+      (evil-insert-state 1))))
 
 (defun mm/org-m-ret-continue-checkboxes ()
   "If current item has a checkbox, make new item a checkbox"
