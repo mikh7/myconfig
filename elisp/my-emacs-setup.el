@@ -898,6 +898,7 @@ Example usage would be '(help-mode view-mode).
 (evil-give-back-keys-in-mode '(grep-mode) nil)
 (evil-give-back-keys-in-mode '(compilation-mode) nil)
 (evil-give-back-keys-in-mode '(occur-mode))
+(evil-give-back-keys-in-mode '(special-mode))
 
 (defun my-reconfigure-speedbar-hook ()
   (ignore-errors
