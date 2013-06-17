@@ -775,7 +775,6 @@ If ALL-FRAMES is anything else, count only the selected frame."
 (dolist (mode '(Info-mode help-mode Man-mode 
                           grep-mode  compilation-mode
                           org-agenda-mode
-                          Custom-mode
                           speedbar-mode
                           occur-mode
                           fundamental-mode
@@ -784,6 +783,14 @@ If ALL-FRAMES is anything else, count only the selected frame."
   (remove-from-list 'evil-insert-state-modes mode)
   (remove-from-list 'evil-normal-state-modes mode)
   (add-to-list 'evil-motion-state-modes mode))
+
+(dolist (mode '(Custom-mode))
+  (remove-from-list 'evil-emacs-state-modes mode)
+  (remove-from-list 'evil-insert-state-modes mode)
+  (remove-from-list 'evil-motion-state-modes mode)
+  (add-to-list 'evil-normal-state-modes mode))
+
+(evil-define-key 'normal custom-mode-map "Q" 'Custom-buffer-done)
 
 ;; Prevent from going Evil mode TODO re-check this
 ;; (dolist (mode '(gdb-inferior-io-mode gud-mode))
