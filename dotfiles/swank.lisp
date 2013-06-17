@@ -135,6 +135,7 @@
 		"Dumping lisp image ~A ~:[failed!~;succeeded.~]" 
 		image-file success)))
 	   (awaken ()
+             (setq *connections* nil *emacs-connection* nil)
              #+sbcl(sb-impl::toplevel-repl nil)
              (error "After toplevel REPL")))
       (swank-backend:background-save-image
