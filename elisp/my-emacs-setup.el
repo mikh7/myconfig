@@ -539,8 +539,10 @@ If ALL-FRAMES is anything else, count only the selected frame."
 
 (require 'evil)
 
-(defvar evil-zopen-map (make-sparse-keymap)
-  "Keymap for zo command in Evil mode")
+(defvar evil-Zopen-map (make-sparse-keymap)
+  "Keymap for ZO command in Evil mode")
+(defvar evil-z-map (make-sparse-keymap)
+  "Keymap for z key")
 (defvar evil-S-visual-map (make-sparse-keymap)
   "Keymap for S command in Evil visual mode")
 (defvar evil-s-map (make-sparse-keymap)
@@ -995,18 +997,23 @@ Example usage would be '(help-mode view-mode).
         (call-interactively 'find-file))))
 
 (define-key evil-normal-state-map "gh" 'mm/find-file-home)
-(define-key evil-normal-state-map "zl" nil)
-(define-key evil-normal-state-map "zh" nil)
 
-(define-key evil-normal-state-map "zo" 'find-file)
-(define-key evil-normal-state-map "Z" evil-zopen-map)
-(define-key evil-motion-state-map "Z" evil-zopen-map)
 
-(define-key evil-zopen-map "o" 'find-file)
-(define-key evil-zopen-map "O" 'find-file-other-window)
+(define-key evil-normal-state-map "z" evil-z-map)
+(define-key evil-motion-state-map "z" evil-z-map)
 
-(define-key evil-zopen-map "h" 'mm/find-file-home)
-(define-key evil-zopen-map "e" 'mm/find-file-elisp)
+(define-key evil-z-map "o" 'find-file)
+(define-key evil-z-map "k" 'kill-buffer)
+(define-key evil-z-map "b" 'bury-buffer)
+
+(define-key evil-normal-state-map "Z" evil-Zopen-map)
+(define-key evil-motion-state-map "Z" evil-Zopen-map)
+
+(define-key evil-Zopen-map "o" 'find-file)
+(define-key evil-Zopen-map "O" 'find-file-other-window)
+
+(define-key evil-Zopen-map "h" 'mm/find-file-home)
+(define-key evil-Zopen-map "e" 'mm/find-file-elisp)
 ;;;
 ;;; End of Viper setup
 ;;;
