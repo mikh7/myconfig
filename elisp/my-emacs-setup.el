@@ -1003,7 +1003,13 @@ Example usage would be '(help-mode view-mode).
 (define-key evil-motion-state-map "z" evil-z-map)
 
 (define-key evil-z-map "o" 'find-file)
-(define-key evil-z-map "k" 'kill-buffer)
+
+(defun mm/zk ()
+  "Calls quit-restore-window with 'kill argument"
+  (interactive)
+  (quit-restore-window nil 'kill))
+
+(define-key evil-z-map "k" 'mm/zk)
 (define-key evil-z-map "b" 'bury-buffer)
 
 (define-key evil-normal-state-map "Z" evil-Zopen-map)
