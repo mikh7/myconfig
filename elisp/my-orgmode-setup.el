@@ -554,7 +554,8 @@ any children"
 (evil-define-key 'normal org-agenda-mode-map ";;" 'org-agenda-filter-by-tag)
 (evil-define-key 'normal org-agenda-mode-map ";/" 'org-agenda-filter-by-tag)
 
-(evil-define-key 'normal org-agenda-mode-map "st" 'org-agenda-show-tags)
+(evil-define-key 'normal org-agenda-mode-map "st" nil)
+(evil-define-key 'normal org-agenda-mode-map "sT" 'org-agenda-show-tags)
 (evil-define-key 'normal org-agenda-mode-map "k" 'org-agenda-previous-line)
 (evil-define-key 'normal org-agenda-mode-map "j" 'org-agenda-next-line)
 
@@ -648,8 +649,7 @@ any children"
                     (call-interactively (global-key-binding "\t")))))))
 
 (defun mm/org-insert-checkbox (&optional arg)
-  "Insert plain list item checkbox either on current line or next
-one"
+  "Insert plain list item checkbox either on current line or next one"
   (interactive "P")
   (let ((itemp (org-in-item-p)))
     (cond (itemp
@@ -835,7 +835,7 @@ one"
         ("c" "New TODO" entry (file+datetree "Diary.org")
          "* TODO %?")
         ("d" "Diary Entry" entry (file+datetree "Diary.org")
-         "* %U %?")
+         "* %U %?" :unnarrowed t)
         ("m" "Music" entry (file+headline "Music.org" "Music")
          "** %?")
         ;; ("d" "Diary" entry (file+headline "Diary.org" "Diary")
