@@ -79,20 +79,6 @@
     )
   (call-next-method))
 
-(defvar *compile-string-filename* nil
-  "File where form being compiled by Slime `slime-compile-defun' comes from")
-
-(export '*compile-string-filename*)
-
-(defvar *old-compile-string-for-emacs*
-  (fdefinition 'compile-string-for-emacs))
-
-(setf (fdefinition 'compile-string-for-emacs)
-      (lambda (string buffer position filename policy)
-        (let ((*compile-string-filename* filename))
-          (funcall *old-compile-string-for-emacs*
-                   string buffer position filename policy))))
-
 #+clisp
 (defun swank-backend::fspec-pathname (spec)
   (let ((path spec)
@@ -126,6 +112,12 @@
                                                      :type suffix)))))
     (values path type lines)))
 
+
+(defparameter *mm/log-config* '(:sane2 :thread -12 :pretty :nopackage :info))
+(log4cl:clear-logging-configuration)
+(apply 'log:config *mm/log-config*)
+
+
 (defslimefun mm/save-snapshot (image-file)
   (let* ((connection *emacs-connection*)
          (style (connection.communication-style connection)))
@@ -137,7 +129,7 @@
 	   (awaken ()
              (setq *connections* nil *emacs-connection* nil)
              (log4cl:clear-logging-configuration)
-             (log:config :sane2 :thread -12 :pretty :nopackage :info)
+             (apply 'log:config *mm/log-config*)
              #+sbcl (sb-impl::toplevel-repl nil)
              (error "After toplevel REPL")))
       (swank-backend:background-save-image

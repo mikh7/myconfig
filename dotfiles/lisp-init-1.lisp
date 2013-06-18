@@ -53,6 +53,8 @@
 (ql:quickload :stefil)
 (ql:quickload :fiveam)
 (ql:quickload :arnesi)
+(ql:quickload :com.dvlsoft.clon)
+(com.dvlsoft.clon:nickname-package)
 
 (setf quickproject:*author* "Max Mikhanosha <max@openchat.com>"
       quickproject:*license* "Apache License, Version 2.0")
