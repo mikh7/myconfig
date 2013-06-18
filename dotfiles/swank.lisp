@@ -136,7 +136,9 @@
 		image-file success)))
 	   (awaken ()
              (setq *connections* nil *emacs-connection* nil)
-             #+sbcl(sb-impl::toplevel-repl nil)
+             (log4cl:clear-logging-configuration)
+             (log:config :sane2 :thread -12 :pretty :nopackage :info)
+             #+sbcl (sb-impl::toplevel-repl nil)
              (error "After toplevel REPL")))
       (swank-backend:background-save-image
        image-file
