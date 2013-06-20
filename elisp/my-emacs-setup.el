@@ -779,14 +779,13 @@ If ALL-FRAMES is anything else, count only the selected frame."
                           org-agenda-mode
                           speedbar-mode
                           occur-mode
-                          fundamental-mode
                           mime-view-mode))
   (remove-from-list 'evil-emacs-state-modes mode)
   (remove-from-list 'evil-insert-state-modes mode)
   (remove-from-list 'evil-normal-state-modes mode)
   (add-to-list 'evil-motion-state-modes mode))
 
-(dolist (mode '(Custom-mode))
+(dolist (mode '(Custom-mode fundamental-mode))
   (remove-from-list 'evil-emacs-state-modes mode)
   (remove-from-list 'evil-insert-state-modes mode)
   (remove-from-list 'evil-motion-state-modes mode)
