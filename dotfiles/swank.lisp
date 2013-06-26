@@ -181,35 +181,32 @@
                           (zerop (sb-posix:wexitstatus status))))
                ;; (logg "After waitpid")
                )
+             (dump ()
+               (sb-debug::disable-debugger)
+               (setf sb-impl::*descriptor-handlers* nil)
+               (setq *connections* nil *emacs-connection* nil)
+               (log4cl:clear-logging-configuration)
+               (apply 'log:config *mm/log-config*)
+               (sb-ext:save-lisp-and-die
+                filename
+                :executable executable 
+                :save-runtime-options save-runtime-options
+                :toplevel #'restart-sbcl
+                :save-runtime-options save-runtime-options
+                :compression compression))
              (forker () 
+               (logg "I'm a forker")
                (if (eq style :spawn) 
                    (cond ((= (setq pid (sb-posix:fork)) 0)
-                          (sb-debug::disable-debugger)
                           ;; (logg "I'm a child in forker()")
-                          (apply #'sb-ext:save-lisp-and-die filename
-                                 (when restart-function
-                                   (list :toplevel #'restart-sbcl))))
+                          (dump))
                          (t
                           ;; (logg "I'm a parent of ~d, will use thread to wait" pid)
                           (spawn #'waiter :name "background-save-image")))
                    (multiple-value-bind (pipe-in pipe-out) (sb-posix:pipe)
                      (cond ((= (setq pid (sb-posix:fork)) 0)
                             (sb-posix:close pipe-in)
-                            (sb-debug::disable-debugger)
-                            ;; (logg "I'm a child in forker()")
-                            
-                            (setf sb-impl::*descriptor-handlers* nil)
-                            (setq *connections* nil *emacs-connection* nil)
-                            (log4cl:clear-logging-configuration)
-                            (apply 'log:config *mm/log-config*)
-                            ;; (logg "I'm a child in forker()")
-                            (sb-ext:save-lisp-and-die
-                             filename
-                             :executable executable 
-                             :save-runtime-options save-runtime-options
-                             :toplevel #'restart-sbcl
-                             :save-runtime-options save-runtime-options
-                             :compression compression))
+                            (dump))
                            (t
                             ;; (logg "I'm a parent of ~d, will use fd-handler to wait" pid)
                             (sb-posix:close pipe-out)
