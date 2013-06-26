@@ -19,15 +19,15 @@
 (asdf:initialize-source-registry
  `(:source-registry
    :inherit-configuration
-   (:tree "~/lisp-systems")
-   (:directory "~/cvs/slime")))
+   (:tree "~/lisp-systems/")
+   (:directory "~/cvs/slime/")))
 
 (asdf:load-system :asdf-policy-locations)
 
-(dolist (elem '("/usr/src/local/stumpwm"
-                "~/projects/lisp"
-                "~/tt-hg/sbcl"
-                ;; "~/tt-stephilize/src/sbcl"
+(dolist (elem '("/usr/src/local/stumpwm/"
+                "~/projects/lisp/"
+                "~/tt-hg/sbcl/"
+                ;; "~/tt-stephilize/src/sbcl/"
                 ))
   (pushnew elem ql:*local-project-directories* :test 'equal))
 
