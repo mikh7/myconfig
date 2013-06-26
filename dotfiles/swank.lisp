@@ -114,9 +114,15 @@
 
 
 (defparameter *mm/log-config* '(:sane2 :thread -12 :pretty :nopackage :info))
-(log4cl:clear-logging-configuration)
-(apply 'log:config *mm/log-config*)
 
+(defun mm/reset-logging ()
+  (log4cl:clear-logging-configuration)
+  (apply 'log:config *mm/log-config*))
+
+(mm/reset-logging)
+
+(defun mm/slime-repl-connected ()
+  (apply 'log:config (remove :info *mm/log-config*)))
 
 (defslimefun mm/save-snapshot (image-file)
   (let* ((connection *emacs-connection*)
@@ -128,8 +134,7 @@
 		image-file success)))
 	   (awaken ()
              (setq *connections* nil *emacs-connection* nil)
-             (log4cl:clear-logging-configuration)
-             (apply 'log:config *mm/log-config*)
+             (mm/reset-logging)
              #+sbcl (sb-impl::toplevel-repl nil)
              (error "After toplevel REPL")))
       (swank-backend:background-save-image
@@ -138,5 +143,81 @@
        :completion-function #'complete
        :communication-style style)
       (format nil "Started dumping lisp to ~A..." image-file))))
+
+#+sbcl
+(defun mydump (filename &key restart-function
+                             completion-function
+                             executable
+                             save-runtime-options
+                             compression)
+  (declare (type function restart-function completion-function))
+  (let* (pid
+         (connection *emacs-connection*)
+         (style (connection.communication-style connection)))
+    (labels ((restart-sbcl ()
+               (sb-debug::enable-debugger)
+               (setf sb-impl::*descriptor-handlers* nil)
+               (setq *connections* nil *emacs-connection* nil)
+               (mm/reset-logging)
+               (funcall restart-function))
+             (logg (&rest args)
+               (ignore-errors 
+                (apply #'format sb-sys:*tty* args)
+                (terpri sb-sys:*tty*)
+                (finish-output sb-sys:*tty*)))
+             (waiter (&optional fd)
+               ;; (logg "FD-HANDLER for pid ~d fd ~d" pid fd)
+               (when fd 
+                 ;; (logg "before invalidate ~d" fd) 
+                 (sb-sys:invalidate-descriptor fd) 
+                 ;; (logg "before close ~d" fd)
+                 (sb-posix:close fd))
+               ;; (logg "before waitpid")
+               (multiple-value-bind (rpid status) (sb-posix:waitpid pid 0)
+                 ;; (logg "waitpid returned")
+                 (assert (= pid rpid))
+                 (assert (sb-posix:wifexited status))
+                 (funcall completion-function
+                          (zerop (sb-posix:wexitstatus status))))
+               ;; (logg "After waitpid")
+               )
+             (forker () 
+               (if (eq style :spawn) 
+                   (cond ((= (setq pid (sb-posix:fork)) 0)
+                          (sb-debug::disable-debugger)
+                          ;; (logg "I'm a child in forker()")
+                          (apply #'sb-ext:save-lisp-and-die filename
+                                 (when restart-function
+                                   (list :toplevel #'restart-sbcl))))
+                         (t
+                          ;; (logg "I'm a parent of ~d, will use thread to wait" pid)
+                          (spawn #'waiter :name "background-save-image")))
+                   (multiple-value-bind (pipe-in pipe-out) (sb-posix:pipe)
+                     (cond ((= (setq pid (sb-posix:fork)) 0)
+                            (sb-posix:close pipe-in)
+                            (sb-debug::disable-debugger)
+                            ;; (logg "I'm a child in forker()")
+                            
+                            (setf sb-impl::*descriptor-handlers* nil)
+                            (setq *connections* nil *emacs-connection* nil)
+                            (log4cl:clear-logging-configuration)
+                            (apply 'log:config *mm/log-config*)
+                            ;; (logg "I'm a child in forker()")
+                            (sb-ext:save-lisp-and-die
+                             filename
+                             :executable executable 
+                             :save-runtime-options save-runtime-options
+                             :toplevel #'restart-sbcl
+                             :save-runtime-options save-runtime-options
+                             :compression compression))
+                           (t
+                            ;; (logg "I'm a parent of ~d, will use fd-handler to wait" pid)
+                            (sb-posix:close pipe-out)
+                            (sb-sys:add-fd-handler pipe-in :input #'waiter)
+                            ;; (logg "Added fd handler to ~d~% handlers are now ~s" pipe-in
+                            ;;       sb-impl::*descriptor-handlers*)
+                            ))))))
+      (call-with-only-initial-thread #'forker))))
+
 
 (log:info "~~/.swank.lisp done")

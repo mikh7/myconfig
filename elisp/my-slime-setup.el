@@ -217,6 +217,12 @@
              (funcall (read-from-string "swank:start-server")
                       ,port-filename))))
 
+(defun mm/slime-connected-hook ()
+  "Reconfigure logging on connection, need to run after `1slime-repl-connected-hook-function'"
+  (slime-eval `(swank::mm/slime-repl-connected)))
+
+(add-hook 'slime-connected-hook 'mm/slime-connected-hook t)
+
 (defvar mm/start-with-core-args nil)
 (put 'mm/start-with-core-args 'permanent-local t)
 
