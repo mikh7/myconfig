@@ -322,6 +322,7 @@
                '("SWANK"
                  "SWANK-BACKEND"
                  "STEFIL::"
+                 "COM.DVLSOFT"
                  "COMMON-LISP:"
                  "SB-"))))
 
@@ -757,7 +758,8 @@ successful. Suitable for using in keyboard macros"
            (last-margin (process-get conn 'last-margin)))
       (unless (eql new-width last-margin)
         (process-put conn 'last-margin new-width)
-        (mm/slime-set-connection-right-margin conn new-width)))))
+        ;; (mm/slime-set-connection-right-margin conn new-width)
+        ))))
 
 (defun mm/remove-set-right-margin-hook ()
   (remove-hook 'window-configuration-change-hook 'mm/slime-set-right-margin))
