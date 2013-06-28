@@ -38,7 +38,6 @@
 (ql:quickload :demacs)
 (ql:quickload :log4cl)
 (ql:quickload :anaphora)
-(ql:quickload :cl-maxlib)
 (ql:quickload :quickproject)
 (ql:quickload :uiop)
 (ql:quickload :cl-ppcre)
@@ -50,11 +49,12 @@
 (ql:quickload :trivial-garbage)
 (ql:quickload :trivial-backtrace)
 (ql:quickload :named-readtables)
-(ql:quickload :stefil)
-(ql:quickload :fiveam)
-(ql:quickload :arnesi)
 (ql:quickload :com.dvlsoft.clon)
 (com.dvlsoft.clon:nickname-package)
+(ql:quickload :cl-maxlib)
+(ql:quickload :fiveam)
+(ql:quickload :arnesi)
+(ql:quickload :stefil)
 
 (setf quickproject:*author* "Max Mikhanosha <max@openchat.com>"
       quickproject:*license* "Apache License, Version 2.0")
@@ -129,6 +129,8 @@
                                (dolist (dep (component-load-dependencies sys))
                                  (rec dep (1+ depth)))))))))))
       (rec system-name 0))))
+(export 'show-dependencies)
+
 (cl:in-package :cl-user)
 
 #+sbclno (in-package :sb-impl)
