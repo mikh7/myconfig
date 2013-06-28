@@ -184,7 +184,7 @@ forced"
    (string-match "^\\*Apropo" name)
    (string-match "^\\*Info" name)
    (string-match "^\\*sldb" name)
-   (string-match "^egg.*buffer-mode$" (symbol-name major-mode))
+   ;; (string-match "^egg.*buffer-mode$" (symbol-name major-mode))
    ;; (string-match "^\\*vc-dir" name)
    ;; (string-match "^\\*vc-diff" name)
    ;; (string-match "^\\*org-quicky" name)
