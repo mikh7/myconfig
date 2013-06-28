@@ -216,5 +216,19 @@
                             ))))))
       (call-with-only-initial-thread #'forker))))
 
+(defun %mydump-completed (success)
+  (log:info "Dumping lisp image ~A ~:[failed!~;succeeded.~]" "/home/max/test1" success))
+
+(defmacro clon:dump (name function &rest args) 
+  `(progn
+     (setq clon::*executablep* t) ; not used but here for correctness
+     (mydump ,name
+             :restart-function #',function
+             :executable t
+             :save-runtime-options t
+             :completion-function
+             (lambda (success) 
+               (log:info "Dumping lisp image ~A ~:[failed!~;succeeded.~]" ,name success))
+             ,@args)))
 
 (log:info "~~/.swank.lisp done")
