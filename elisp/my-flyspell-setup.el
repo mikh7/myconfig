@@ -24,6 +24,32 @@
 
 
 (require 'flyspell)
+(require 'ispell)
+
+(defun mm/use-hunspell () 
+  (setq ispell-dictionary "american"
+        ispell-extra-args '("-a" "-i" "utf-8")
+        ispell-silently-savep t
+        ispell-dictionary-alist
+        '((nil                          ; default
+           "[[:alpha:]]" "[^[:alpha:]]" "[']" t ("-d" "en_US" "-i"  
+                                           "utf-8") nil utf-8)
+          ("american"                   ; Yankee English
+           "[[:alpha:]]" "[^[:alpha:]]" "[']" t ("-d" "en_US" "-i"  
+                                           "utf-8") nil utf-8)
+          ("british"                    ; British English
+           "[[:alpha:]]" "[^[:alpha:]]" "[']" t ("-d" "en_GB" "-i"  
+                                           "utf-8") nil utf-8)
+          ("russian"                    ; British English
+           "[АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя]"
+           "[^АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя]" "" nil ("-d" "ru_RU" "-i"  
+                                                                                           "utf-8") nil utf-8)))
+  (setq-default ispell-program-name "hunspell"))
+
+(defadvice ispell-set-spellchecker-params (after use-hunspell activate)
+  (mm/use-hunspell))
+
+(eval-after-load "ispell" `(mm/use-hunspell))
 
 (defun my-flyspell-after-major-mode-change-hook ()
   (when (memq major-mode '(text-mode
