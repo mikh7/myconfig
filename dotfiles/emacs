@@ -104,6 +104,7 @@
  '(search-invisible nil)
  '(show-paren-style (quote parenthesis))
  '(slime-repl-history-size 10000)
+ '(split-width-threshold 170)
  '(standard-indent 2)
  '(transient-mark-mode t)
  '(undo-limit 50000000)
