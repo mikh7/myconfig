@@ -1,5 +1,7 @@
 iprint Running ~/.zshrc
 
+unalias which
+
 # for reloading
 setopt typeset_silent
 setopt extended_glob
