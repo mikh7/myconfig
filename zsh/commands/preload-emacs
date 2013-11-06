@@ -14,7 +14,11 @@ fi
 
 name=$1
 waitp=$2
-screendir=/var/run/uscreens/S-$USER
+if [[ -d /var/run/screen ]] ; then
+  screendir=/var/run/screen/S-$USER
+else
+  screendir=/var/run/uscreens/S-$USER
+fi
 serverdir=/tmp/emacs$UID
 
 if [[ -z $name ]]; then 
