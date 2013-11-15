@@ -95,7 +95,7 @@ will return \"-abc123 --whatever -cde"
         (mm/dired-no-omit t))
     (setq ad-return-value ad-do-it)))
 
-(define-key dired-sort-map "s"
+(define-key dired-sort-map "S"
   (lambda () "sort by Size" (interactive)
     (dired-sort-other (dired-add-switches
                        dired-base-listing-switches "S"
