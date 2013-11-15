@@ -273,8 +273,12 @@ If ALL-FRAMES is anything else, count only the selected frame."
     (send-string-to-terminal "\e[?1l")
     (define-key (get-input-decode-map) "\eO" nil)
     (cond ((fboundp 'set-input-meta-mode)
-           (set-input-meta-mode t))
+           (set-input-meta-mode t nil))
           (t (set-input-mode t nil t)))))
+
+;; instead we redefine evil-esc not to use sit-for
+;; (define-key (current-global-map) (kbd "ESC") nil)
+;; (define-key (current-global-map) (kbd "M-x") 'execute-extended-command)
 
 (load (locate-library "term/xterm"))
 
