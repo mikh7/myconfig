@@ -110,7 +110,7 @@ For generic-mode, each element is quoted. For generic, each element is unchanged
 	; Jambase built-in targets
 	(generic-make-keywords-list
 	 (list
-	  "all" "clean" "dirs" "exe" "files" "first" "install" "lib" "obj" "shell" "uninstall")
+	  "all" "clean" "dirs" "exe" "files" "first" "install" "import" "using" "alias" "lib" "obj" "shell" "uninstall")
 	 'font-lock-builtin-face)
 
 	; Jambase built-in variables
