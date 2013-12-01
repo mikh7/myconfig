@@ -3,4 +3,4 @@
 	url = git@github.com:bogolisk/egg
 [submodule "elisp/site-lisp/evil"]
 	path = elisp/site-lisp/evil
-	url = git://gitorious.org/evil/evil.git
+	url = ssh://momoland.openchat.com:22/home/max/cvs/evil
