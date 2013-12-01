@@ -1265,6 +1265,10 @@ Example usage would be '(help-mode view-mode).
 (add-to-list 'auto-mode-alist (cons "zalias$" 'shell-script-mode))
 (add-to-list 'auto-mode-alist (cons "/X11.+app-override/" 'conf-xdefaults-mode))
 (add-to-list 'auto-mode-alist (cons "\\.\\(ofx\\|qfx\\)$" 'nxml-mode))
+
+(when (require-if-available 'jam-mode) 
+  (add-to-list 'auto-mode-alist (cons "\\.\\(jam\\)$" 'jam-mode)))
+
 (setq auto-mode-case-fold t)
 
 (require-if-available 'my-nxml-mode-setup)
