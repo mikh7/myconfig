@@ -1,0 +1,6 @@
+[submodule "elisp/site-lisp/egg"]
+	path = elisp/site-lisp/egg
+	url = git@github.com:bogolisk/egg
+[submodule "elisp/site-lisp/evil"]
+	path = elisp/site-lisp/evil
+	url = git://gitorious.org/evil/evil.git
