@@ -840,4 +840,23 @@ is formatted to:
                        (forward-sexp 1)))
                    (mapconcat #'identity (cons word2 (nreverse specializers)) " ")))))))))
 
+
+;; Emacs lisp mode
+(defun mgm-after-emacs-lisp-mode ()
+  (when (fboundp 'paredit-mode)
+    (paredit-mode))
+  (when (fboundp 'eldoc-mode)
+    (eldoc-mode))
+  (when (fboundp 'paredit-magic-mode)
+    (paredit-magic-mode)))
+
+
+(define-key emacs-lisp-mode-map "\C-c\C-c" 'eval-defun)
+(define-key lisp-interaction-mode-map "\C-c\C-c" 'eval-defun)
+
+(evil-define-key 'normal emacs-lisp-mode-map ",b" 'edebug-set-breakpoint)
+(evil-define-key 'normal emacs-lisp-mode-map ",e" 'eval-expression)
+(evil-define-key 'normal emacs-lisp-mode-map "ze" 'eval-expression)
+
+
 (provide 'my-lisp-mode-setup)

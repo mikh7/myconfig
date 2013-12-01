@@ -430,17 +430,6 @@ If ALL-FRAMES is anything else, count only the selected frame."
 (require 'edebug)
 (define-key edebug-mode-map [f6] 'edebug-next-mode)
 
-(defun mgm-after-emacs-lisp-mode ()
-  (when (fboundp 'paredit-mode)
-    (paredit-mode))
-  (when (fboundp 'eldoc-mode)
-    (eldoc-mode))
-  (when (fboundp 'paredit-magic-mode)
-    (paredit-magic-mode)))
-
-(define-key emacs-lisp-mode-map "\C-c\C-c" 'eval-defun)
-(define-key lisp-interaction-mode-map "\C-c\C-c" 'eval-defun)
-
 (defun mgm-after-lisp-interaction-mode ()
   (when (fboundp 'paredit-mode)
     (paredit-mode))
