@@ -73,3 +73,5 @@ hglm () {
 
 alias ms=makeserver
 alias showdpms='xset -q | grep -A1 DPMS'
+
+alias vi='connect-emacs emacs'

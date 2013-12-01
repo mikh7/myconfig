@@ -273,8 +273,12 @@ If ALL-FRAMES is anything else, count only the selected frame."
     (send-string-to-terminal "\e[?1l")
     (define-key (get-input-decode-map) "\eO" nil)
     (cond ((fboundp 'set-input-meta-mode)
-           (set-input-meta-mode t))
+           (set-input-meta-mode t nil))
           (t (set-input-mode t nil t)))))
+
+;; instead we redefine evil-esc not to use sit-for
+;; (define-key (current-global-map) (kbd "ESC") nil)
+;; (define-key (current-global-map) (kbd "M-x") 'execute-extended-command)
 
 (load (locate-library "term/xterm"))
 
@@ -1250,6 +1254,10 @@ Example usage would be '(help-mode view-mode).
 (add-to-list 'auto-mode-alist (cons "zalias$" 'shell-script-mode))
 (add-to-list 'auto-mode-alist (cons "/X11.+app-override/" 'conf-xdefaults-mode))
 (add-to-list 'auto-mode-alist (cons "\\.\\(ofx\\|qfx\\)$" 'nxml-mode))
+
+(when (require-if-available 'jam-mode) 
+  (add-to-list 'auto-mode-alist (cons "\\.\\(jam\\)$" 'jam-mode)))
+
 (setq auto-mode-case-fold t)
 
 (require-if-available 'my-nxml-mode-setup)

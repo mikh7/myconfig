@@ -113,7 +113,7 @@ for the diff switches"
 (defun my-egg-status (&optional arg)
   "Call `egg-status' with T parameter so it switches to status buffer"
   (interactive)
-  (egg-status t nil)
+  (egg-status t t)
   ;; (egg-buffer-hide-section-type :diff)
   )
 
