@@ -86,7 +86,7 @@ for the diff switches"
     (remove-from-list 'evil-emacs-state-modes mode)
     (remove-from-list 'evil-insert-state-modes mode)
     (evil-give-back-keys-in-mode modes)
-    (evil-define-key 'normal ode-map ";v" egg-file-cmd-map)))
+    (evil-define-key 'normal-mode-map ";v" egg-file-cmd-map)))
 
 (dolist (mode '(egg-commit-buffer-mode vc-git-log-edit-mode))
   (remove-from-list 'evil-normal-state-modes mode)
@@ -102,7 +102,7 @@ for the diff switches"
 (defun my-egg-log (&optional arg)
   "Call `egg-log' with T parameter so it switches to status buffer"
   (interactive)
-  (egg-log t)
+  (call-interactively 'egg-log)
   ;; (egg-buffer-hide-section-type :diff)
   )
 
