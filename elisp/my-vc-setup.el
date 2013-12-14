@@ -370,6 +370,10 @@ operation."
   (defadvice egg-add-log-message (after evil-go-insert activate)
     (evil-insert-state)))
 
+(when (fboundp 'egg-commit-log-edit)
+  (defadvice egg-commit-log-edit (after evil-go-insert activate)
+    (evil-insert-state)))
+
 ;; done in the end of my-emacs-setup anyway
 ;; (viper-apply-major-mode-modifiers)
 
