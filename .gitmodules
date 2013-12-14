@@ -1,6 +1,6 @@
 [submodule "elisp/site-lisp/egg"]
 	path = elisp/site-lisp/egg
-	url = git@github.com:bogolisk/egg
+        url = ssh://momoland.openchat.com:22/home/max/cvs/egg
 [submodule "elisp/site-lisp/evil"]
 	path = elisp/site-lisp/evil
 	url = ssh://momoland.openchat.com:22/home/max/cvs/evil
