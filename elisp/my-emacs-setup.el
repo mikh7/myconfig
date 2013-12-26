@@ -739,19 +739,21 @@ If ALL-FRAMES is anything else, count only the selected frame."
 
 (require-if-available 'wgrep)
 
+;; Its fixed in emacs 24
+(unless (>= emacs-major-version 24)
+  (remove-from-list 'compilation-error-regexp-alist 'gcc-include)
+  (add-to-list 'compilation-error-regexp-alist 'gcc-include t)
+
+  (setcdr (assoc 'gcc-include compilation-error-regexp-alist-alist)
+          '("^\\(?:In file included \\|                 \\|\t\\)from \
+\\([0-9]*[^0-9\n]\\(?:[^\n :]\\| [^-/\n]\\|:[^ \n]\\)*?\\):\
+\\([0-9]+\\)\\(?::\\([0-9]+\\)\\)?\\(?:\\(:\\)\\|\\(,\\|$\\)\\)?"
+            1 2 3 (4 . 5))))
 ;; need to put "in file included from" regexp last
 ;; otherwise it gets borked by others after it
 ;; 
 ;; Fixes the problem with in file included from error
 ;; having incorrect file name
-(remove-from-list 'compilation-error-regexp-alist 'gcc-include)
-(add-to-list 'compilation-error-regexp-alist 'gcc-include t)
-
-(setcdr (assoc 'gcc-include compilation-error-regexp-alist-alist)
-        '("^\\(?:In file included \\|                 \\|\t\\)from \
-\\([0-9]*[^0-9\n]\\(?:[^\n :]\\| [^-/\n]\\|:[^ \n]\\)*?\\):\
-\\([0-9]+\\)\\(?::\\([0-9]+\\)\\)?\\(?:\\(:\\)\\|\\(,\\|$\\)\\)?"
-          1 2 3 (4 . 5)))
 
 ;; (remove-hook 'grep-mode-hook 
 ;;           (lambda ()
