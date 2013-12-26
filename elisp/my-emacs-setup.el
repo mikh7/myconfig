@@ -330,6 +330,8 @@ If ALL-FRAMES is anything else, count only the selected frame."
 
 ;; remove facemenu binding, as it conflics with ESC o
 (define-key global-map "\M-o" nil)
+;; fixes C-u + function keys on terminal
+(define-key universal-argument-map "\e" nil)
     
 (fix-keys) ; need this for emacs 22
 
