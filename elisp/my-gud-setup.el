@@ -1,6 +1,10 @@
 
 (require 'gud)
 
+(defun my-gdb-input (command callback)
+  (if (eql emacs-major-version 24)
+      (gdb-input command callback)
+    (gdb-input (list command callback))))
 
 (defvar gud-popups t
   "If true then GDB buffers will popup on activity. This is
@@ -141,11 +145,11 @@ newest executable file in the directory containing CMakeCache.txt
 
 (defun my-gdb-send-args-and-run ()
   (when my-gdb-args
-    (gdb-input (list (format "-exec-arguments %s" args)
-                     'ignore))
+    (my-gdb-input (format "-exec-arguments %s" args)
+                  'ignore)
     (comint-add-to-input-history (format "set args %s" args)))
-  ;; (gdb-input (list "-gdb-set target-async 1"
-  ;;                  (lambda () (gdb-input (list "-exec-run" 'ignore)))))
+  ;; (my-gdb-input "-gdb-set target-async 1"
+  ;;               (lambda () (my-gdb-input "-exec-run" 'ignore)))
   )
 
 (defun my-gdb-start-hook ()
@@ -320,12 +324,12 @@ ARGUMENTS program arguments.
                 (when gdb-threads-list
                   (if (y-or-n-p "This program is running, kill it? ")
                       (progn
-                        (gdb-input (list "kill" 'ignore))
+                        (my-gdb-input "kill" 'ignore)
                         (sit-for 0))
                     (error "Program is already running")))
-                (gdb-input (list (format "file %S"
-                                         program)
-                                 'ignore))
+                (my-gdb-input (format "file %S"
+                                      program)
+                              'ignore)
                 (my-gdb-send-args-and-run)))))))))
 
 (defun my-kill-gdb (arg)
