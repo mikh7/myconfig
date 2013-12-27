@@ -134,7 +134,7 @@
   (c-electric-star nil)
   (let ((comment (save-excursion
                    (comment-beginning)))
-        (in-string-p (in-string-p)))
+        (in-string-p (my-in-string-p)))
     (if (or (and (not comment)
                  (not in-string-p))
             (and comment

@@ -145,11 +145,11 @@ Example usage:
 (defun tempo-space ()
   "Expand tempo space when not in comment or string"
   (interactive "*")
-  (let ((comment
-         (save-excursion (comment-beginning)))
-        (in-string-p (unless (eq major-mode 'sh-mode)
-                       (in-string-p)))
-        (expand-abbrev nil))
+  (let* ((comment
+          (save-excursion (comment-beginning)))
+         (in-string-p (unless (or comment (eq major-mode 'sh-mode))
+                        (my-in-string-p)))
+         (expand-abbrev nil))
     (if (or (and (not comment)
                  (not in-string-p))
             (and comment

@@ -1167,6 +1167,9 @@ Example usage would be '(help-mode view-mode).
 ;;;
 
 
+(defun my-in-string-p ()
+  (ignore-errors (in-string-p)))
+
 (ignore-errors
   (require 'my-tempo-setup))
 
