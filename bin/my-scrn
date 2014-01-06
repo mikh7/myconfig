@@ -16,7 +16,7 @@ case $OSTYPE ; in
                 screens=/tmp/screens 
                 ;;
   linux*)  
-                if [[ -f /etc/redhat-release ]] ; then
+                if [[ -f /etc/redhat-release || -f /etc/centos-release ]] ; then
                   screens=/tmp/uscreens
                 else
                   screens=/var/run/uscreens 

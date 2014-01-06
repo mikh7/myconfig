@@ -124,3 +124,4 @@ export DICT=/usr/share/dict/words
 # for $EPOCHSECONDS
 zmodload zsh/datetime
 export BROWSER=url
+export LBM_LICENSE_INFO="Organization=Velio Systems:Expiration-Date=never:License-Key=9D98 2C9E 0622 9322"
