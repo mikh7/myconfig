@@ -1024,9 +1024,9 @@ Example usage would be '(help-mode view-mode).
 (require-if-available 'my-kmacro-setup)
 (require-if-available 'my-wl-setup)
 
-;; (require 'autoinsert)
-;; (auto-insert-mode nil)
-;; (setq auto-insert-query nil)
+(require 'autoinsert)
+(auto-insert-mode 1)
+(setq auto-insert-query t)
 
 (ignore-errors
   (when (require-if-available 'org)
@@ -1261,6 +1261,7 @@ Example usage would be '(help-mode view-mode).
 (add-to-list 'auto-mode-alist (cons "zalias$" 'shell-script-mode))
 (add-to-list 'auto-mode-alist (cons "/X11.+app-override/" 'conf-xdefaults-mode))
 (add-to-list 'auto-mode-alist (cons "\\.\\(ofx\\|qfx\\)$" 'nxml-mode))
+(add-to-list 'auto-mode-alist (cons "\\.\\(h\\|hh\\)$" 'c++-mode))
 
 (when (require-if-available 'jam-mode) 
   (add-to-list 'auto-mode-alist (cons "\\.\\(jam\\)$" 'jam-mode)))
