@@ -1,6 +1,8 @@
 iprint Running ~/.zshrc
 
-unalias which
+if alias -L which >/dev/null ; then
+    unalias which
+fi
 
 # for reloading
 setopt typeset_silent
