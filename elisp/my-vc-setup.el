@@ -8,6 +8,8 @@
 (require 'vc-git)
 (require 'egg)
 
+(defalias 'egg-find-file-at-point 'find-file-at-point)
+
 (defvar vc-diff-switches-history nil
   "History for vc-diff command switches")
 
