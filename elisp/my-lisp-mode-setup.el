@@ -47,6 +47,8 @@
 (put :module 'common-lisp-indent-function
      '(4 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 &rest 1))
 
+(put :signals 'common-lisp-indent-function '(nil))
+
 (font-lock-add-keywords 'lisp-mode lisp-font-lock-keywords-2 'set)
 
 
