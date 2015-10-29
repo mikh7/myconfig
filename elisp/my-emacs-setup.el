@@ -615,7 +615,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
 (define-key evil-normal-state-map "," (make-sparse-keymap))
 (define-key evil-normal-state-map ";c" 'comment-dwim)
 (define-key evil-visual-state-map ";c" 'comment-dwim)
-(define-key evil-normal-state-map "zz" nil)
+(define-key evil-normal-state-map "zz" 'my-compile)
 (define-key evil-normal-state-map "\C-c\C-g" nil)
 (define-key evil-motion-state-map (kbd "TAB") 'my-exec-key-in-emacs)
 (define-key evil-insert-state-map (kbd "TAB") 'my-exec-key-in-emacs)
@@ -1427,6 +1427,7 @@ All functions so advised will strive to maintain the same column."
            (compile compile-command)))))
 
 (global-set-key [(f7)] 'my-compile)
+(define-key global-map "\M-gc" 'my-compile)
 
 (global-set-key "\C-cf" nil)
 (global-set-key "\C-c\C-k" nil)

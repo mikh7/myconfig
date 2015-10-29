@@ -7,7 +7,7 @@
 [merge]
 	tool = ediff
 [user]
-	email = max@openchat.com
+	email = max@henningcarey.com
 	name = Max Mikhanosha
 [diff "lisp"]
         xfuncname="^(\\(def.*)$"
