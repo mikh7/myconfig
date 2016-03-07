@@ -110,6 +110,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
 ;; (require-if-available 'ehelp)
 (setq-default help-char 0)      ;; Allow using Ctrl-H as normal key
 (setq help-char 0)                ;; Allow using Ctrl-H as normal key
+(global-set-key "\M-gh" help-map)
 (setq help-event-list '(f1))
 (setq interprogram-cut-function 'x-select-text)
 (setq x-select-enable-clipboard t)
