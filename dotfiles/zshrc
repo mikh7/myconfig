@@ -435,7 +435,7 @@ if [[ -z $LESS && -x /usr/bin/less ]] ; then
   export LESSOPEN LESSCLOSE LESS LESSKEY PAGER LESS_ADVANCED_PREPROCESSOR MORE
 fi
 export LESSHISTFILE=~/.lesshist
-LESS+=" -X"
+LESS+=" -X -r"
 #
 # Set INFOPATH to tell xemacs where he can find the info files
 #
