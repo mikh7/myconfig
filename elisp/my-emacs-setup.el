@@ -1592,5 +1592,8 @@ C-u argument surround it by double-quotes"
 
 (add-to-list 'auto-mode-alist (cons "\\.pyc_dis\\'" 'python-mode))
 
+(require 'diff)
+(evil-define-key 'motion diff-mode-map "za" 'diff-apply-hunk)
+
 (random t)
 

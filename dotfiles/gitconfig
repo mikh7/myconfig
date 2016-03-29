@@ -11,3 +11,5 @@
 	name = Max Mikhanosha
 [diff "lisp"]
         xfuncname="^(\\(def.*)$"
+[push]
+	default = matching
