@@ -264,23 +264,23 @@ of the form (UPAT EXP)."
            (used-cases ())
            (main
             (pcase--u
-             (mapcar (lambda (case)
-                       `((match ,val . ,(car case))
+             (mapcar (lambda (acase)
+                       `((match ,val . ,(car acase))
                          ,(lambda (vars)
-                            (unless (memq case used-cases)
+                            (unless (memq acase used-cases)
                               ;; Keep track of the cases that are used.
-                              (push case used-cases))
+                              (push acase used-cases))
                             (funcall
-                             (if (pcase--small-branch-p (cdr case))
+                             (if (pcase--small-branch-p (cdr acase))
                                  ;; Don't bother sharing multiple
                                  ;; occurrences of this leaf since it's small.
                                  #'pcase-codegen codegen)
-                             (cdr case)
+                             (cdr acase)
                              vars))))
                      cases))))
-      (dolist (case cases)
-        (unless (or (memq case used-cases) (eq (car case) 'pcase--dontcare))
-          (message "Redundant pcase pattern: %S" (car case))))
+      (dolist (acase cases)
+        (unless (or (memq acase used-cases) (eq (car acase) 'pcase--dontcare))
+          (message "Redundant pcase pattern: %S" (car acase))))
       (macroexp-let* defs main))))
 
 (defun pcase-codegen (code vars)
@@ -755,5 +755,6 @@ Otherwise, it defers to REST which is a list of branches of the form
    (t (error "Unknown QPattern %s" qpat))))
 
 
+(provide 'pcase-copy)
 (provide 'pcase)
 ;;; pcase.el ends here

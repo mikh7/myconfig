@@ -3,6 +3,15 @@
 ;; (from some japanese website with too long url...)
 
 (require 'server)
+(unless (fboundp 'defvar-local)
+  (defmacro defvar-local (var val &optional docstring)
+    "Define VAR as a buffer-local variable with default value VAL.                
+Like `defvar' but additionally marks the variable as being automatically        
+buffer-local wherever it is set."
+    (declare (debug defvar) (doc-string 3))
+    ;; Can't use backquote here, it's too early in the bootstrap.                 
+    (list 'progn (list 'defvar var val docstring)
+          (list 'make-variable-buffer-local (list 'quote var)))))
 
 (defmacro log-sexp (&rest exprs)
   (let* ((first t)

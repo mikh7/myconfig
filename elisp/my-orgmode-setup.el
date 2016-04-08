@@ -1,14 +1,24 @@
+
+;; (eval-when-compile
+;;   (when (file-directory-p "~/.emacs.d/org-mode")
+;;     (add-to-list 'load-path "~/.emacs.d/org-mode/lisp")
+;;     (add-to-list 'load-path "~/.emacs.d/org-mode/contrib/lisp"))
+;;   (require 'org-compat)
+;;   (require 'macroexp-copy)
+;;   (require 'pcase-copy))
+
+(require 'org-compat)
 (require 'org)
 (require 'org-agenda)
-(require 'org-depend)
-(require 'org-clock)
-(require 'org-id)
+(require-if-available 'org-depend)
+(require-if-available 'org-clock)
+(require-if-available 'org-id)
 (require 'reveal)
-(require 'org-habit)
-(require 'org-mobile)
-(require 'org-src)
-(require 'org-element)
-(require 'org-wl)
+(require-if-available 'org-habit)
+(require-if-available 'org-mobile)
+(require-if-available 'org-src)
+(require-if-available 'org-element)
+(require-if-available 'org-wl)
 
 
 (unless (fboundp 'org-mode-p)
