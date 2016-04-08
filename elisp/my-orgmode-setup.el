@@ -1,11 +1,12 @@
 
-;; (eval-when-compile
-;;   (when (file-directory-p "~/.emacs.d/org-mode")
-;;     (add-to-list 'load-path "~/.emacs.d/org-mode/lisp")
-;;     (add-to-list 'load-path "~/.emacs.d/org-mode/contrib/lisp"))
-;;   (require 'org-compat)
-;;   (require 'macroexp-copy)
-;;   (require 'pcase-copy))
+(eval-when-compile
+  (when (file-directory-p "~/.emacs.d/org-mode")
+    (add-to-list 'load-path "~/.emacs.d/org-mode/lisp")
+    (add-to-list 'load-path "~/.emacs.d/org-mode/contrib/lisp"))
+  (require 'org-compat)
+  ;; (require 'macroexp-copy)
+  ;; (require 'pcase-copy)
+  )
 
 (require 'org-compat)
 (require 'org)
