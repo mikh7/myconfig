@@ -8,4 +8,4 @@ scrot -s "/tmp/shot$$.png"
 uploadImage "/tmp/shot$$.png" | xclip -selection c
 rm "/tmp/shot$$.png"
 notify-send "Done"
-
+exec gnome-screenshot -a

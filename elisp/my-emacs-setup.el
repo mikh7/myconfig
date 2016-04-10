@@ -151,6 +151,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
 (global-set-key (kbd "M-v") 'scroll-other-window)
 (global-set-key (kbd "M-n") 'scroll-other-window-down)
 (global-set-key (kbd "M-V") 'scroll-other-window-down)
+;;(global-set-key "\C-q\C-q" 'quoted-insert)
 
 ;; dont want emacs stalled under heavy io
 (setq write-region-inhibit-fsync t)

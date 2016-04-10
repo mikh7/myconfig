@@ -1047,3 +1047,14 @@
                    (setf (group-name group) (gdump-name dump))
                    (grestore)))))
         (error "Invalid dump")))))
+
+(defcommand save (file) ((:rest "Base file name: "))
+  "Restores the group and rules from the specified file"
+  (let* ((group-file (concat file ".group"))
+         (rules-file (concat file ".rules"))
+         (group (current-group))
+         (*window-placement-rules*
+           (remove (group-name (current-group)) *window-placement-rules*
+                   :key #'first :test-not #'equal)))
+    (dump-group-to-file group-file)
+    (dump-window-placement-rules rules-file)))
