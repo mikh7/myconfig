@@ -119,6 +119,7 @@ setprompt () {
         PR_URCORNER=${altchar[k]:--}
 
         PR_HOST=$HOST[1,4]
+        PR_HOST2=$HOST
 
         
     ###
@@ -131,7 +132,7 @@ setprompt () {
 	        ;;
 	    screen*)
 	    #PR_TITLEBAR=$'%{\e_screen \005 (\005t) | %(!.-=[ROOT]=- | .)%n@%m:%~ | ${COLUMNS}x${LINES} | %y\e\\%}'
-	        PR_TITLEBAR=$'%{\e_${PR_JOB}%~%(!.#.) - ${PR_HOST}/\005 ${COLUMNS}x${LINES}\e\\%}'
+	        PR_TITLEBAR=$'%{\e_${PR_JOB}%~%(!.#.) - ${PR_HOST2}/\005 ${COLUMNS}x${LINES}\e\\%}'
 	        ;;
 	    *)
 	        PR_TITLEBAR=''

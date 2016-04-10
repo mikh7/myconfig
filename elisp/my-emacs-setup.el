@@ -3,6 +3,15 @@
 ;; (from some japanese website with too long url...)
 
 (require 'server)
+(unless (fboundp 'defvar-local)
+  (defmacro defvar-local (var val &optional docstring)
+    "Define VAR as a buffer-local variable with default value VAL.                
+Like `defvar' but additionally marks the variable as being automatically        
+buffer-local wherever it is set."
+    (declare (debug defvar) (doc-string 3))
+    ;; Can't use backquote here, it's too early in the bootstrap.                 
+    (list 'progn (list 'defvar var val docstring)
+          (list 'make-variable-buffer-local (list 'quote var)))))
 
 (defmacro log-sexp (&rest exprs)
   (let* ((first t)
@@ -110,6 +119,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
 ;; (require-if-available 'ehelp)
 (setq-default help-char 0)      ;; Allow using Ctrl-H as normal key
 (setq help-char 0)                ;; Allow using Ctrl-H as normal key
+(global-set-key "\M-gh" help-map)
 (setq help-event-list '(f1))
 (setq interprogram-cut-function 'x-select-text)
 (setq x-select-enable-clipboard t)
@@ -616,7 +626,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
 (define-key evil-normal-state-map "," (make-sparse-keymap))
 (define-key evil-normal-state-map ";c" 'comment-dwim)
 (define-key evil-visual-state-map ";c" 'comment-dwim)
-(define-key evil-normal-state-map "zz" nil)
+(define-key evil-normal-state-map "zz" 'my-compile)
 (define-key evil-normal-state-map "\C-c\C-g" nil)
 (define-key evil-motion-state-map (kbd "TAB") 'my-exec-key-in-emacs)
 (define-key evil-insert-state-map (kbd "TAB") 'my-exec-key-in-emacs)
@@ -1428,6 +1438,7 @@ All functions so advised will strive to maintain the same column."
            (compile compile-command)))))
 
 (global-set-key [(f7)] 'my-compile)
+(define-key global-map "\M-gc" 'my-compile)
 
 (global-set-key "\C-cf" nil)
 (global-set-key "\C-c\C-k" nil)
@@ -1590,6 +1601,9 @@ C-u argument surround it by double-quotes"
   (setq zoom-frame/buffer 'buffer))
 
 (add-to-list 'auto-mode-alist (cons "\\.pyc_dis\\'" 'python-mode))
+
+(require 'diff)
+(evil-define-key 'motion diff-mode-map "za" 'diff-apply-hunk)
 
 (random t)
 

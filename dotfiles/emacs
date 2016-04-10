@@ -14,10 +14,10 @@
 ;;===========  do not modify below this line ====================;
 
 (custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
+  ;; custom-set-variables was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
  '(Info-isearch-search nil)
  '(backup-by-copying-when-linked t)
  '(backward-delete-char-untabify-method (quote hungry))
@@ -98,7 +98,7 @@
  '(python-indent 2)
  '(python-indent-guess-indent-offset nil)
  '(python-indent-offset 2)
- '(safe-local-variable-values (quote ((Package . CL-PPCRE) (Package . metabang\.math) (Package ITERATE :use "COMMON-LISP" :colon-mode :external) (syntax . COMMON-LISP) (Syntax . Common-Lisp) (Syntax . ANSI-Common-Lisp) (Syntax . COMMON-LISP) (Package . CL-USER) (Base . 10) (unibyte . t))))
+ '(safe-local-variable-values (quote ((sgml-basic-offset . 4) (Package . CL-PPCRE) (Package . metabang\.math) (Package ITERATE :use "COMMON-LISP" :colon-mode :external) (syntax . COMMON-LISP) (Syntax . Common-Lisp) (Syntax . ANSI-Common-Lisp) (Syntax . COMMON-LISP) (Package . CL-USER) (Base . 10) (unibyte . t))))
  '(save-place t nil (saveplace))
  '(scroll-bar-mode (quote right))
  '(search-invisible nil)
