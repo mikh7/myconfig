@@ -6,7 +6,9 @@
 
 # Short curretn dirdir
 #
-# <user@host:~/myconfig/dotfiles> |
+
+# <host:~/myconfig/dotfiles> |
+
 #
 # Long current dir
 #
@@ -118,8 +120,27 @@ setprompt () {
         PR_LRCORNER=${altchar[j]:--}
         PR_URCORNER=${altchar[k]:--}
 
-        PR_HOST=$HOST[1,4]
-        PR_HOST2=$HOST
+
+        case $HOST ; in
+            (*.*.veliosystems.com)
+            # velio special, from blahcrapblah.sec1 or blahcrapblah.aur1 I want
+            # the sec1 part in front
+            #
+            # so for backtest1.sec1.veliosystems.com => SEC1.backtest1
+            # and for mgrigorian-server1.aur1 => AUR1.mgrigorian-server1
+            function {
+                local host=${${(s:.:)HOST}[1]} site=${${(s:.:U)HOST}[2]}
+                PR_HOST=$site.$host
+                PR_HOST2=$site.$host
+            }
+            ;;
+            (*)
+            # default
+            PR_HOST=$HOST[1,4]
+            PR_HOST2=$HOST
+            ;;
+        esac
+        
 
         
     ###
@@ -128,11 +149,11 @@ setprompt () {
         case $TERM in
 	    xterm*)
 	    #PR_TITLEBAR=$'%{\e]0;%(!.-=*[ROOT]*=- | .)%n@%m:%~ | ${COLUMNS}x${LINES} | %y\a%}'
-	        PR_TITLEBAR=$'%{\e]0;${PR_JOB}%~%(!.#.) - ${PR_HOST} ${COLUMNS}x${LINES}\a%}'
+	        PR_TITLEBAR=$'%{\e]0;${PR_HOST}${PR_JOB}%~%(!.#.)\a%}'
 	        ;;
 	    screen*)
 	    #PR_TITLEBAR=$'%{\e_screen \005 (\005t) | %(!.-=[ROOT]=- | .)%n@%m:%~ | ${COLUMNS}x${LINES} | %y\e\\%}'
-	        PR_TITLEBAR=$'%{\e_${PR_JOB}%~%(!.#.) - ${PR_HOST2}/\005 ${COLUMNS}x${LINES}\e\\%}'
+	        PR_TITLEBAR=$'%{\ek${PR_HOST}${PR_JOB}:%~%(!.#.)\e\\%}'
 	        ;;
 	    *)
 	        PR_TITLEBAR=''
@@ -198,3 +219,5 @@ setprompt
 function reload-prompt() {
     . ~/myconfig/dotfiles/zsh-prompt
 }
+
+export PR_HOST PR_HOST2
