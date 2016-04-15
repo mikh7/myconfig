@@ -1,12 +1,5 @@
 
-(eval-when-compile
-  (when (file-directory-p "~/.emacs.d/org-mode")
-    (add-to-list 'load-path "~/.emacs.d/org-mode/lisp")
-    (add-to-list 'load-path "~/.emacs.d/org-mode/contrib/lisp"))
-  (require 'org-compat)
-  ;; (require 'macroexp-copy)
-  ;; (require 'pcase-copy)
-  )
+
 
 (require 'org-compat)
 (require 'org)
@@ -26,6 +19,18 @@
   (defun org-mode-p ()
     (eq major-mode 'org-mode)))
 
+(unless (fboundp 'org-get-at-bol)
+  (defun org-get-at-bol (property)
+    "Get text property PROPERTY at beginning of line."
+    (get-text-property (point-at-bol)  property)))
+
+(unless (fboundp 'org-agenda-next-line)
+  (defun org-agenda-next-line ()
+    (interactive)
+    (call-interactively 'next-line))
+  (defun org-agenda-previous-line ()
+    (interactive)
+    (call-interactively 'previous-line)))
 
 (dolist (mode '(org-mode org-agenda-mode))
   (remove-from-list 'evil-emacs-state-modes mode)
@@ -817,7 +822,7 @@ any children"
 
 ;; remember setup
 
-(require 'org-capture)
+(require-if-available 'org-capture)
 
 
 (defun my-org-maybe-go-insert ()
@@ -858,9 +863,10 @@ any children"
         ("a" "Account" entry (file+headline "Assorted_Accounts.org" "Assorted Accounts")
          "* %?\n%U\n%a\n  %i" :clock-in nil :clock-resume nil)))
 
-(define-key global-map "\C-cc" 'org-capture)
-(define-key org-capture-mode-map "\C-cr" 'org-capture-refile)
-(define-key global-map "\C-cd" 'mm/jump-to-diary)
+(when (fboundp 'org-capture-refile) 
+  (define-key global-map "\C-cc" 'org-capture) 
+  (define-key org-capture-mode-map "\C-cr" 'org-capture-refile) 
+  (define-key global-map "\C-cd" 'mm/jump-to-diary))
 
 (defun mm/jump-to-diary ()
   (interactive)
@@ -1736,7 +1742,7 @@ Returns the new TODO keyword, or nil if no state change should occur."
       (goto-char start) 
       (mm/refile-to-diary ts))))
 
-(require 'ox-gfm)
+(require-if-available 'ox-gfm)
 
 (provide 'my-orgmode-setup)
 

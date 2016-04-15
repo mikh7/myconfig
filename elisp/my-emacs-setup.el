@@ -1038,7 +1038,17 @@ Example usage would be '(help-mode view-mode).
 (auto-insert-mode 1)
 (setq auto-insert-query t)
 
+(eval-when-compile
+  (when (file-directory-p "~/.emacs.d/org-mode")
+    (add-to-list 'load-path "~/.emacs.d/org-mode/lisp")
+    (add-to-list 'load-path "~/.emacs.d/org-mode/contrib/lisp"))
+  (require 'org-compat)
+  ;; (require 'macroexp-copy)
+  ;; (require 'pcase-copy)
+  )
+
 (ignore-errors
+  
   (when (require-if-available 'org)
     (require 'my-orgmode-setup)))
 

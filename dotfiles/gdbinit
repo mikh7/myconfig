@@ -21,6 +21,12 @@ from printers import register_libstdcxx_printers
 register_libstdcxx_printers (gdb.current_objfile())
 end
 
+python
+import sys
+import os
+sys.path.insert(0, os.path.expanduser('~/myconfig/gdb/boost'))
+from boost.printers import register_printer_gen
+register_printer_gen(None)
+end
 
-set print asm-demangle on
 set print static-member off
