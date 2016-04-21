@@ -856,7 +856,7 @@ is formatted to:
 
 (evil-define-key 'normal emacs-lisp-mode-map ",b" 'edebug-set-breakpoint)
 (evil-define-key 'normal emacs-lisp-mode-map ",e" 'eval-expression)
-(evil-define-key 'normal emacs-lisp-mode-map "ze" 'eval-expression)
+(evil-define-key 'normal emacs-lisp-mode-map "ze" 'eval-last-sexp)
 
 
 (provide 'my-lisp-mode-setup)
