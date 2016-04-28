@@ -20,11 +20,11 @@
     (mtt-set-last-title title)
     (cond ((string-match "^xterm" (tty-type))
            (send-string-to-terminal 
-            (format "\e]0;%s %s - Emacs\a" 
+            (format "\e]0;(%s) %s\a" 
                     (mygetenv "PR_HOST" (selected-frame)) title)))
           ((string-match "^screen" (tty-type))
            (send-string-to-terminal 
-            (format "\e_(%s \005n) %s \e\\" 
+            (format "\e_(%s \005n) %s\e\\" 
                     (mygetenv "PR_HOST" (selected-frame)) title))))))
 
 (defun mtt-track-title ()

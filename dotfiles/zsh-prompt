@@ -81,7 +81,7 @@ zsh-prompt-preexec () {
         local -a cmd
         cmd=($=CMD)
         CMD=$cmd[1,4]
-        PR_JOB=" [$CMD]"
+        PR_JOB=" [$CMD] "
         if [[ ! $PR_JOB == *xdotool* ]] ; then
             echo -nE ${(%e)PR_TITLEBAR}
         fi
