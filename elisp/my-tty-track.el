@@ -24,7 +24,7 @@
                     (mygetenv "PR_HOST" (selected-frame)) title)))
           ((string-match "^screen" (tty-type))
            (send-string-to-terminal 
-            (format "\e_%s (vi %s) - screen \005n\e\\" 
+            (format "\e_(%s \005n) %s \e\\" 
                     (mygetenv "PR_HOST" (selected-frame)) title))))))
 
 (defun mtt-track-title ()
