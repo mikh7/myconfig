@@ -81,7 +81,7 @@ zsh-prompt-preexec () {
         local -a cmd
         cmd=($=CMD)
         CMD=$cmd[1,4]
-        PR_JOB=" [$CMD] "
+        PR_JOB=" [$CMD]"
         if [[ ! $PR_JOB == *xdotool* ]] ; then
             echo -nE ${(%e)PR_TITLEBAR}
         fi
@@ -157,7 +157,7 @@ setprompt () {
         case $TERM in
 	    xterm*)
 	    #PR_TITLEBAR=$'%{\e]0;%(!.-=*[ROOT]*=- | .)%n@%m:%~ | ${COLUMNS}x${LINES} | %y\a%}'
-	        PR_TITLEBAR=$'%{\e]0;${PR_HOST}${PR_JOB}%~%(!.#.)\a%}'
+	        PR_TITLEBAR=$'%{\e]0;(${PR_HOST})${PR_JOB} %~%(!.#.)\a%}'
 	        ;;
 	    screen*)
 	    #PR_TITLEBAR=$'%{\e_screen \005 (\005t) | %(!.-=[ROOT]=- | .)%n@%m:%~ | ${COLUMNS}x${LINES} | %y\e\\%}'
