@@ -300,6 +300,7 @@ xterm*selectToClipboard: true
 ! Usually one gets hardly any error messages. Try...
 XTerm*StringConversionWarnings: on
 
+! below clears it
 XTerm*VT100.translations: #override \n\
 
 
@@ -376,5 +377,7 @@ XTerm*VT100.translations: #override \n\
                      Meta <Key>: insert-eight-bit() \n \
                      \
 
+
+*VT100.Translations: #override @Alt_R<Key>f: insert-selection(PRIMARY, CUT_BUFFER0)
 
 
