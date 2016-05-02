@@ -14,12 +14,13 @@
     (setq ad-return-value ad-do-it)))
 
 (defadvice comint-read-input-ring (around fix-history activate)
-  (let (tmp) 
+  (let (tmp (comint-input-ring-file-name comint-input-ring-file-name)) 
     (when (and (eq major-mode 'shell-mode)
                (equal (getenv "HISTFILE")
                       comint-input-ring-file-name)
                (setq tmp (getenv "HISTFILE_FOR_EMACS")))
-      (setq comint-input-ring-file-name tmp))))
+      (setq comint-input-ring-file-name tmp))
+    (setq ad-return-value ad-do-it)))
 
 ;; viper comint mode history browsing via jk keys
 

@@ -547,9 +547,6 @@ If ALL-FRAMES is anything else, count only the selected frame."
   (when (file-directory-p "~/.emacs.d/ESS")
     (add-to-list 'load-path "~/.emacs.d/ESS/lisp")))
 
-(when (require-if-available 'ess-site)
-  (require-if-available 'my-ess-setup))
-
 (require 'hexrgb)
 (require 'my-icicles-setup)
 
@@ -1660,6 +1657,9 @@ C-u argument surround it by double-quotes"
 
 (require 'diff)
 (evil-define-key 'motion diff-mode-map "za" 'diff-apply-hunk)
+
+(when (require-if-available 'ess-site)
+  (require-if-available 'my-ess-setup))
 
 (random t)
 
