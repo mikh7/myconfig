@@ -275,7 +275,7 @@ forced"
   (let ((cycle-buffer-filter my-cycle-R-filter)
         (cycle-buffer-filter-extra my-cycle-xshell-filter-extra))
     (condition-case msg 
-        (cycle-buffer arg)
+        (cycle-buffer 4)
       (error 
        (cond ((string-match "^There is no appropriate" (second msg))
               (call-interactively 'R))
