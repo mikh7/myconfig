@@ -44,6 +44,7 @@ not really affect the buffer's content."
            (unless ,modified
              (restore-buffer-modified-p nil)))))))
 
+
 (defmacro log-sexp (&rest exprs)
   (let* ((first t)
          (format
@@ -91,6 +92,10 @@ If ALL-FRAMES is anything else, count only the selected frame."
       (error  (progn (message "Error while loading extension %S: %S"
                               lib err) nil)))))
 
+(unless (require-if-available 'cl-lib) 
+  (require 'cl)
+  (defalias 'cl-remove-if 'remove-if)
+  (defalias 'cl-remove-if-not 'remove-if-not)) 
 
 (require 'view)
 (require 'help-mode)
@@ -538,6 +543,12 @@ If ALL-FRAMES is anything else, count only the selected frame."
 ;(max-color-theme)
 ;(color-theme-vim-colors)
 
+(eval-when-compile
+  (when (file-directory-p "~/.emacs.d/ESS")
+    (add-to-list 'load-path "~/.emacs.d/ESS/lisp")))
+
+(when (require-if-available 'ess-site)
+  (require-if-available 'my-ess-setup))
 
 (require 'hexrgb)
 (require 'my-icicles-setup)
@@ -807,7 +818,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
             (hl-line-mode 1)))
 
 ;; force these modes to start in Evil insert mode
-(dolist (mode '(erc-mode eshell-mode inferior-python-mode))
+(dolist (mode '(erc-mode eshell-mode inferior-python-mode inferior-ess-mode))
   (remove-from-list 'evil-emacs-state-modes mode)
   (add-to-list 'evil-insert-state-modes mode))
 
@@ -1068,18 +1079,20 @@ Example usage would be '(help-mode view-mode).
 (require 'autoinsert)
 (auto-insert-mode 1)
 (setq auto-insert-query t)
+(defvar my-have-ess nil)
 
 (eval-when-compile
   (when (file-directory-p "~/.emacs.d/org-mode")
     (add-to-list 'load-path "~/.emacs.d/org-mode/lisp")
     (add-to-list 'load-path "~/.emacs.d/org-mode/contrib/lisp") 
     (require 'org-compat))
-  (when (file-directory-p "~/.emacs.d/ESS")
-    (add-to-list 'load-path "~/.emacs.d/ESS/lisp"))
+  
   
   ;; (require 'macroexp-copy)
   ;; (require 'pcase-copy)
   )
+
+
 
 (ignore-errors
   
@@ -1648,9 +1661,5 @@ C-u argument surround it by double-quotes"
 (require 'diff)
 (evil-define-key 'motion diff-mode-map "za" 'diff-apply-hunk)
 
-(when (require-if-available 'ess-comp)
-  (require 'ess)
-  ;; my ess setup here
-  )
 (random t)
 

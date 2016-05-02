@@ -12,6 +12,8 @@ termcapinfo xterm-256color "" "Co#256"
 
 term screen-256color
 hardstatus string %h
+# get rid of screen locking binding
+bind "^X"
 
 defscrollback 9000
 defflow auto
