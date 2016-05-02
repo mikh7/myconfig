@@ -13,6 +13,37 @@ buffer-local wherever it is set."
     (list 'progn (list 'defvar var val docstring)
           (list 'make-variable-buffer-local (list 'quote var)))))
 
+(unless (fboundp 'with-silent-modifications) 
+  (defmacro with-silent-modifications (&rest body)
+    "Execute BODY, pretending it does not modify the buffer.
+If BODY performs real modifications to the buffer's text, other
+than cosmetic ones, undo data may become corrupted.
+
+This macro will run BODY normally, but doesn't count its buffer
+modifications as being buffer modifications.  This affects things
+like buffer-modified-p, checking whether the file is locked by
+someone else, running buffer modification hooks, and other things
+of that nature.
+
+Typically used around modifications of text-properties which do
+not really affect the buffer's content."
+    (declare (debug t) (indent 0))
+    (let ((modified (make-symbol "modified")))
+      `(let* ((,modified (buffer-modified-p))
+              (buffer-undo-list t)
+              (inhibit-read-only t)
+              (inhibit-modification-hooks t)
+              deactivate-mark
+              ;; Avoid setting and removing file locks and checking
+              ;; buffer's uptodate-ness w.r.t the underlying file.
+              buffer-file-name
+              buffer-file-truename)
+         (unwind-protect
+             (progn
+               ,@body)
+           (unless ,modified
+             (restore-buffer-modified-p nil)))))))
+
 (defmacro log-sexp (&rest exprs)
   (let* ((first t)
          (format
@@ -1041,8 +1072,11 @@ Example usage would be '(help-mode view-mode).
 (eval-when-compile
   (when (file-directory-p "~/.emacs.d/org-mode")
     (add-to-list 'load-path "~/.emacs.d/org-mode/lisp")
-    (add-to-list 'load-path "~/.emacs.d/org-mode/contrib/lisp"))
-  (require 'org-compat)
+    (add-to-list 'load-path "~/.emacs.d/org-mode/contrib/lisp") 
+    (require 'org-compat))
+  (when (file-directory-p "~/.emacs.d/ESS")
+    (add-to-list 'load-path "~/.emacs.d/ESS/lisp"))
+  
   ;; (require 'macroexp-copy)
   ;; (require 'pcase-copy)
   )
@@ -1614,5 +1648,9 @@ C-u argument surround it by double-quotes"
 (require 'diff)
 (evil-define-key 'motion diff-mode-map "za" 'diff-apply-hunk)
 
+(when (require-if-available 'ess-comp)
+  (require 'ess)
+  ;; my ess setup here
+  )
 (random t)
 
