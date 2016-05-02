@@ -30,5 +30,30 @@
 (message "Result of loading ess-r-completion is %s"
          (load-library "ess-r-completion"))
 
+
+;; fix the viper key bindings
+(evil-define-key 'normal inferior-ess-mode-map "\C-m" 'viper-comint-enter)
+(evil-define-key 'insert inferior-ess-mode-map "\C-m" 'my-exec-key-in-emacs)
+(evil-define-key 'normal inferior-ess-mode-map "j" 'viper-comint-j)
+(evil-define-key 'normal inferior-ess-mode-map "k" 'viper-comint-k)
+(evil-define-key 'normal inferior-ess-mode-map "/" 'viper-comint-start-search)
+(evil-define-key 'normal inferior-ess-mode-map "n" 'viper-comint-search-next)
+(evil-define-key 'normal inferior-ess-mode-map "N" 'viper-comint-search-prev)
+
+
+(defun my-ess-hook ()
+  (setq comint-use-prompt-regexp nil)
+  (setq inhibit-field-text-motion nil))
+
+
+(defun mgm-after-inferior-ess-mode ()
+  (setq comint-input-ring-file-name "~/.myrhistory")
+  (comint-read-input-ring)
+  (set-process-sentinel (get-buffer-process (current-buffer))
+                        #'shell-write-history-on-exit)
+  (add-hook 'kill-buffer-hook #'comint-write-input-ring nil t))
+
+
+(add-hook 'inferior-ess-mode-hook 'my-ess-hook)
 (provide 'my-ess-setup)
 ;;; my-ess-setup.el ends here
