@@ -91,6 +91,8 @@
 (evil-define-key 'normal shell-mode-map "k" 'viper-comint-k)
 (evil-define-key 'normal shell-mode-map "\C-m" 'viper-comint-enter)
 (evil-define-key 'normal shell-mode-map "/" 'viper-comint-start-search)
+(evil-define-key 'insert shell-mode-map "\M-/" 'viper-comint-start-search)
+(evil-define-key 'normal shell-mode-map "\M-/" 'viper-comint-start-search)
 (evil-define-key 'normal shell-mode-map "n" 'viper-comint-search-next)
 (evil-define-key 'normal shell-mode-map "N" 'viper-comint-search-prev)
 

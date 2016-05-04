@@ -37,6 +37,8 @@
 (evil-define-key 'normal inferior-ess-mode-map "j" 'viper-comint-j)
 (evil-define-key 'normal inferior-ess-mode-map "k" 'viper-comint-k)
 (evil-define-key 'normal inferior-ess-mode-map "/" 'viper-comint-start-search)
+(evil-define-key 'insert inferior-ess-mode-map "\M-/" 'viper-comint-start-search)
+(evil-define-key 'normal inferior-ess-mode-map "\M-/" 'viper-comint-start-search)
 (evil-define-key 'normal inferior-ess-mode-map "n" 'viper-comint-search-next)
 (evil-define-key 'normal inferior-ess-mode-map "N" 'viper-comint-search-prev)
 
@@ -51,8 +53,11 @@
   (comint-read-input-ring)
   (set-process-sentinel (get-buffer-process (current-buffer))
                         #'shell-write-history-on-exit)
-  (add-hook 'kill-buffer-hook #'comint-write-input-ring nil t))
+  (add-hook 'kill-buffer-hook #'comint-write-input-ring nil t)
+  (ess--unset-smart-S-assign-key))
 
+(defun mgm-after-ess-mode ()
+  (ess--unset-smart-S-assign-key))
 
 (add-hook 'inferior-ess-mode-hook 'my-ess-hook)
 (provide 'my-ess-setup)
