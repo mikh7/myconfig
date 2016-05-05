@@ -647,6 +647,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
   (setq undo-tree-mode-lighter nil))
 
 (global-set-key (kbd "C-/") nil)
+(global-set-key (kbd "M-/") nil)
 (evil-define-key 'motion undo-tree-visualizer-map "q" 'undo-tree-visualizer-quit)
 
 (define-key evil-normal-state-map ";" (make-sparse-keymap))
@@ -952,8 +953,9 @@ Example usage would be '(help-mode view-mode).
 (add-hook 'speedbar-reconfigure-keymaps-hook 'my-reconfigure-speedbar-hook)
 
 ;; I like my backspace just the way it is
-(define-key evil-insert-state-map [backspace] 'my-exec-key-in-emacs)
-(define-key evil-insert-state-map (kbd "DEL") 'my-exec-key-in-emacs)
+;; undo this, fucks up . repeat when I used backspaces in the repeat
+(define-key evil-insert-state-map [backspace] 'evil-delete-backward-char-and-join)
+(define-key evil-insert-state-map (kbd "DEL") 'evil-delete-backward-char-and-join)
 
 ;; simularly for del key
 (define-key evil-insert-state-map (kbd "<delete>") 'my-exec-key-in-emacs)
