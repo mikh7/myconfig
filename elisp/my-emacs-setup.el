@@ -826,7 +826,8 @@ If ALL-FRAMES is anything else, count only the selected frame."
                           org-agenda-mode
                           speedbar-mode
                           occur-mode
-                          mime-view-mode))
+                          mime-view-mode
+                          ess-help-mode))
   (remove-from-list 'evil-emacs-state-modes mode)
   (remove-from-list 'evil-insert-state-modes mode)
   (remove-from-list 'evil-normal-state-modes mode)

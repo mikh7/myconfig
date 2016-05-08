@@ -65,6 +65,8 @@
 
 (defun viper-comint-start-search ()
   (interactive)
+  (when (fboundp 'evil-normal-state)
+    (evil-normal-state)))
   (setq viper-comint-search-regexp 
 	(read-from-minibuffer "Match (regexp): " nil nil nil
 			      'minibuffer-history-search-history))

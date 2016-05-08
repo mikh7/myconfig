@@ -42,6 +42,9 @@
 (evil-define-key 'normal inferior-ess-mode-map "n" 'viper-comint-search-next)
 (evil-define-key 'normal inferior-ess-mode-map "N" 'viper-comint-search-prev)
 
+(evil-define-key 'insert inferior-ess-mode-map "\M--" 'ess-smart-S-assign)
+(evil-define-key 'insert ess-mode-map "\M--" 'ess-smart-S-assign)
+
 
 (defun my-ess-hook ()
   (setq comint-use-prompt-regexp nil)
@@ -60,5 +63,12 @@
   (ess--unset-smart-S-assign-key))
 
 (add-hook 'inferior-ess-mode-hook 'my-ess-hook)
+
+(evil-give-back-keys-in-mode '(ess-help-mode)
+                             `([?w] [?y] [?g] [?s] [?z] [?%] ,@evil-give-back-keys-exception))
+
+
 (provide 'my-ess-setup)
+
+
 ;;; my-ess-setup.el ends here
