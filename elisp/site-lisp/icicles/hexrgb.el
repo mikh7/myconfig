@@ -199,6 +199,8 @@
 (defvar eyedrop-picked-foreground)
 (defvar eyedrop-picked-background)
 
+
+(defconst my-force-window-system t)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;###autoload
@@ -237,19 +239,19 @@ Character FROM is affected (possibly deleted).  Character TO is not."
        (buffer-string)))))
 
 ;;;###autoload
-(defconst hexrgb-defined-colors (eval-when-compile (and window-system (x-defined-colors)))
+(defconst hexrgb-defined-colors (eval-when-compile (and my-force-window-system (x-defined-colors)))
   "List of all supported colors.")
 
 ;;;###autoload
 (defconst hexrgb-defined-colors-no-dups
     (eval-when-compile
-     (and window-system (hexrgb-canonicalize-defined-colors (x-defined-colors))))
+     (and my-force-window-system (hexrgb-canonicalize-defined-colors (x-defined-colors))))
   "List of all supported color names, with no duplicates.
 Names are all lowercase, without any spaces.")
 
 ;;;###autoload
 (defconst hexrgb-defined-colors-alist
-    (eval-when-compile (and window-system (mapcar #'list (x-defined-colors))))
+    (eval-when-compile (and my-force-window-system (mapcar #'list (x-defined-colors))))
   "Alist of all supported color names, for use in completion.
 See also `hexrgb-defined-colors-no-dups-alist', which is the same
 thing, but without any duplicates, such as \"light blue\" and
@@ -258,7 +260,7 @@ thing, but without any duplicates, such as \"light blue\" and
 ;;;###autoload
 (defconst hexrgb-defined-colors-no-dups-alist
     (eval-when-compile
-     (and window-system
+     (and my-force-window-system
           (mapcar #'list (hexrgb-canonicalize-defined-colors (x-defined-colors)))))
   "Alist of all supported color names, with no duplicates, for completion.
 Names are all lowercase, without any spaces.")

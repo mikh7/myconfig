@@ -13,6 +13,38 @@ buffer-local wherever it is set."
     (list 'progn (list 'defvar var val docstring)
           (list 'make-variable-buffer-local (list 'quote var)))))
 
+(unless (fboundp 'with-silent-modifications) 
+  (defmacro with-silent-modifications (&rest body)
+    "Execute BODY, pretending it does not modify the buffer.
+If BODY performs real modifications to the buffer's text, other
+than cosmetic ones, undo data may become corrupted.
+
+This macro will run BODY normally, but doesn't count its buffer
+modifications as being buffer modifications.  This affects things
+like buffer-modified-p, checking whether the file is locked by
+someone else, running buffer modification hooks, and other things
+of that nature.
+
+Typically used around modifications of text-properties which do
+not really affect the buffer's content."
+    (declare (debug t) (indent 0))
+    (let ((modified (make-symbol "modified")))
+      `(let* ((,modified (buffer-modified-p))
+              (buffer-undo-list t)
+              (inhibit-read-only t)
+              (inhibit-modification-hooks t)
+              deactivate-mark
+              ;; Avoid setting and removing file locks and checking
+              ;; buffer's uptodate-ness w.r.t the underlying file.
+              buffer-file-name
+              buffer-file-truename)
+         (unwind-protect
+             (progn
+               ,@body)
+           (unless ,modified
+             (restore-buffer-modified-p nil)))))))
+
+
 (defmacro log-sexp (&rest exprs)
   (let* ((first t)
          (format
@@ -60,6 +92,10 @@ If ALL-FRAMES is anything else, count only the selected frame."
       (error  (progn (message "Error while loading extension %S: %S"
                               lib err) nil)))))
 
+(unless (require-if-available 'cl-lib) 
+  (require 'cl)
+  (defalias 'cl-remove-if 'remove-if)
+  (defalias 'cl-remove-if-not 'remove-if-not)) 
 
 (require 'view)
 (require 'help-mode)
@@ -507,6 +543,9 @@ If ALL-FRAMES is anything else, count only the selected frame."
 ;(max-color-theme)
 ;(color-theme-vim-colors)
 
+(eval-when-compile
+  (when (file-directory-p "~/.emacs.d/ESS")
+    (add-to-list 'load-path "~/.emacs.d/ESS/lisp")))
 
 (require 'hexrgb)
 (require 'my-icicles-setup)
@@ -608,6 +647,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
   (setq undo-tree-mode-lighter nil))
 
 (global-set-key (kbd "C-/") nil)
+(global-set-key (kbd "M-/") nil)
 (evil-define-key 'motion undo-tree-visualizer-map "q" 'undo-tree-visualizer-quit)
 
 (define-key evil-normal-state-map ";" (make-sparse-keymap))
@@ -776,7 +816,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
             (hl-line-mode 1)))
 
 ;; force these modes to start in Evil insert mode
-(dolist (mode '(erc-mode eshell-mode inferior-python-mode))
+(dolist (mode '(erc-mode eshell-mode inferior-python-mode inferior-ess-mode))
   (remove-from-list 'evil-emacs-state-modes mode)
   (add-to-list 'evil-insert-state-modes mode))
 
@@ -786,7 +826,8 @@ If ALL-FRAMES is anything else, count only the selected frame."
                           org-agenda-mode
                           speedbar-mode
                           occur-mode
-                          mime-view-mode))
+                          mime-view-mode
+                          ess-help-mode))
   (remove-from-list 'evil-emacs-state-modes mode)
   (remove-from-list 'evil-insert-state-modes mode)
   (remove-from-list 'evil-normal-state-modes mode)
@@ -913,8 +954,9 @@ Example usage would be '(help-mode view-mode).
 (add-hook 'speedbar-reconfigure-keymaps-hook 'my-reconfigure-speedbar-hook)
 
 ;; I like my backspace just the way it is
-(define-key evil-insert-state-map [backspace] 'my-exec-key-in-emacs)
-(define-key evil-insert-state-map (kbd "DEL") 'my-exec-key-in-emacs)
+;; undo this, fucks up . repeat when I used backspaces in the repeat
+(define-key evil-insert-state-map [backspace] 'evil-delete-backward-char-and-join)
+(define-key evil-insert-state-map (kbd "DEL") 'evil-delete-backward-char-and-join)
 
 ;; simularly for del key
 (define-key evil-insert-state-map (kbd "<delete>") 'my-exec-key-in-emacs)
@@ -1037,15 +1079,20 @@ Example usage would be '(help-mode view-mode).
 (require 'autoinsert)
 (auto-insert-mode 1)
 (setq auto-insert-query t)
+(defvar my-have-ess nil)
 
 (eval-when-compile
   (when (file-directory-p "~/.emacs.d/org-mode")
     (add-to-list 'load-path "~/.emacs.d/org-mode/lisp")
-    (add-to-list 'load-path "~/.emacs.d/org-mode/contrib/lisp"))
-  (require 'org-compat)
+    (add-to-list 'load-path "~/.emacs.d/org-mode/contrib/lisp") 
+    (require 'org-compat))
+  
+  
   ;; (require 'macroexp-copy)
   ;; (require 'pcase-copy)
   )
+
+
 
 (ignore-errors
   
@@ -1613,6 +1660,9 @@ C-u argument surround it by double-quotes"
 
 (require 'diff)
 (evil-define-key 'motion diff-mode-map "za" 'diff-apply-hunk)
+
+(when (require-if-available 'ess-site)
+  (require-if-available 'my-ess-setup))
 
 (random t)
 

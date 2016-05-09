@@ -210,9 +210,7 @@ Example usage:
 		       'c-tempo-tags)
 
 (tempo-define-template "c-if"
-		       '(> "if (" r ") {" 
-                           > r > n >
-                           "}" >)
+		       '(> "if (" r ")" > r > " ")
 		       "if"
 		       "Insert a C if statement"
 		       'c-tempo-tags)
