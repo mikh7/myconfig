@@ -109,7 +109,7 @@
  ;; default " %i %-12:c%?-12t%-7e % s"
  org-agenda-prefix-format '((agenda . "%-10:c%?-12t % s")
                             (timeline . "  % s")
-                            (todo . "%-10:c ")
+                            (todo . "%10:c ")
                             (tags . "%-10:c")
                             (search . "%-10:c"))
  org-columns-default-format "%4TODO %70ITEM(Task) %6Effort(E){:} %CLOCKSUM(Act)"
