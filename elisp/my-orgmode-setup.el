@@ -54,16 +54,20 @@
             (if (evil-normal-state-p)
                 (evil-insert-state))))
 
+
+(setq org-directory "~/my-org")
+(when (string= (getenv "HOSTNAME") "backtest1.chi1.veliosystems.com")
+  (setq org-directory "/uat-max:my-org")
+  (setq org-agenda-files))
+
 ;; set my variables
 (setq 
  org-todo-keywords 
  '((type "TODO(d!)" "NEXT(n)" "WAIT(w@/!)" "MAYBE(m)" "NEW" "|" 
          "DONE(t@!)" "CANCELLED(c@!)" "DELEGATED(l@!)")
    (sequence "BAD(b!)" "GOOD(g!)" "CBT" "CBTOK" "CBTFAIL"))
- org-agenda-files                 '("~/my-org/")
- org-refile-targets               '((org-agenda-files . (:level . 1))
-                                    ("~/my-org/Trading_system_devel.org" .
-                                     (:maxlevel . 4)))
+ org-agenda-files                 (list (concat org-directory "/"))
+ org-refile-targets               '((org-agenda-files . (:level . 1)))
  org-refile-use-outline-path       t
  org-log-done                      'note
  org-tags-match-list-sublevels     t
@@ -129,27 +133,36 @@
  org-habit-show-done-always-green t
  org-tag-alist-for-agenda nil
  ;; TAGS 
- org-tag-alist '(("emacs" . ?e)
-                 ("org" . ?o)
-                 ;; ("sunflare" . ?s)
-                 ;; ("comp" . ?s)
-                 ("slime" . ?s)
-                 ("stump" . ?S)
-                 ("bind" . ?b)
-                 ("paredit" . ?p)
-                 ("log4cl" . ?l)
-                 ("lisp" . ?L)
-                 ;; ("gdb" . ?g)
-                 ("web" . ?w)
-                 ("wl" . ?u)
-                 ("ats" . ?a)
-                 ;; good/bad
-                 ("good" . ?G)
-                 ("bad" . ?B))
+ org-tag-alist
+ (if (string-match ".*velio.*" (getenv "HOSTNAME")) 
+     '(("emacs" . ?e)
+     ("R" . ?r)
+     ("splunk" . ?s)
+     ("bind" . ?b)
+     ;; good/bad
+     ("good" . ?G)
+     ("bad" . ?B))
+   '(("emacs" . ?e)
+       ("org" . ?o)
+       ;; ("sunflare" . ?s)
+       ;; ("comp" . ?s)
+       ("slime" . ?s)
+       ("stump" . ?S)
+       ("bind" . ?b)
+       ("paredit" . ?p)
+       ("log4cl" . ?l)
+       ("lisp" . ?L)
+       ;; ("gdb" . ?g)
+       ("web" . ?w)
+       ("wl" . ?u)
+       ("ats" . ?a)
+       ;; good/bad
+       ("good" . ?G)
+       ("bad" . ?B)))
  org-fast-tag-selection-single-key 'expert
  org-agenda-log-mode-items '(closed)
  org-agenda-dim-blocked-tasks 'invisible
- org-agenda-diary-file "~/my-org/Diary.org")
+ org-agenda-diary-file (concat org-directory "/Diary.org"))
 
 
 ;; Custom agenda command definitions
@@ -251,7 +264,7 @@
       '(("h" "Habits (Undone)" agenda "STYLE=\"habit\""
           ((org-agenda-overriding-header "Habits")
            (org-agenda-skip-scheduled-if-done nil)
-           (org-agenda-files '("~/my-org/Habits.org" "~/my-org/Habits.orgg"))
+           (org-agenda-files '("Habits.org" "Habits.orgg"))
            (org-agenda-sorting-strategy '(alpha-up))
            (org-habit-show-habits t)
            (org-habit-show-habits-only-for-today t)
@@ -260,7 +273,7 @@
         ("H" "Habits (ALL)" agenda "STYLE=\"habit\""
          ((org-agenda-overriding-header "Habits")
           (org-agenda-skip-scheduled-if-done nil)
-          (org-agenda-files '("~/my-org/Habits.org" "~/my-org/Habits.orgg"))
+          (org-agenda-files '("Habits.org" "Habits.orgg"))
           (org-agenda-sorting-strategy '(alpha-up))
           (org-habit-show-habits t)
           (org-habit-show-habits-only-for-today t)
@@ -844,7 +857,6 @@ any children"
 
 (add-hook 'org-capture-before-finalize-hook 'mm/org-capture-mode-hook)
 
-(setq org-directory "~/my-org") 
 (setq org-default-notes-file (concat org-directory "/Diary.org")) 
 (setq org-capture-templates
       '(
@@ -1667,7 +1679,7 @@ Returns the new TODO keyword, or nil if no state change should occur."
   "Refile an entry to journal file's date-tree"
   (interactive)
   (require 'org-datetree)
-  (let ((journal "~/my-org/Diary.org")
+  (let ((journal (concat org-directory "/Diary.org"))
         post-date)
     (setq post-date (or date
                         (org-entry-get (point) "TIMESTAMP_IA")

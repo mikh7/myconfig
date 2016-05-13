@@ -1,28 +1,29 @@
-typeset -g zshrc_load_time
+typeset -gA _reload_times
+typeset -gA _do_reload
+
 # Provide automatic reload of zshrc
 zmodload zsh/stat
 
 function zsh-autoreload-check {
     emulate -L zsh
-    local time
+    local time file
     local first_time=0
-    _do_reload_config=0
-    [[ ! -z $zshrc_load_time ]] || first_time=1
-    for time in \
-        $(stat +mtime ~/.zshrc) \
-        $(stat +mtime ~/.zalias) \
-        $(stat +mtime ~/.zshenv)
+    for file in zalias ssh_auth_sock
     do
-      if [[ $first_time == 1 ]] ; then
-        if [[ -z $zshrc_load_time || $time > $zshrc_load_time ]] ; then
-          zshrc_load_time=$time
+        if [[ -f ~/.$file ]] ; then
+            time=$(stat +mtime ~/.$file)
+            [[ ! -z $_reload_times[$file] ]] || first_time=1
+            if [[ $first_time == 1 ]] ; then
+                if [[ -z $_reload_times[$file] || $time > $_reload_times[$file] ]] ; then
+                    _reload_times[$file]=$time
+                fi
+            else
+                if [[ $time > $_reload_times[$file] ]] ; then
+                    _do_reload[$file]=1
+                    _reload_times[$file]=$time
+                fi
+            fi
         fi
-      else
-        if [[ $time > $zshrc_load_time ]] ; then
-          zshrc_load_time=$time
-          _do_reload_config=1
-        fi
-      fi
     done
 }
 

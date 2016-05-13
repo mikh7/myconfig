@@ -1664,5 +1664,7 @@ C-u argument surround it by double-quotes"
 (when (require-if-available 'ess-site)
   (require-if-available 'my-ess-setup))
 
+(require-if-available 'my-reload-ssh-auth)
+
 (random t)
 
