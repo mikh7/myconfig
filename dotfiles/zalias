@@ -30,4 +30,6 @@ alias vi='connect-emacs emacs'
 
 if [[ -n $SSH_AUTH_SOCK ]] ; then
     echo export SSH_AUTH_SOCK=$SSH_AUTH_SOCK > ~/.ssh_auth_sock
+elif [[ -f ~/.ssh_auth_sock ]] ; then
+    . ~/.ssh_auth_sock
 fi
