@@ -5,9 +5,9 @@
 #include <unistd.h>
 
 int 
-testUTF8 (void)
+main (void)
 {
-  unsigned int y, x, Isatty = 0;
+  unsigned int y = 0, x = 0, Isatty = 0;
   struct termios termios_orig, termios;
 
   if (isatty (STDIN_FILENO) && isatty (STDOUT_FILENO))
@@ -21,20 +21,27 @@ testUTF8 (void)
       tcsetattr (STDOUT_FILENO, TCSANOW, &termios);
       /* ^X^Z cancel any ESC sequence */
       /* `A' from font directly via UTF-8; ask cursor position */
-      printf ("\030\032" "\r\xEF\x81\x81" "\033[6n\033D");
+
+      write(1, "\r\303\266", 3);
+      write(1, "\33[6n", 4);
+      
       scanf ("\033[%u;%u", &y, &x);/* get cursor position */
+
       tcsetattr (STDOUT_FILENO, TCSANOW, &termios_orig);
-      printf("\033[1F" "\033[%uX", (x-1)); /* go back; erase 1 or 3 char */
-      fflush (stdout);
+
+      write(1, "\r  \r", 4);
+      
+
       /*Get a single byte in UTF-8 and 3 bytes othewise */
       switch (x)
 	{
 	case 2: /* UTF-8 */
-		x=1;
-		break;
-	case 4: /* single-byte mode */
-		x=0;
-		break;
+          return 2;
+          break;
+	case 3: /* single-byte mode */
+        case 4:
+          return 1;
+          break;
 	default: /* error */
 		x=255;
 	}
