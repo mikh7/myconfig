@@ -447,6 +447,17 @@ infopath+=(/usr/local/info /usr/share/info /usr/info)
 # Use SUSE LANG setting script
 if [[ $TERM != dumb && $TERM != emacs && -z $SSH_SENDS_LOCALE && -r /etc/profile.d/sh.utf8 ]] ; then
   . /etc/profile.d/sh.utf8 
+elif [[ $TERM != dumb && $TERM != emacs && -z $SSH_SENDS_LOCALE ]] ; then
+    if command -v testutf8 >/dev/null 2>&1 ; then
+        testutf8
+        ret=$?
+        if [[ $ret == 1 ]] ; then
+            LANG=en_US
+        elif [[ $ret == 2 ]] ; then
+            LANG=en_US.UTF-8
+        fi
+    fi
+
 fi
 
 ### below is for my cygwin machine environment
