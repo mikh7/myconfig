@@ -450,9 +450,6 @@ if [[ $TERM != dumb && $TERM != emacs && -z $SSH_SENDS_LOCALE && -r /etc/profile
 fi
 
 ### below is for my cygwin machine environment
-if [ -f ~/.ssh-agent.env ] ; then
-  . ~/.ssh-agent.env
-fi
 
 # I don't like flow control
 
