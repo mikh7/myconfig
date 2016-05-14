@@ -11,6 +11,9 @@ termcapinfo xterm-256color 'vi=\E[?25l:ve=\E[34h\E[?25h:vs=\E[34l'
 termcapinfo xterm-256color "" "Co#256"
 
 term screen-256color
+hardstatus string %h
+# get rid of screen locking binding
+bind "^X"
 
 defscrollback 9000
 defflow auto

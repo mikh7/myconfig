@@ -214,6 +214,8 @@ forced"
 
 (defconst my-cycle-eshell-filter `((string-match "^\\*eshell\\(\\*\\|<.+>\\)" (buffer-name))))
 (defconst my-cycle-shell-filter `((string-match "^\\*shell\\(\\*\\|<.+>\\)" (buffer-name))))
+(defconst my-cycle-R-filter `((string-match "^\\*R\\*" (buffer-name))))
+
 (defconst my-cycle-xshell-filter-extra `((or
                                           (not my-buffer-last-frame)
                                           (eq cycle-buffer-orig-frame my-buffer-last-frame))))
@@ -267,6 +269,23 @@ forced"
   (interactive "P")
   (cycle-eshell (- arg)))
 
+(defun cycle-R-shell (&optional arg)
+  "Cycle buffer to an R shell"
+  (interactive "P")
+  (let ((cycle-buffer-filter my-cycle-R-filter)
+        (cycle-buffer-filter-extra my-cycle-xshell-filter-extra))
+    (condition-case msg 
+        (cycle-buffer 4)
+      (error 
+       (cond ((string-match "^There is no appropriate" (second msg))
+              (call-interactively 'R))
+             (t (error "%s" msg)))))))
+
+
+(defun cycle-R-backwards (&optional arg)
+  "Cycle buffer to an eshell"
+  (interactive "P")
+  (cycle-R-shell (- arg)))
 
 ;; New frames are created by emacsclient displaying most recent buffer
 ;; by default, only after the frame is created it switches to the
@@ -283,8 +302,9 @@ forced"
   (with-current-buffer (get-buffer-create "*scratch*")
     (setq ad-return-value ad-do-it)))
 
-(global-set-key "\C-ce" 'cycle-eshell) (global-set-key "\C-cs"
-'cycle-shell)
+(global-set-key "\C-ce" 'cycle-eshell)
+(global-set-key "\C-cs" 'cycle-shell)
+(global-set-key "\C-cr" 'cycle-R-shell)
 
 ;; nice!
 (global-set-key "\C-l" 'cycle-buffer)

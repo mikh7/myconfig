@@ -1,12 +1,5 @@
 
-(eval-when-compile
-  (when (file-directory-p "~/.emacs.d/org-mode")
-    (add-to-list 'load-path "~/.emacs.d/org-mode/lisp")
-    (add-to-list 'load-path "~/.emacs.d/org-mode/contrib/lisp"))
-  (require 'org-compat)
-  ;; (require 'macroexp-copy)
-  ;; (require 'pcase-copy)
-  )
+
 
 (require 'org-compat)
 (require 'org)
@@ -26,6 +19,18 @@
   (defun org-mode-p ()
     (eq major-mode 'org-mode)))
 
+(unless (fboundp 'org-get-at-bol)
+  (defun org-get-at-bol (property)
+    "Get text property PROPERTY at beginning of line."
+    (get-text-property (point-at-bol)  property)))
+
+(unless (fboundp 'org-agenda-next-line)
+  (defun org-agenda-next-line ()
+    (interactive)
+    (call-interactively 'next-line))
+  (defun org-agenda-previous-line ()
+    (interactive)
+    (call-interactively 'previous-line)))
 
 (dolist (mode '(org-mode org-agenda-mode))
   (remove-from-list 'evil-emacs-state-modes mode)
@@ -49,16 +54,20 @@
             (if (evil-normal-state-p)
                 (evil-insert-state))))
 
+
+(setq org-directory "~/my-org")
+(when (string= (getenv "HOSTNAME") "backtest1.chi1.veliosystems.com")
+  (setq org-directory "/uat-max:my-org")
+  (setq org-agenda-files))
+
 ;; set my variables
 (setq 
  org-todo-keywords 
  '((type "TODO(d!)" "NEXT(n)" "WAIT(w@/!)" "MAYBE(m)" "NEW" "|" 
          "DONE(t@!)" "CANCELLED(c@!)" "DELEGATED(l@!)")
    (sequence "BAD(b!)" "GOOD(g!)" "CBT" "CBTOK" "CBTFAIL"))
- org-agenda-files                 '("~/my-org/")
- org-refile-targets               '((org-agenda-files . (:level . 1))
-                                    ("~/my-org/Trading_system_devel.org" .
-                                     (:maxlevel . 4)))
+ org-agenda-files                 (list (concat org-directory "/"))
+ org-refile-targets               '((org-agenda-files . (:level . 1)))
  org-refile-use-outline-path       t
  org-log-done                      'note
  org-tags-match-list-sublevels     t
@@ -104,7 +113,7 @@
  ;; default " %i %-12:c%?-12t%-7e % s"
  org-agenda-prefix-format '((agenda . "%-10:c%?-12t % s")
                             (timeline . "  % s")
-                            (todo . "%-10:c ")
+                            (todo . "%10:c ")
                             (tags . "%-10:c")
                             (search . "%-10:c"))
  org-columns-default-format "%4TODO %70ITEM(Task) %6Effort(E){:} %CLOCKSUM(Act)"
@@ -124,27 +133,36 @@
  org-habit-show-done-always-green t
  org-tag-alist-for-agenda nil
  ;; TAGS 
- org-tag-alist '(("emacs" . ?e)
-                 ("org" . ?o)
-                 ;; ("sunflare" . ?s)
-                 ;; ("comp" . ?s)
-                 ("slime" . ?s)
-                 ("stump" . ?S)
-                 ("bind" . ?b)
-                 ("paredit" . ?p)
-                 ("log4cl" . ?l)
-                 ("lisp" . ?L)
-                 ;; ("gdb" . ?g)
-                 ("web" . ?w)
-                 ("wl" . ?u)
-                 ("ats" . ?a)
-                 ;; good/bad
-                 ("good" . ?G)
-                 ("bad" . ?B))
+ org-tag-alist
+ (if (string-match ".*velio.*" (getenv "HOSTNAME")) 
+     '(("emacs" . ?e)
+     ("R" . ?r)
+     ("splunk" . ?s)
+     ("bind" . ?b)
+     ;; good/bad
+     ("good" . ?G)
+     ("bad" . ?B))
+   '(("emacs" . ?e)
+       ("org" . ?o)
+       ;; ("sunflare" . ?s)
+       ;; ("comp" . ?s)
+       ("slime" . ?s)
+       ("stump" . ?S)
+       ("bind" . ?b)
+       ("paredit" . ?p)
+       ("log4cl" . ?l)
+       ("lisp" . ?L)
+       ;; ("gdb" . ?g)
+       ("web" . ?w)
+       ("wl" . ?u)
+       ("ats" . ?a)
+       ;; good/bad
+       ("good" . ?G)
+       ("bad" . ?B)))
  org-fast-tag-selection-single-key 'expert
  org-agenda-log-mode-items '(closed)
  org-agenda-dim-blocked-tasks 'invisible
- org-agenda-diary-file "~/my-org/Diary.org")
+ org-agenda-diary-file (concat org-directory "/Diary.org"))
 
 
 ;; Custom agenda command definitions
@@ -246,7 +264,7 @@
       '(("h" "Habits (Undone)" agenda "STYLE=\"habit\""
           ((org-agenda-overriding-header "Habits")
            (org-agenda-skip-scheduled-if-done nil)
-           (org-agenda-files '("~/my-org/Habits.org" "~/my-org/Habits.orgg"))
+           (org-agenda-files '("Habits.org" "Habits.orgg"))
            (org-agenda-sorting-strategy '(alpha-up))
            (org-habit-show-habits t)
            (org-habit-show-habits-only-for-today t)
@@ -255,7 +273,7 @@
         ("H" "Habits (ALL)" agenda "STYLE=\"habit\""
          ((org-agenda-overriding-header "Habits")
           (org-agenda-skip-scheduled-if-done nil)
-          (org-agenda-files '("~/my-org/Habits.org" "~/my-org/Habits.orgg"))
+          (org-agenda-files '("Habits.org" "Habits.orgg"))
           (org-agenda-sorting-strategy '(alpha-up))
           (org-habit-show-habits t)
           (org-habit-show-habits-only-for-today t)
@@ -817,7 +835,7 @@ any children"
 
 ;; remember setup
 
-(require 'org-capture)
+(require-if-available 'org-capture)
 
 
 (defun my-org-maybe-go-insert ()
@@ -839,7 +857,6 @@ any children"
 
 (add-hook 'org-capture-before-finalize-hook 'mm/org-capture-mode-hook)
 
-(setq org-directory "~/my-org") 
 (setq org-default-notes-file (concat org-directory "/Diary.org")) 
 (setq org-capture-templates
       '(
@@ -858,9 +875,10 @@ any children"
         ("a" "Account" entry (file+headline "Assorted_Accounts.org" "Assorted Accounts")
          "* %?\n%U\n%a\n  %i" :clock-in nil :clock-resume nil)))
 
-(define-key global-map "\C-cc" 'org-capture)
-(define-key org-capture-mode-map "\C-cr" 'org-capture-refile)
-(define-key global-map "\C-cd" 'mm/jump-to-diary)
+(when (fboundp 'org-capture-refile) 
+  (define-key global-map "\C-cc" 'org-capture) 
+  (define-key org-capture-mode-map "\C-cr" 'org-capture-refile) 
+  (define-key global-map "\C-cd" 'mm/jump-to-diary))
 
 (defun mm/jump-to-diary ()
   (interactive)
@@ -1661,7 +1679,7 @@ Returns the new TODO keyword, or nil if no state change should occur."
   "Refile an entry to journal file's date-tree"
   (interactive)
   (require 'org-datetree)
-  (let ((journal "~/my-org/Diary.org")
+  (let ((journal (concat org-directory "/Diary.org"))
         post-date)
     (setq post-date (or date
                         (org-entry-get (point) "TIMESTAMP_IA")
@@ -1736,7 +1754,7 @@ Returns the new TODO keyword, or nil if no state change should occur."
       (goto-char start) 
       (mm/refile-to-diary ts))))
 
-(require 'ox-gfm)
+(require-if-available 'ox-gfm)
 
 (provide 'my-orgmode-setup)
 

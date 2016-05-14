@@ -133,7 +133,7 @@ For generic-mode, each element is quoted. For generic, each element is unchanged
 	'("$(\\([^ :\\[()\t\r\n]+\\)[)\\[:]" 1 font-lock-variable-name-face))
 
   ; Apply this mode to all files called Jamfile, Jamrules or Jambase
-  (list "\\(Jamfile\\|Jamrules\\|Jambase\\)\\'")
+  (list "\\(Jamfile\\|Jamrules\\|Jambase\\|Jamroot\\)\\'")
 
   ; Attach setup function so we can modify syntax table.
   (list 'jam-mode-setup-function)

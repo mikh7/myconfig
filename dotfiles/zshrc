@@ -22,6 +22,7 @@ done
 setopt extended_glob
 setopt ksh_glob
 setopt csh_null_glob
+setopt histsubstpattern
 
 
 # Apparently if its loaded in ksh mode, it wont work

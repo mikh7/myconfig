@@ -287,4 +287,12 @@ mode) then remove that newline."
 ;;       (c-indent-line)
 ;;       (forward-line))))
 
+(defun align-defun ()
+  (interactive)
+  (save-excursion 
+    (mark-defun) 
+    (call-interactively 'align)))
+
+(evil-define-key 'normal c++-mode-map "za" 'align-defun)
+
 (provide 'my-ccmode-setup)

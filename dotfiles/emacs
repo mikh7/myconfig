@@ -84,6 +84,7 @@
  '(evil-overriding-maps (quote ((Buffer-menu-mode-map) (color-theme-mode-map) (comint-mode-map) (compilation-mode-map) (dictionary-mode-map) (ert-results-mode-map . motion) (speedbar-key-map) (speedbar-file-key-map) (speedbar-buffers-key-map))))
  '(fill-column 78)
  '(garbage-collection-messages nil)
+ '(icicle-functions-to-redefine (quote (bbdb-complete-name bbdb-complete-mail comint-dynamic-complete comint-dynamic-complete-filename comint-replace-by-expanded-filename gud-gdb-complete-command Info-goto-node Info-index Info-menu lisp-complete-symbol lisp-completion-at-point minibuffer-default-add-completions read-char-by-name read-color read-from-minibuffer read-string recentf-make-menu-items)))
  '(icicle-region-background "gray82")
  '(icicle-reminder-prompt-flag 0)
  '(icicle-top-level-key-bindings (quote (([pause] icicle-switch-to/from-minibuffer t) ("`" icicle-search-generic t) ("$" icicle-search-word t) ("^" icicle-search-keywords t) ("'" icicle-occur t) ("=" icicle-imenu t) ("\"" icicle-search-text-property t) ("/" icicle-complete-thesaurus-entry nil) ([24 134217829] icicle-execute-named-keyboard-macro t) (" " icicle-command-abbrev t) ("5o" icicle-select-frame t) ([f1 15] icicle-describe-option-of-type t) ([S-f4] icicle-kmacro t) (abort-recursive-edit icicle-abort-recursive-edit t) (minibuffer-keyboard-quit icicle-abort-recursive-edit (fboundp (quote minibuffer-keyboard-quit))) (execute-extended-command icicle-execute-extended-command t) (switch-to-buffer icicle-buffer t) (switch-to-buffer-other-window icicle-buffer-other-window t) (find-file icicle-file t) (find-file-other-window icicle-file-other-window t) (bookmark-set icicle-bookmark-cmd t) (find-tag icicle-find-tag (fboundp (quote command-remapping))) (eval-expression icicle-pp-eval-expression (fboundp (quote command-remapping))) (pp-eval-expression icicle-pp-eval-expression (fboundp (quote command-remapping))) (find-tag-other-window icicle-find-first-tag-other-window t) (kill-buffer icicle-kill-buffer t) (kill-buffer-and-its-windows icicle-kill-buffer t) (delete-window icicle-delete-window t) (delete-windows-for icicle-delete-window t) (other-window-or-frame icicle-other-window-or-frame t) (exchange-point-and-mark icicle-exchange-point-and-mark t) (where-is icicle-where-is t) (yank icicle-yank-maybe-completing t) (set-mark-command icicle-goto-marker-or-set-mark-command t) (pop-global-mark icicle-goto-global-marker-or-pop-global-mark t) ([27 134217848] lacarte-execute-menu-command (fboundp (quote lacarte-execute-menu-command))) ([134217824] lacarte-execute-menu-command (fboundp (quote lacarte-execute-menu-command))) ([f10] lacarte-execute-menu-command (fboundp (quote lacarte-execute-menu-command))) (icicle-apropos-complete-and-exit mm/apropos-complete-and-exit (fboundp (quote icicle-apropos-complete-and-exit))))))
@@ -92,7 +93,7 @@
  '(message-log-max 1000)
  '(mime-edit-message-default-max-lines 1000000000000)
  '(org-agenda-sticky t)
- '(org-habit-show-all-today t)
+ '(org-habit-show-all-today t t)
  '(paragraph-separate "[ 	]*$\\|--")
  '(python-honour-comment-indentation t)
  '(python-indent 2)

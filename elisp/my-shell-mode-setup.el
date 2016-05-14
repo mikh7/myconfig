@@ -14,12 +14,13 @@
     (setq ad-return-value ad-do-it)))
 
 (defadvice comint-read-input-ring (around fix-history activate)
-  (let (tmp) 
+  (let (tmp (comint-input-ring-file-name comint-input-ring-file-name)) 
     (when (and (eq major-mode 'shell-mode)
                (equal (getenv "HISTFILE")
                       comint-input-ring-file-name)
                (setq tmp (getenv "HISTFILE_FOR_EMACS")))
-      (setq comint-input-ring-file-name tmp))))
+      (setq comint-input-ring-file-name tmp))
+    (setq ad-return-value ad-do-it)))
 
 ;; viper comint mode history browsing via jk keys
 
@@ -68,7 +69,9 @@
 	(read-from-minibuffer "Match (regexp): " nil nil nil
 			      'minibuffer-history-search-history))
   (setq viper-comint-search-idx 0)
-  (viper-comint-search-next))
+  (viper-comint-search-next)
+  (when (fboundp 'evil-normal-state)
+    (evil-normal-state)))
 
 (defun viper-comint-search-next ()
   (interactive)
@@ -90,6 +93,8 @@
 (evil-define-key 'normal shell-mode-map "k" 'viper-comint-k)
 (evil-define-key 'normal shell-mode-map "\C-m" 'viper-comint-enter)
 (evil-define-key 'normal shell-mode-map "/" 'viper-comint-start-search)
+(evil-define-key 'insert shell-mode-map "\M-/" 'viper-comint-start-search)
+(evil-define-key 'normal shell-mode-map "\M-/" 'viper-comint-start-search)
 (evil-define-key 'normal shell-mode-map "n" 'viper-comint-search-next)
 (evil-define-key 'normal shell-mode-map "N" 'viper-comint-search-prev)
 

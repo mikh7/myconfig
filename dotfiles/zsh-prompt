@@ -6,7 +6,9 @@
 
 # Short curretn dirdir
 #
-# <user@host:~/myconfig/dotfiles> |
+
+# <host:~/myconfig/dotfiles> |
+
 #
 # Long current dir
 #
@@ -36,7 +38,15 @@ function zsh-prompt-precmd {
     PR_PWDLEN=""
     PR_JOB=
     
-    local promptsize=${#${(%):---(%n@%m:%l)---()--}}
+
+    local promptsize
+    if [[ $TERM == screen* ]] ; then
+        promptsize=${#${(%):---(${PR_HOST}:scr/$WINDOW)---()--}}
+    else
+        promptsize=${#${(%):---(${PR_HOST}:%l)---()--}}
+    fi
+
+
     local pwdsize=${#${(%):-%~}}
     
     if [[ "$promptsize + $pwdsize" -gt $TERMWIDTH ]]; then
@@ -71,7 +81,7 @@ zsh-prompt-preexec () {
         local -a cmd
         cmd=($=CMD)
         CMD=$cmd[1,4]
-        PR_JOB="($CMD) "
+        PR_JOB="[$CMD] "
         if [[ ! $PR_JOB == *xdotool* ]] ; then
             echo -nE ${(%e)PR_TITLEBAR}
         fi
@@ -118,8 +128,27 @@ setprompt () {
         PR_LRCORNER=${altchar[j]:--}
         PR_URCORNER=${altchar[k]:--}
 
-        PR_HOST=$HOST[1,4]
-        PR_HOST2=$HOST
+
+        case $HOST ; in
+            (*.*.veliosystems.com)
+            # velio special, from blahcrapblah.sec1 or blahcrapblah.aur1 I want
+            # the sec1 part in front
+            #
+            # so for backtest1.sec1.veliosystems.com => SEC1.backtest1
+            # and for mgrigorian-server1.aur1 => AUR1.mgrigorian-server1
+            function {
+                local host=${${(s:.:)HOST}[1]} site=${${(s:.:U)HOST}[2]}
+                PR_HOST=$site.$host
+                PR_HOST2=$site.$host
+            }
+            ;;
+            (*)
+            # default
+            PR_HOST=$HOST[1,4]
+            PR_HOST2=$HOST
+            ;;
+        esac
+        
 
         
     ###
@@ -128,11 +157,11 @@ setprompt () {
         case $TERM in
 	    xterm*)
 	    #PR_TITLEBAR=$'%{\e]0;%(!.-=*[ROOT]*=- | .)%n@%m:%~ | ${COLUMNS}x${LINES} | %y\a%}'
-	        PR_TITLEBAR=$'%{\e]0;${PR_JOB}%~%(!.#.) - ${PR_HOST} ${COLUMNS}x${LINES}\a%}'
+	        PR_TITLEBAR=$'%{\e]0;(${PR_HOST}) ${PR_JOB}%~%(!.#.)\a%}'
 	        ;;
 	    screen*)
 	    #PR_TITLEBAR=$'%{\e_screen \005 (\005t) | %(!.-=[ROOT]=- | .)%n@%m:%~ | ${COLUMNS}x${LINES} | %y\e\\%}'
-	        PR_TITLEBAR=$'%{\e_${PR_JOB}%~%(!.#.) - ${PR_HOST2}/\005 ${COLUMNS}x${LINES}\e\\%}'
+	        PR_TITLEBAR=$'%{\e_(${PR_HOST} \005n) ${PR_JOB}%~%(!.#.)\e\\\ekzsh ${PR_JOB}%~%(!.#.)\e\\%}'
 	        ;;
 	    *)
 	        PR_TITLEBAR=''
@@ -165,9 +194,10 @@ setprompt () {
     ###
     # Finally, the prompt.
 
+    if [[ $TERM == screen* ]] ; then
         PROMPT='$PR_SET_CHARSET$PR_STITLE${(e)PR_TITLEBAR}\
 $PR_CYAN$PR_SHIFT_IN$PR_ULCORNER$PR_BLUE$PR_HBAR$PR_SHIFT_OUT(\
-$PR_GREEN%(!.%SROOT%s.%n)$PR_GREEN@%m:%l\
+$PR_GREEN%(!.%SROOT@%s.)$PR_GREEN${PR_HOST}:scr/$WINDOW\
 $PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_CYAN$PR_HBAR${(e)PR_FILLBAR}$PR_BLUE$PR_HBAR$PR_SHIFT_OUT(\
 $PR_MAGENTA%$PR_PWDLEN<...<%~%<<\
 $PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_CYAN$PR_URCORNER$PR_SHIFT_OUT\
@@ -178,6 +208,22 @@ ${(e)PR_APM}$PR_YELLOW%D{%H:%M}\
 $PR_LIGHT_BLUE:%(!.$PR_RED.$PR_WHITE)%#$PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_SHIFT_OUT\
 $PR_CYAN$PR_SHIFT_IN$PR_HBAR$PR_SHIFT_OUT\
 $PR_NO_COLOUR '
+    else
+        PROMPT='$PR_SET_CHARSET$PR_STITLE${(e)PR_TITLEBAR}\
+$PR_CYAN$PR_SHIFT_IN$PR_ULCORNER$PR_BLUE$PR_HBAR$PR_SHIFT_OUT(\
+$PR_GREEN%(!.%SROOT@%s.)$PR_GREEN${PR_HOST}:%l\
+$PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_CYAN$PR_HBAR${(e)PR_FILLBAR}$PR_BLUE$PR_HBAR$PR_SHIFT_OUT(\
+$PR_MAGENTA%$PR_PWDLEN<...<%~%<<\
+$PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_CYAN$PR_URCORNER$PR_SHIFT_OUT\
+
+$PR_CYAN$PR_SHIFT_IN$PR_LLCORNER$PR_BLUE$PR_HBAR$PR_SHIFT_OUT(\
+%(?..$PR_LIGHT_RED%?$PR_BLUE:)\
+${(e)PR_APM}$PR_YELLOW%D{%H:%M}\
+$PR_LIGHT_BLUE:%(!.$PR_RED.$PR_WHITE)%#$PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_SHIFT_OUT\
+$PR_CYAN$PR_SHIFT_IN$PR_HBAR$PR_SHIFT_OUT\
+$PR_NO_COLOUR '
+    fi
+
 
         RPROMPT=' $PR_CYAN$PR_SHIFT_IN$PR_HBAR$PR_BLUE$PR_HBAR$PR_SHIFT_OUT\
 $PR_MSG($PR_YELLOW%D{%a,%b%d}$PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_CYAN$PR_LRCORNER$PR_SHIFT_OUT$PR_NO_COLOUR'
@@ -198,3 +244,5 @@ setprompt
 function reload-prompt() {
     . ~/myconfig/dotfiles/zsh-prompt
 }
+
+export PR_HOST PR_HOST2
