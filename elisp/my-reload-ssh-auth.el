@@ -3,9 +3,8 @@
 (defvar my-reload-ssh-auth-file "~/.ssh_auth_sock")
 
 (defun my-reload-ssh-auth-file-mtime (file)
-  (destructuring-bind (v1 v2)
-      (nth 5 (file-attributes file))
-    (+ (* v1 65536) v2)))
+  (let ((x (nth 5 (file-attributes file))))
+    (+ (* (first x) 65536) (second x))))
 
 (defun my-reload-ssh-auth-extract (file)
   (with-temp-buffer
