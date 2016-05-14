@@ -15,9 +15,13 @@ fi
 name=$1
 waitp=$2
 if [[ -d /var/run/screen ]] ; then
-  screendir=/var/run/screen/S-$USER
+  screendir=/var/run/screen/S-$LOGNAME
+elif [[ -d /var/run/uscreens/S-$LOGNAME ]] ; then
+  screendir=/var/run/uscreens/S-$LOGNAME
+elif [[ -d /tmp/uscreens/S-$LOGNAME ]] ; then
+  screendir=/tmp/uscreens/S-$LOGNAME
 else
-  screendir=/var/run/uscreens/S-$USER
+  screendir=/var/run/uscreens/S-$LOGNAME
 fi
 serverdir=/tmp/emacs$UID
 
