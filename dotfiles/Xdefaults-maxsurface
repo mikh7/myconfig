@@ -2,7 +2,58 @@
 ! use the FreeType
 xterm*renderFont: true
 !xterm*faceName: Bitstream Vera Sans Mono-10
-xterm*faceName: Consolas-10
 !xterm*boldFont: 9x15bold
 !xterm*font: -mine-fixed-medium-r-normal--17-170-75-75-c-90-iso8859-1
-emacs*Font: Consolas-10
+emacs*Font: Consolas-9.5
+
+
+! better mouse stuff for surface pro
+XTerm*VT100.translations: #override \n\
+                     Meta~Shift<Btn1Down>: keymap(mySelect) select-start() \n\
+                     Meta Shift<Btn1Down>: keymap(mySelect) start-extend() \n\
+                     Meta <Btn1Motion>: keymap(mySelect) select-extend() \n\
+                     ~Meta ~Ctrl ~Shift <Btn1Down>: ignore() \n\
+                     ~Ctrl~Shift<KeyPress>Alt_L,~Ctrl~Shift<Btn1Down>: keymap(mySelect) select-start() \n\
+                     Shift~Ctrl<KeyPress>Alt_L,Shift~Ctrl<Btn1Down>: keymap(mySelect) start-extend() \n\
+                     Meta Shift <Btn1Down>: keymap(mySelect) select-extend() \n\
+                     Meta Shift <Btn1Motion>: keymap(mySelect) select-extend() \n\
+                     !Ctrl <Btn1Down>: insert-selection(PRIMARY, CUT_BUFFER0) \n\
+                     !Lock Ctrl <Btn1Down>: insert-selection(PRIMARY, CUT_BUFFER0) \n\
+
+
+
+*VT100.mySelectKeymap.Translations: #override \
+   ! <Motion>: select-extend() \n\
+   ! <Motion>: select-extend() \n\
+   !Meta <Motion>: select-extend() \n\
+   <Motion>: select-extend() \n\
+   <BtnMotion>: select-extend() \n\
+   ~Meta <BtnMotion>: select-extend() \n\
+   Meta <BtnMotion>: select-extend() \n\
+   Meta <Motion>: select-extend() \n\
+   <Key>Return: select-end(PRIMARY, CUT_BUFFER0) keymap(None) \n\
+   <Key>Escape: select-end() select-end() keymap(None) \n\
+   <KeyPress>: ignore() \n\
+   <Key>: ignore() \n\
+   Meta <Btn1Down>: select-end(PRIMARY, CUT_BUFFER0) keymap(None) \n\
+   <Btn1Up>: ignore() \n\
+   <Btn2Down>: ignore() \n\
+   <Btn2Up>: ignore() \n\
+   Ctrl ~Meta <Btn1Down>: ignore() \n\
+   Ctrl <Btn1Down>: ignore() \n\
+   Ctrl ~Meta <Btn2Down>: ignore() \n\
+   Ctrl <Btn2Down>: ignore() \n\
+   Ctrl ~Meta <Btn1Up>: ignore() \n\
+   Ctrl <Btn1Up>: ignore() \n\
+   Ctrl ~Meta <Btn2Up>: ignore() \n\
+   Ctrl <Btn2Up>: ignore() \n\
+
+
+xterm*faceName: Consolas
+xterm*faceSize: 9.5
+xterm*faceSize1: 11
+xterm*faceSize2: 12
+xterm*faceSize3: 13
+xterm*faceSize4: 14
+xterm*faceSize5: 15
+xterk*faceSize6: 16
