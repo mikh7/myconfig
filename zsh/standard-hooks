@@ -6,10 +6,11 @@ add-hook chpwd_hook
 add-hook periodic_hook
 
 function _do_reload_config {
-    local file=$1
+    local file=$1 tmp
     _do_reload[$file]=0
+    tmp="$(cat ~/.$file)"
     print Reloading zsh file $file
-    . ~/.$file
+    eval "$tmp"
     # [[ -o interactive ]] && . ~/.zshrc
     # setopt no_local_options
 }
