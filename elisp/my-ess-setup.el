@@ -66,14 +66,15 @@
 (defun my-ess-closing-return (&optional no-newline artificial)
   (interactive)
   ;; Note that the input string does not include its terminal newline.
-  (save-restriction) 
-  (let ((proc (get-buffer-process (current-buffer))))
-    (if (not proc) (user-error "Current buffer has no process")
-      (widen)
-      (let* ((pmark (process-mark proc)))
-        (narrow-to-region pmark (point))
-        (while (ignore-errors (save-excursion (backward-up-list 1)) t)
-          (insert ")")))))
+  (save-restriction 
+    (goto-char (point-ma))
+    (let ((proc (get-buffer-process (current-buffer))))
+      (if (not proc) (user-error "Current buffer has no process")
+        (widen)
+        (let* ((pmark (process-mark proc)))
+          (narrow-to-region pmark (point))
+          (while (ignore-errors (save-excursion (backward-up-list 1)) t)
+            (insert ")"))))))
   (inferior-ess-send-input))
 
 (evil-define-key 'normal inferior-ess-mode-map (kbd "M-RET") 'my-ess-closing-return)
