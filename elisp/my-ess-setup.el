@@ -62,6 +62,8 @@
 (defun mgm-after-ess-mode ()
   (ess--unset-smart-S-assign-key))
 
+(defun mgm-after-ess-help-mode ()
+  (evil-motion-state))
 
 (defun my-ess-closing-return (&optional no-newline artificial)
   (interactive)
