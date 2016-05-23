@@ -67,7 +67,7 @@
   (interactive)
   ;; Note that the input string does not include its terminal newline.
   (save-restriction 
-    (goto-char (point-ma))
+    (goto-char (point-max))
     (let ((proc (get-buffer-process (current-buffer))))
       (if (not proc) (user-error "Current buffer has no process")
         (widen)
