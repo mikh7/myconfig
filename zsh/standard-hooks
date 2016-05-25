@@ -8,6 +8,7 @@ add-hook periodic_hook
 function _do_reload_config {
     local file=$1 tmp
     _do_reload[$file]=0
+    # sourcing a file here crashes older zsh
     tmp="$(cat ~/.$file)"
     print Reloading zsh file $file
     eval "$tmp"
