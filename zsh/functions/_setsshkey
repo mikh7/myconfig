@@ -1,0 +1,28 @@
+local new_auth_sock old_auth_sock
+local old_auth_sock_valid=n new_auth_sock_valid=n
+
+
+if [[ -n $SSH_AUTH_SOCK ]] ; then
+    new_auth_sock=$SSH_AUTH_SOCK
+    if ssh-add -l >/dev/null 2>&1 ; then
+        new_auth_sock_valid=y 
+    fi
+fi
+
+if [[ -f ~/.ssh_auth_sock ]] ; then
+    function {
+        local SSH_AUTH_SOCK
+        . ~/.ssh_auth_sock
+        old_auth_sock=$SSH_AUTH_SOCK
+        if ssh-add -l >/dev/null 2>&1 ; then
+           old_auth_sock_valid=y 
+        fi
+    }
+fi
+
+if [[ $old_auth_sock_valid == n && $new_auth_sock_valid == y ]] ; then
+    echo export SSH_AUTH_SOCK=$SSH_AUTH_SOCK > ~/.ssh_auth_sock
+elif [[ $new_auth_sock_valid == n && $old_auth_sock_valid == y ]] ; then
+    SSH_AUTH_SOCK=$old_auth_sock
+fi
+
