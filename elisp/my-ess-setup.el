@@ -62,8 +62,8 @@
 (defun mgm-after-ess-mode ()
   (ess--unset-smart-S-assign-key))
 
-(defun mgm-after-ess-help-mode ()
-  (evil-motion-state))
+(add-hook 'ess-help-mode-hook (lambda ()
+                                (turn-on-evil-mode)))
 
 (defun my-ess-closing-return (&optional no-newline artificial)
   (interactive)
