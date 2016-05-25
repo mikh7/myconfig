@@ -6,10 +6,10 @@ xterm*renderFont: true
 !xterm*font: -mine-fixed-medium-r-normal--17-170-75-75-c-90-iso8859-1
 
 xterm*faceName: Consolas
-xterm*faceSize1: 09.50
-xterm*faceSize2: 10.50
-xterm*faceSize:  11.25
-xterm*faceSize3: 11.70
-xterm*faceSize4: 13.00
-xterm*faceSize5: 14.00
-xterm*faceSize6: 16.00
+xterm*faceSize1: 10
+xterm*faceSize2: 11
+xterm*faceSize:  12
+xterm*faceSize3: 13
+xterm*faceSize4: 14
+xterm*faceSize5: 15
+xterm*faceSize6: 16
