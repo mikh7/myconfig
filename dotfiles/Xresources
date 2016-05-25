@@ -48,6 +48,10 @@ Emacs*font: Bitstream Vera Sans Mono-14
 Emacs*background: white
 #elif defined (CLNT_momoland)
 XTerm*faceName: Consolas-13
+#elif defined (CLNT_mmikhanosha_pc)
+XTerm*faceName: Consolas
+XTerm*renderFont: true
+!Emacs*font: Consolas-10
 #endif
 
 irc*font: Lucida Sans Typewriter-11
