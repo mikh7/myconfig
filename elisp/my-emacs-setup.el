@@ -604,6 +604,30 @@ If ALL-FRAMES is anything else, count only the selected frame."
  evil-replace-state-cursor '((hbar . 3) "black")
  evil-emacs-state-cursor '"Magenta")
 
+(define-key evil-insert-state-map "\e[["
+  (lambda (&optional arg)
+    (interactive)
+    (evil-normal-state)
+    (evil-backward-section-begin arg)))
+
+(define-key evil-insert-state-map "\e[]" 
+  (lambda (&optional arg)
+    (interactive)
+    (evil-normal-state)
+    (evil-backward-section-end arg)))
+
+(define-key evil-insert-state-map "\e[(" 
+  (lambda (&optional arg)
+    (interactive)
+    (evil-normal-state)
+    (evil-previous-open-paren arg)))
+
+(define-key evil-insert-state-map "\e[{"
+  (lambda (&optional arg)
+    (interactive)
+    (evil-normal-state)
+    (evil-previous-open-brace arg)))
+
 (defun my-exec-key-in-emacs (&optional prefix)
   "Execute last command key in emacs state"
   (interactive "P")
