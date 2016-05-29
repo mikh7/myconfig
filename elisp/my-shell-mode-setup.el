@@ -105,6 +105,16 @@
 (evil-define-key 'insert comint-mode-map (kbd "M-p") 'my-exec-key-to-normal-state)
 (evil-define-key 'insert comint-mode-map (kbd "M-n") 'my-exec-key-to-normal-state)
 
+(evil-define-key 'insert comint-mode-map (kbd "M-s") 'my-exec-key-to-normal-state)
+(evil-define-key 'insert comint-mode-map (kbd "M-r") 'my-exec-key-to-normal-state)
+(evil-define-key 'insert comint-mode-map (kbd "C-r") 'my-exec-key-to-normal-state)
+(evil-define-key 'insert comint-mode-map (kbd "C-s") 'my-exec-key-to-normal-state)
+
+
+(evil-define-key 'insert comint-mode-map (kbd "C-b") 'my-exec-key-to-normal-state)
+(evil-define-key 'insert comint-mode-map (kbd "M-f") 'my-exec-key-to-normal-state)
+
+
 (defun comint-clear-buffer ()
   (interactive)
   (let ((comint-buffer-maximum-size 0))
