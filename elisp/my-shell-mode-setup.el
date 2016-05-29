@@ -68,7 +68,7 @@
   (setq viper-comint-search-regexp 
 	(read-from-minibuffer "Match (regexp): " nil nil nil
 			      'minibuffer-history-search-history))
-  (setq viper-comint-search-idx 0)
+  (setq viper-comint-search-idx 1)
   (viper-comint-search-next)
   (when (fboundp 'evil-normal-state)
     (evil-normal-state)))
@@ -79,15 +79,17 @@
       (error "")
   (comint-previous-matching-input 
    viper-comint-search-regexp viper-comint-search-idx)
-  (setq viper-comint-search-idx (1+ viper-comint-search-idx))))
+  ;; (setq viper-comint-search-idx (1+ viper-comint-search-idx))
+  ))
 
 (defun viper-comint-search-prev ()
   (interactive)
   (if (null viper-comint-search-regexp)
       (error "")
-  (comint-previous-matching-input 
+    (comint-next-matching-input 
    viper-comint-search-regexp viper-comint-search-idx)
-  (setq viper-comint-search-idx (1- viper-comint-search-idx))))
+  ;; (setq viper-comint-search-idx (1- viper-comint-search-idx))
+  ))
 
 (evil-define-key 'normal shell-mode-map "j" 'viper-comint-j)
 (evil-define-key 'normal shell-mode-map "k" 'viper-comint-k)
