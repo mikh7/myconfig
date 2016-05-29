@@ -604,7 +604,13 @@ If ALL-FRAMES is anything else, count only the selected frame."
  evil-replace-state-cursor '((hbar . 3) "black")
  evil-emacs-state-cursor '"Magenta")
 
-(define-key evil-insert-state-map "\e[["
+(define-key evil-insert-state-map (kbd "M-[ M-[")
+  (lambda (&optional arg)
+    (interactive)
+    (evil-normal-state)
+    (evil-backward-section-begin arg)))
+
+(define-key evil-insert-state-map (kbd "M-[ [")
   (lambda (&optional arg)
     (interactive)
     (evil-normal-state)
@@ -616,17 +622,20 @@ If ALL-FRAMES is anything else, count only the selected frame."
     (evil-normal-state)
     (evil-backward-section-end arg)))
 
+
 (define-key evil-insert-state-map "\e[(" 
   (lambda (&optional arg)
     (interactive)
     (evil-normal-state)
     (evil-previous-open-paren arg)))
 
+
 (define-key evil-insert-state-map "\e[{"
   (lambda (&optional arg)
     (interactive)
     (evil-normal-state)
     (evil-previous-open-brace arg)))
+
 
 (defun my-exec-key-in-emacs (&optional prefix)
   "Execute last command key in emacs state"
@@ -659,6 +668,43 @@ If ALL-FRAMES is anything else, count only the selected frame."
             (command-execute com)))
       (quit (ding))
       (error (beep 1)))))
+
+(defun my-exec-key-to-normal-state (&optional prefix)
+  "Execute last command key in normal state"
+  (interactive "P")
+  (let ((key last-command-event)
+        com) 
+    (setq
+     unread-command-events
+     (let ((new-events
+            (cond ((eventp key) (list key))
+                  ((listp key) key)
+                  ((sequencep key)
+                   (listify-key-sequence key))
+                  (t (error
+                      "exec-key-in-emacs: Invalid argument, %S"
+                      key)))))
+       (if (not (eventp nil))
+           (setq new-events (delq nil new-events)))
+       (append new-events unread-command-events)))
+    (condition-case err
+        (progn
+          (evil-normal-state)
+          (setq com
+                (key-binding (setq key (read-key-sequence nil))))
+          (while (vectorp com) (setq com (key-binding com)))
+          ;; this-command, last-command-char, last-command-event
+          (setq this-command com)
+          (setq last-command-event key)
+          (cond ((commandp com) 
+                 (setq prefix-arg (or prefix-arg prefix)) 
+                 (log-sexp "Doing" com) 
+                 (command-execute com))
+                (t (error "No key bound to `%s' in normal state" (key-description key)))))
+      (quit (evil-insert-state) (ding))
+      (error (evil-insert-state) (error "%s" (cadr err))))))
+
+
 
 (when (require-if-available 'undo-tree)
   ;; Undo its own bindings, I use u and C-a-z 
