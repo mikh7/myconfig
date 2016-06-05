@@ -82,6 +82,7 @@
 (evil-define-key 'normal inferior-ess-mode-map (kbd "M-RET") 'my-ess-closing-return)
 (evil-define-key 'insert inferior-ess-mode-map (kbd "M-RET") 'my-ess-closing-return)
 
+
 (add-hook 'inferior-ess-mode-hook 'my-ess-hook)
 
 (evil-give-back-keys-in-mode '(ess-help-mode)

@@ -68,7 +68,7 @@
   (setq viper-comint-search-regexp 
 	(read-from-minibuffer "Match (regexp): " nil nil nil
 			      'minibuffer-history-search-history))
-  (setq viper-comint-search-idx 0)
+  (setq viper-comint-search-idx 1)
   (viper-comint-search-next)
   (when (fboundp 'evil-normal-state)
     (evil-normal-state)))
@@ -79,15 +79,17 @@
       (error "")
   (comint-previous-matching-input 
    viper-comint-search-regexp viper-comint-search-idx)
-  (setq viper-comint-search-idx (1+ viper-comint-search-idx))))
+  ;; (setq viper-comint-search-idx (1+ viper-comint-search-idx))
+  ))
 
 (defun viper-comint-search-prev ()
   (interactive)
   (if (null viper-comint-search-regexp)
       (error "")
-  (comint-previous-matching-input 
+    (comint-next-matching-input 
    viper-comint-search-regexp viper-comint-search-idx)
-  (setq viper-comint-search-idx (1- viper-comint-search-idx))))
+  ;; (setq viper-comint-search-idx (1- viper-comint-search-idx))
+  ))
 
 (evil-define-key 'normal shell-mode-map "j" 'viper-comint-j)
 (evil-define-key 'normal shell-mode-map "k" 'viper-comint-k)
@@ -97,6 +99,27 @@
 (evil-define-key 'normal shell-mode-map "\M-/" 'viper-comint-start-search)
 (evil-define-key 'normal shell-mode-map "n" 'viper-comint-search-next)
 (evil-define-key 'normal shell-mode-map "N" 'viper-comint-search-prev)
+
+(evil-define-key 'normal comint-mode-map (kbd "M-p") 'comint-previous-input)
+(evil-define-key 'normal comint-mode-map (kbd "M-n") 'comint-next-input)
+(evil-define-key 'normal comint-mode-map (kbd "M-P") 'comint-previous-prompt)
+(evil-define-key 'normal comint-mode-map (kbd "M-N") 'comint-next-prompt)
+
+(evil-define-key 'insert comint-mode-map (kbd "M-p") 'my-exec-key-to-normal-state)
+(evil-define-key 'insert comint-mode-map (kbd "M-n") 'my-exec-key-to-normal-state)
+(evil-define-key 'insert comint-mode-map (kbd "M-P") 'my-exec-key-to-normal-state)
+(evil-define-key 'insert comint-mode-map (kbd "M-N") 'my-exec-key-to-normal-state)
+
+
+(evil-define-key 'insert comint-mode-map (kbd "M-s") 'my-exec-key-to-normal-state)
+(evil-define-key 'insert comint-mode-map (kbd "M-r") 'my-exec-key-to-normal-state)
+(evil-define-key 'insert comint-mode-map (kbd "C-r") 'my-exec-key-to-normal-state)
+(evil-define-key 'insert comint-mode-map (kbd "C-s") 'my-exec-key-to-normal-state)
+
+
+(evil-define-key 'insert comint-mode-map (kbd "C-b") 'my-exec-key-to-normal-state)
+(evil-define-key 'insert comint-mode-map (kbd "M-f") 'my-exec-key-to-normal-state)
+
 
 (defun comint-clear-buffer ()
   (interactive)
