@@ -7,36 +7,46 @@ xterm*renderFont: true
 emacs*Font: Consolas-9.5
 
 
+                     ! Shift <Btn1Motion>: keymap(mySelect) select-extend() \n\
+                     ! Shift ~Ctrl<Btn1Motion>: keymap(mySelect) select-extend() \n\
+                     ! Shift~Meta~Ctrl<Btn1Motion>: keymap(mySelect) select-extend() \n\
+
 ! better mouse stuff for surface pro
 XTerm*VT100.translations: #override \n\
-                     Meta~Shift<Btn1Down>: keymap(mySelect) select-start() \n\
-                     Meta Shift<Btn1Down>: keymap(mySelect) start-extend() \n\
-                     Meta <Btn1Motion>: keymap(mySelect) select-extend() \n\
-                     ~Meta ~Ctrl ~Shift <Btn1Down>: ignore() \n\
-                     ~Ctrl~Shift<KeyPress>Alt_L,~Ctrl~Shift<Btn1Down>: keymap(mySelect) select-start() \n\
-                     Shift~Ctrl<KeyPress>Alt_L,Shift~Ctrl<Btn1Down>: keymap(mySelect) start-extend() \n\
-                     Meta Shift <Btn1Down>: keymap(mySelect) select-extend() \n\
-                     Meta Shift <Btn1Motion>: keymap(mySelect) select-extend() \n\
+                     ~Ctrl~Shift<Btn1Down>: select-start() \n\
+                     Shift~Ctrl<Btn1Down>: keymap(mySelect) select-start() \n\
+                     Shift~Ctrl<Btn1Down>: keymap(mySelect) select-start() \n\
+                     Shift <Btn1Down>: keymap(mySelect) start-extend() \n\
+                     Shift~Meta<Btn1Down>: keymap(mySelect) start-extend() \n\
+                     Shift~Meta~Ctrl<Btn1Down>: keymap(mySelect) start-extend() \n\
+                     ~Ctrl<KeyPress>Shift_L,~Ctrl~Meta<Btn1Down>: keymap(mySelect) select-start() \n\
+                     ~Ctrl~Meta<KeyPress>Shift_L,~Ctrl~Meta<Btn1Down>: keymap(mySelect) select-start() \n\
+                     Shift~Meta<KeyPress>Shift_L,Shift<Btn1Down>: keymap(mySelect) select-start() \n\
                      !Ctrl <Btn1Down>: insert-selection(PRIMARY, CUT_BUFFER0) \n\
                      !Lock Ctrl <Btn1Down>: insert-selection(PRIMARY, CUT_BUFFER0) \n\
 
 
 
 *VT100.mySelectKeymap.Translations: #override \
-   ! <Motion>: select-extend() \n\
-   ! <Motion>: select-extend() \n\
-   !Meta <Motion>: select-extend() \n\
    <Motion>: select-extend() \n\
-   <BtnMotion>: select-extend() \n\
-   ~Meta <BtnMotion>: select-extend() \n\
-   Meta <BtnMotion>: select-extend() \n\
+   Shift <Motion>: select-extend() \n\
+   <Btn1Motion>: select-extend() \n\
+   Shift <Btn1Motion>: select-extend() \n\
+   !Shift <Motion>: select-extend() \n\
+   Shift ~Meta <Motion>: select-extend() \n\
+   Shift ~Ctrl <Btn1Motion>: select-extend() \n\
+   Shift ~Ctrl ~Meta<Btn1Motion>: select-extend() \n\
+   Shift <BtnMotion>: select-extend() \n\
+   Shift <Btn1Down>: select-start() \n\
    Meta <Motion>: select-extend() \n\
+   <KeyRelease>Shift_L: select-end(PRIMARY, CUT_BUFFER0) keymap(None) \n\
    <Key>Return: select-end(PRIMARY, CUT_BUFFER0) keymap(None) \n\
    <Key>Escape: select-end() select-end() keymap(None) \n\
    <KeyPress>: ignore() \n\
    <Key>: ignore() \n\
-   Meta <Btn1Down>: select-end(PRIMARY, CUT_BUFFER0) keymap(None) \n\
    <Btn1Up>: ignore() \n\
+   <BtnUp>: ignore() \n\
+   <ButtonRelease>: ignore() \n\
    <Btn2Down>: ignore() \n\
    <Btn2Up>: ignore() \n\
    Ctrl ~Meta <Btn1Down>: ignore() \n\
