@@ -10,7 +10,7 @@
 # <host:~/myconfig/dotfiles> |
 
 #
-# Long current dir
+# Long current directory
 #
 # <user@host                     /usr/src/local/xft-emacs/emacs-multi-tty/src>
 # 
@@ -194,6 +194,9 @@ setprompt () {
     ###
     # Finally, the prompt.
 
+    # this line used to display % or # after the current time (if shell was root)
+    # but I don't like it
+    # %(!.$PR_RED.$PR_BLUE)%#
     if [[ $TERM == screen* ]] ; then
         PROMPT='$PR_SET_CHARSET$PR_STITLE${(e)PR_TITLEBAR}\
 $PR_CYAN$PR_SHIFT_IN$PR_ULCORNER$PR_BLUE$PR_HBAR$PR_SHIFT_OUT(\
@@ -205,7 +208,7 @@ $PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_CYAN$PR_URCORNER$PR_SHIFT_OUT\
 $PR_CYAN$PR_SHIFT_IN$PR_LLCORNER$PR_BLUE$PR_HBAR$PR_SHIFT_OUT(\
 %(?..$PR_LIGHT_RED%?$PR_BLUE:)\
 ${(e)PR_APM}$PR_YELLOW%D{%H:%M}\
-$PR_LIGHT_BLUE:%(!.$PR_RED.$PR_WHITE)%#$PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_SHIFT_OUT\
+$PR_LIGHT_BLUE$PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_SHIFT_OUT\
 $PR_CYAN$PR_SHIFT_IN$PR_HBAR$PR_SHIFT_OUT\
 $PR_NO_COLOUR '
     else
@@ -219,7 +222,7 @@ $PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_CYAN$PR_URCORNER$PR_SHIFT_OUT\
 $PR_CYAN$PR_SHIFT_IN$PR_LLCORNER$PR_BLUE$PR_HBAR$PR_SHIFT_OUT(\
 %(?..$PR_LIGHT_RED%?$PR_BLUE:)\
 ${(e)PR_APM}$PR_YELLOW%D{%H:%M}\
-$PR_LIGHT_BLUE:%(!.$PR_RED.$PR_WHITE)%#$PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_SHIFT_OUT\
+$PR_LIGHT_BLUE$PR_BLUE)$PR_SHIFT_IN$PR_HBAR$PR_SHIFT_OUT\
 $PR_CYAN$PR_SHIFT_IN$PR_HBAR$PR_SHIFT_OUT\
 $PR_NO_COLOUR '
     fi
