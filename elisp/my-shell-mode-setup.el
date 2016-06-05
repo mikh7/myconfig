@@ -100,10 +100,16 @@
 (evil-define-key 'normal shell-mode-map "n" 'viper-comint-search-next)
 (evil-define-key 'normal shell-mode-map "N" 'viper-comint-search-prev)
 
-(evil-define-key 'normal comint-mode-map (kbd "M-p") 'comint-previous-prompt)
-(evil-define-key 'normal comint-mode-map (kbd "M-n") 'comint-next-prompt)
+(evil-define-key 'normal comint-mode-map (kbd "M-p") 'comint-previous-input)
+(evil-define-key 'normal comint-mode-map (kbd "M-n") 'comint-next-input)
+(evil-define-key 'normal comint-mode-map (kbd "M-P") 'comint-previous-prompt)
+(evil-define-key 'normal comint-mode-map (kbd "M-N") 'comint-next-prompt)
+
 (evil-define-key 'insert comint-mode-map (kbd "M-p") 'my-exec-key-to-normal-state)
 (evil-define-key 'insert comint-mode-map (kbd "M-n") 'my-exec-key-to-normal-state)
+(evil-define-key 'insert comint-mode-map (kbd "M-P") 'my-exec-key-to-normal-state)
+(evil-define-key 'insert comint-mode-map (kbd "M-N") 'my-exec-key-to-normal-state)
+
 
 (evil-define-key 'insert comint-mode-map (kbd "M-s") 'my-exec-key-to-normal-state)
 (evil-define-key 'insert comint-mode-map (kbd "M-r") 'my-exec-key-to-normal-state)
