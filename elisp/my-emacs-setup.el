@@ -514,6 +514,7 @@ If ALL-FRAMES is anything else, count only the selected frame."
   (require-if-available 'cua)
   (CUA-mode t))
 (when (>= emacs-major-version 22)
+  (require-if-available 'cua-base)
   (cua-mode t))
 
 ;; Remove C-Return keybinding
