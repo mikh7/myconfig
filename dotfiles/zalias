@@ -26,7 +26,11 @@ alias d='dirs -v'
 
 alias showdpms='xset -q | grep -A1 DPMS'
 
-alias vi='connect-emacs emacs'
+if command -v emacs >/dev/null 2>&1 ; then
+  alias vi='connect-emacs emacs'
+else
+  alias vi=vim
+fi
 
 if [[ -n $SSH_AUTH_SOCK && -S $SSH_AUTH_SOCK ]] ; then
     echo export SSH_AUTH_SOCK=$SSH_AUTH_SOCK > ~/.ssh_auth_sock
