@@ -734,6 +734,8 @@ any children"
 
 (define-key org-src-mode-map "\C-c" nil)
 
+(define-key org-mode-map (kbd "C-M-^") 'org-insert-todo-heading-respect-content)
+
 (defun mm/org-insert-heading-after-current ()
   "Insert a new heading with same level as current, after current subtree."
   (interactive)
