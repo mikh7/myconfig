@@ -596,9 +596,22 @@ If ALL-FRAMES is anything else, count only the selected frame."
 (defvar evil-toggle-map (make-sparse-keymap)
   "Keymap for toggling various things command in Evil mode")
 
+(defun my-can-modify-text ()
+  (let (ok) 
+    (condition-case nil 
+        (with-silent-modifications 
+          (let ((inhibit-read-only nil)) 
+            (insert-and-inherit ?\ ) 
+            (delete-region (1- (point)) (point)))
+          t)
+      (error nil))))
+  
 (defadvice evil-insert-state (before dont-insert-on-readonly-text activate)
-  (when (get-text-property (max (1- (point)) (point-min)) 'read-only)
-    (error "Text is read-only")))
+  (when (and (not (evil-insert-state-p))
+             (or (not (numberp arg))
+                 (not (minusp arg)))
+             (not (my-can-modify-text)))
+    (error "Read only text")))
 
 (setq
  evil-normal-state-cursor '("black") 
