@@ -75,6 +75,14 @@ for the diff switches"
 (evil-define-key 'normal egg-minor-mode-map ";v" egg-file-cmd-map)
 (evil-define-key 'motion egg-minor-mode-map ";v" egg-file-cmd-map)
 (define-key egg-hide-show-map (kbd "TAB") 'egg-section-cmd-toggle-hide-show)
+(define-key egg-hide-show-map (kbd "h")
+  (lambda (&optional arg)
+    (interactive)
+    (if (bolp)
+        (call-interactively 'egg-section-cmd-toggle-hide-show)
+      (call-interactively 'evil-backward-char))))
+  
+(define-key egg-hide-show-map (kbd " ") 'egg-section-cmd-toggle-hide-show-children)
 
 (dolist (mode '(egg-commit-buffer-mode
                 egg-diff-buffer-mode
@@ -84,12 +92,21 @@ for the diff switches"
                 (egg-reflog-buffer-mode egg-log-buffer-mode)))
   (let ((modes mode)
         (mode (if (symbolp mode) mode (car mode))))
-    (add-to-list 'evil-normal-state-modes mode)
+    (add-to-list (if (eq mode 'egg-commit-buffer-mode)
+                     'evil-normal-state-modes
+                   'evil-motion-state-modes)
+                 mode)
     (remove-from-list 'evil-emacs-state-modes mode)
     (remove-from-list 'evil-insert-state-modes mode)
+    (remove-from-list (if (eq mode 'egg-commit-buffer-mode)
+                          'evil-motion-state-modes
+                        'evil-normal-state-modes)
+                      mode)
     (evil-give-back-keys-in-mode modes)
     ;; (evil-define-key 'normal-mode-map ";v" egg-file-cmd-map)
     ))
+
+
 
 (dolist (mode '(egg-commit-buffer-mode vc-git-log-edit-mode))
   (remove-from-list 'evil-normal-state-modes mode)
