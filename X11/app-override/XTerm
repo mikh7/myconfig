@@ -279,7 +279,6 @@ xterm*toolBar: false
 xterm*rightScrollBar: true
 xterm*scrollTtyOutput: false
 xterm*scrollKey: true
-xterm*background: gray90
 xterm*boldmode: false
 xterm*metaSendsEscape: false
 xterm*eightBitInput: true
@@ -306,6 +305,7 @@ XTerm*VT100.translations: #override \n\
 
 !!! Fix Ctrl-8 and such
 *VT100.Translations: #override \
+                     @Super_L <Key>Return: fullscreen() \n\
                      Ctrl~Meta<Key>0:        string(0x1b) string("[27;5;48~") \n\
                      Ctrl~Meta<Key>1:        string(0x1b) string("[27;5;49~") \n\
                      Ctrl~Meta<Key>2:        string(0x1b) string("[27;5;50~") \n\
