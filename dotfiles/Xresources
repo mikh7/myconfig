@@ -25,6 +25,9 @@ XTerm*color242: Purple
 XTerm*color243: SeaGreen
 XTerm*color244: grey80
 XTerm*color245: grey95
+XTerm*foreground: black
+XTerm*utf8: false
+XTerm*termName: xterm-256color
 
 rxvt*meta8: true
 Rxvt*meta8: true
@@ -41,17 +44,19 @@ Emacs.*font: Consolas-13
 ddd*rshCommand: ssh
 
 #if defined(CLNT_tigerclaw)
-XTerm*faceName: Bitstream Vera Sans Mono-14
+XTerm*faceName: Consolas-13
 XTerm*renderFont: true
-XTerm*background: white
-Emacs*font: Bitstream Vera Sans Mono-14
+!Emacs*font: Bitstream Vera Sans Mono-14
 Emacs*background: white
+XTerm*background: white
 #elif defined (CLNT_momoland)
 XTerm*faceName: Consolas-13
 #elif defined (CLNT_mmikhanosha_pc)
 XTerm*faceName: Consolas
 XTerm*renderFont: true
 !Emacs*font: Consolas-10
+#else
+XTerm*background: gray90
 #endif
 
 irc*font: Lucida Sans Typewriter-11
