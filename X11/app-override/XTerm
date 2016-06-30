@@ -373,16 +373,17 @@ XTerm*VT100.translations: #override \n\
                      Ctrl~Shift~Meta <Key>F12:     string(0x1b) string("[23;5~") \n\
                      Ctrl Shift~Meta <Key>F12:     string(0x1b) string("[23;6~") \n\
                      Ctrl~Shift Meta <Key>F12:     string(0x1b) string("[23;7~") \n\
-                     None <KeyPress>Alt_R: keymap(myAltR) \n\
-                     None <KeyPress>Super_L: keymap(myAltR) \n\
                      @Alt_L <Key>: insert-eight-bit() \n\
                      @Alt_L <Key>Return: string(0x8d) \n\
+                     Super <Key>=: larger-vt-font() \n\
+                     Super <Key>-: smaller-vt-font() \n\
+                     Ctrl @Super_L <Key>v: insert-selection(PRIMARY, CUT_BUFFER0) \n\
 
 
 
 *VT100.myAltRKeymap.Translations: #override \
+                     <FocusOut>: keymap(None) \n\
                      <KeyRelease>Alt_R: keymap(None) \n\
                      <KeyRelease>Super_L: keymap(None) \n\
                      <Key>k: larger-vt-font() \n\
                      <Key>j: smaller-vt-font() \n\
-                     <Key>f: insert-selection(PRIMARY, CUT_BUFFER0) \n\

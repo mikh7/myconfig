@@ -1,0 +1,10 @@
+#!/usr/bin/expect -f
+cd ~/forticlientsslvpn/64bit
+spawn ./forticlientsslvpn_cli --server 38.104.42.94:443 --vpnuser max
+expect "Password for VPN:"
+send "GruzRokiv\n"
+expect "Would you like to connect to this server? (Y/N)"
+send "y\n"
+expect "STATUS::Tunnel running"
+wait
+

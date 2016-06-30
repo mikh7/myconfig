@@ -20,6 +20,8 @@ case $OSTYPE ; in
                   screens=/var/run/screen
                 elif [[ -f /etc/redhat-release ]] ; then
                   screens=/tmp/uscreens
+                elif [[ -d /run/screen ]] ; then
+                  screens=/run/screen
                 else
                   screens=/var/run/uscreens 
                 fi
