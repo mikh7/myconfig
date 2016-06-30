@@ -1,0 +1,4 @@
+export XUSERFILESEARCHPATH=~/myconfig/X11/app-override/%N
+
+setxkbmap -option "" dvorak -option ctrl:nocaps 
+xmodmap -e 'keycode 108 = Escape Escape Escape'
