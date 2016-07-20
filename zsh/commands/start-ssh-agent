@@ -1,5 +1,5 @@
 #!/bin/zsh
 pkill ssh-agent
-. <(ssh-agent)
+. <(setsid ssh-agent)
 echo "export SSH_AUTH_SOCK=$SSH_AUTH_SOCK" > ~/.ssh_auth_sock
 
