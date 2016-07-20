@@ -375,8 +375,8 @@ XTerm*VT100.translations: #override \n\
                      Ctrl~Shift Meta <Key>F12:     string(0x1b) string("[23;7~") \n\
                      @Alt_L <Key>: insert-eight-bit() \n\
                      @Alt_L <Key>Return: string(0x8d) \n\
-                     Super <Key>=: larger-vt-font() \n\
-                     Super <Key>-: smaller-vt-font() \n\
+                     @Super_L <Key>=: larger-vt-font() \n\
+                     @Super_L <Key>-: smaller-vt-font() \n\
                      Ctrl @Super_L <Key>v: insert-selection(PRIMARY, CUT_BUFFER0) \n\
 
 
